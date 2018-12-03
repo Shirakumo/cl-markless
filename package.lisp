@@ -65,7 +65,13 @@
 
 (defpackage #:cl-markless-directives
   (:nicknames #:org.shirakumo.markless.directives)
+  (:use #:cl)
   (:export
+   #:directive
+   #:enabled-p
+   #:ensure-directive
+   #:block-directive
+   #:inline-directive
    #:paragraph))
 
 (defpackage #:cl-markless

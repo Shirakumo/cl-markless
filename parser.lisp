@@ -6,6 +6,8 @@
 
 (in-package #:org.shirakumo.markless)
 
+(defparameter *default-directives* ())
+
 (defun parse (thing &rest initargs &key (parser-class 'parser) &allow-other-keys)
   (let ((initargs (copy-list initargs)))
     (remhash :parser-class initargs)
@@ -26,14 +28,19 @@
 
 (defclass parser ()
   ((line-break-mode :initarg :line-break-mode :initform :unescaped :accessor line-break-mode)
-   (disabled-directives :initarg :diasbled-directives :initform () :accessor disabled-directives)
+   (directives :initform () :accessor directives)
    (label-table :initform (make-hash-table :test 'equalp) :accessor label-table)
    (directive-stack :accessor directive-stack)
    (input :initarg :input :initform (error "STREAM required") :accessor input)
    (output :initarg :output :initform (make-instance 'root-component) :accessor output)))
 
-(defmethod initialize-instance :after ((parser parser) &key (stack-depth-limit 32))
-  (setf (directive-stack parser) (make-array stack-depth-limit :fill-pointer T)))
+(defmethod initialize-instance :after ((parser parser) &key (stack-depth-limit 32) (directives *default-directives*) disabled-directives)
+  (setf (directive-stack parser) (make-array stack-depth-limit :fill-pointer T))
+  (setf (directives parser) (mapcar #'directives:ensure-directive directives))
+  ;; FIXME: Possible user-error trap: catchall directives like the paragraph must be
+  ;;        last, and there should not be any duplicates.
+  (dolist (directive disabled-directives)
+    (setf (directives:enabled-p (directive directive parser)) NIL)))
 
 (defmethod label ((label string) (parser parser))
   (gethash label (label-table parser)))
@@ -44,6 +51,12 @@
 (defmethod (setf label) ((value null) (label string) (parser parser))
   (remhash label (label-table parser))
   NIL)
+
+(defmethod directive ((name string) (parser parser))
+  (directive (find-symbol (string-upcase name) '#:org.shirakumo.markless.directives) parser))
+
+(defmethod directive ((name symbol) (parser parser))
+  (find name (directives parser) :key #'type-of))
 
 (defmethod evaluate-instruction ((parser parser) instruction)
   (error "FIXME: custom condition"))
@@ -70,14 +83,16 @@
                         (input parser))))
 
 (defmethod evaluate-instruction ((parser parser) (instruction components:disable-directives))
-  (setf (disabled-directives parser)
-        (union (disabled-directives parser)
-               (components:directives instruction))))
+  (dolist (directive (components:directives instruction))
+    (let ((directive (directive directive parser)))
+      (when directive
+        (setf (directives:enabled-p directive) NIL)))))
 
 (defmethod evaluate-instruction ((parser parser) (instruction components:enable-directives))
-  (setf (disabled-directives parser)
-        (set-difference (disabled-directives parser)
-                        (components:directives instruction))))
+  (dolist (directive (components:directives instruction))
+    (let ((directive (directive directive parser)))
+      (when directive
+        (setf (directives:enabled-p directive) T)))))
 
 (defmethod consume-input ((parser parser))
   (handler-case
@@ -90,15 +105,31 @@
 (defmethod process ((directive null) (parser parser))
   (let ((input (input parser)))
     (cond ((char= #\Return (peek-char NIL input))
+           ;; FIXME: Proper line end handling
            (read-char input))
           (T
-           (let ((directive (make-instance (or (detect-block parser input)
-                                               'directives:paragraph)
-                                           :parser parser)))
-             (vector-push directive (directive-stack parser)))))))
+           (let ((directive (detect-block parser input)))
+             (if directive
+                 (start-directive directive)
+                 (error 'end-of-file)))))))
 
 (defmethod insert-component ((component component) (parser parser))
   )
 
 (defmethod detect-block ((parser parser) input)
-  )
+  ;; FIXME: This could be sped up, of course.
+  (dolist (directive (directives parser))
+    (when (and (enabled-p directive)
+               (typep directive 'directives:block-directive)
+               (detect-block directive input))
+      (return directive))))
+
+(defmethod detect-inline ((parser parser) input)
+  (dolist (directive (directives parser))
+    (when (and (enabled-p directive)
+               (typep directive 'directives:inline-directive)
+               (detect-inline directive input))
+      (return directive))))
+
+(defmethod start-directive :after (directive (parser parser))
+  (vector-push directive (directive-stack parser)))
