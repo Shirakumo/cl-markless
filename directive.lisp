@@ -19,3 +19,9 @@
 
 (defclass inline-directive (directive)
   ())
+
+(defclass paragraph (directive)
+  ())
+
+(defclass header (directive)
+  ())

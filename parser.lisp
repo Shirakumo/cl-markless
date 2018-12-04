@@ -32,7 +32,7 @@
    (label-table :initform (make-hash-table :test 'equalp) :accessor label-table)
    (directive-stack :accessor directive-stack)
    (input :initarg :input :initform (error "STREAM required") :accessor input)
-   (output :initarg :output :initform (make-instance 'root-component) :accessor output)))
+   (output :initarg :output :initform (make-instance 'components:root-component) :accessor output)))
 
 (defmethod initialize-instance :after ((parser parser) &key (stack-depth-limit 32) (directives *default-directives*) disabled-directives)
   (setf (directive-stack parser) (make-array stack-depth-limit :fill-pointer T))
@@ -45,7 +45,7 @@
 (defmethod label ((label string) (parser parser))
   (gethash label (label-table parser)))
 
-(defmethod (setf label) ((value component) (label string) (parser parser))
+(defmethod (setf label) ((value components:component) (label string) (parser parser))
   (setf (gethash label (label-table parser)) value))
 
 (defmethod (setf label) ((value null) (label string) (parser parser))
@@ -95,12 +95,15 @@
         (setf (directives:enabled-p directive) T)))))
 
 (defmethod consume-input ((parser parser))
-  (handler-case
-      (loop (loop for directive across (directive-stack parser)
-                  do (process directive parser))
-            (process NIL parser))
-    (end-of-file (e)
-      (declare (ignore e)))))
+  (let ((stack (directive-stack parser)))
+    (handler-case
+        (loop (loop for i from 0 below (length stack)
+                    do (unless (process (aref stack i) parser)
+                         (setf (fill-pointer stack) i)
+                         (return)))
+              (process NIL parser))
+      (end-of-file (e)
+        (declare (ignore e))))))
 
 (defmethod process ((directive null) (parser parser))
   (let ((input (input parser)))
@@ -113,7 +116,7 @@
                  (start-directive directive)
                  (error 'end-of-file)))))))
 
-(defmethod insert-component ((component component) (parser parser))
+(defmethod insert-component ((component components:component) (parser parser))
   )
 
 (defmethod detect-block ((parser parser) input)
