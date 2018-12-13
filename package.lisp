@@ -72,7 +72,8 @@
    #:ensure-directive
    #:block-directive
    #:inline-directive
-   #:paragraph))
+   #:paragraph
+   #:dispatch))
 
 (defpackage #:cl-markless
   (:nicknames #:org.shirakumo.markless)
