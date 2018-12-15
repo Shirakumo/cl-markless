@@ -18,6 +18,9 @@
 (defclass parent-component (component)
   ((children :initarg :children :initform (make-array 0 :adjustable T :fill-pointer T) :accessor children)))
 
+(defmethod enter (thing (parent parent-component))
+  (cl:vector-push-extend thing (children parent)))
+
 (defclass root-component (parent-component)
   ())
 

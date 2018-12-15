@@ -6,52 +6,53 @@
 
 (in-package #:org.shirakumo.markless)
 
-(defparameter *default-directives* ())
+(defparameter *default-directives*
+  '(directives:paragraph
+    directives:blockquote
+    directives:unordered-list
+    directives:ordered-list
+    directives:header
+    directives:code-block
+    directives:instruction
+    directives:comment
+    directives:embed
+    directives:footnote))
 
 (defun compile-dispatch-table (directives)
-  (labels ((make-table (candidates i)
-             (loop with table = (make-hash-table :test #+sbcl 'eq #-sbcl 'eql :size (1+ (length candidates)) :rehash-threshold 1)
-                   for candidate in canditates
-                   do (push candidate (gethash (char (car candidate) i) table))
-                   finally (return (fill-table table (1+ i)))))
-           (fill-table (table i)
-             (loop for candidates being the hash-values of table
-                   do (setf (gethash key table)
-                            ;; If we have multiples, deepen the dispatch.
-                            (if (rest candidates)
-                                (make-table candidates i)
-                                (cdr (first candidates))))
-                   finally (return table))))
-    (make-table (loop for directive in directives
-                      collect (cons (directives:dispatch directive) directive))
-                0)))
+  (let ((dispatch-depth (if directives
+                            (length (directives:dispatch (first directives)))
+                            0)))
+    (labels ((make-table (candidates i)
+               (loop with table = (make-hash-table :test #+sbcl 'eq #-sbcl 'eql :size (1+ (length candidates)) :rehash-threshold 1)
+                     for candidate in candidates
+                     do (loop for char across (aref (car candidate) i)
+                              do (push candidate (gethash char table)))
+                     finally (return (fill-table table (1+ i)))))
+             (fill-table (table i)
+               (loop for key being the hash-keys of table
+                     for candidates being the hash-values of table
+                     do (setf (gethash key table)
+                              (if (< i dispatch-depth)
+                                  (make-table candidates i)
+                                  (cdr (first candidates))))
+                     finally (return table))))
+      (make-table (loop for directive in directives
+                        collect (cons (directives:dispatch directive) directive))
+                  0))))
 
 (defun dispatch (table stream)
+  (declare (type hash-table table))
+  (declare (type stream stream))
   (let ((consumed (make-array 3 :element-type 'character :fill-pointer 0)))
     (loop with target = table
-          for char of-type character = (read-char stream)
+          for char of-type character = (read-char stream NIL #\Nul)
           do (vector-push char consumed)
-             (setf target (gethash char table))
-          until (typep target 'directives:directive)
-          finally (return (values target consumed)))))
-
-(defun parse (thing &rest initargs &key (parser-class 'parser) &allow-other-keys)
-  (let ((initargs (copy-list initargs)))
-    (remhash :parser-class initargs)
-    (%parse thing class initargs)))
-
-(defmethod %parse ((string string) class initargs)
-  (%parse (make-string-input-stream string) class initargs))
-
-(defmethod %parse ((pathname pathname) class initargs)
-  (with-open-file (stream pathname :element-type 'character)
-    (%parse stream class initargs)))
-
-(defmethod %parse ((stream stream) class initargs)
-  (let ((parser (apply #'make-instance class :input stream initargs)))
-    (consume-input parser)
-    (values (output parser)
-            parser)))
+             (setf target (gethash char target))
+          while (typep target 'hash-table)
+          finally (return (values
+                           (when (and (not (null target)) (directives:enabled-p target))
+                             target)
+                           consumed)))))
 
 (defclass parser ()
   ((line-break-mode :initarg :line-break-mode :initform :unescaped :accessor line-break-mode)
@@ -60,8 +61,8 @@
    (directive-stack :accessor directive-stack)
    (block-dispatch-table :accessor block-dispatch-table)
    (inline-dispatch-table :accessor inline-dispatch-table)
-   (input :initarg :input :initform (error "STREAM required") :accessor input)
-   (output :initarg :output :initform (make-instance 'components:root-component) :accessor output)))
+   (input :initform NIL :accessor input)
+   (output :initform NIL :accessor output)))
 
 (defmethod initialize-instance :after ((parser parser) &key (stack-depth-limit 32) (directives *default-directives*) disabled-directives)
   (setf (directive-stack parser) (make-array stack-depth-limit :fill-pointer T))
@@ -91,6 +92,14 @@
 
 (defmethod directives-of (type (parser parser))
   (remove-if-not (lambda (d) (typep d type)) (directives parser)))
+
+(defmethod disable ((parser parser) test)
+  (dolist (directive (directives parser) parser)
+    (setf (directives:enabled-p directive) (funcall test directive))))
+
+(defmethod enable ((parser parser) test)
+  (dolist (directive (directives parser) parser)
+    (setf (directives:enabled-p directive) (funcall test directive))))
 
 (defmethod evaluate-instruction ((parser parser) instruction)
   (error "FIXME: custom condition"))
@@ -132,9 +141,11 @@
   (let ((stack (directive-stack parser)))
     (handler-case
         (loop (loop for i from 0 below (length stack)
-                    do (unless (process (aref stack i) parser)
+                    for directive = (aref stack i)
+                    do (unless (process directive parser)
+                         (loop for i downfrom (1- (length stack)) to i
+                               do (leave directive))
                          (setf (fill-pointer stack) i)
-                         ;; FIXME: Close associated block
                          (return)))
               (process NIL parser))
       (end-of-file (e)
@@ -146,23 +157,15 @@
            ;; FIXME: Proper line end handling
            (read-char input))
           (T
-           (let ((directive (detect-block parser input)))
-             (if directive
-                 (start-directive directive)
-                 (error 'end-of-file)))))))
+           (multiple-value-bind (directive rest) (dispatch table input)
+             (let ((result (directives:enter
+                            (or directive (gethash #\Space (gethash #\Space (block-dispatch-table parser))))
+                            parser
+                            rest)))
+               ))))))
 
 (defmethod insert-component ((component components:component) (parser parser))
   )
 
-(defmethod detect-block ((parser parser) input)
-  )
-
-(defmethod detect-inline ((parser parser) input)
-  (dolist (directive (directives parser))
-    (when (and (enabled-p directive)
-               (typep directive 'directives:inline-directive)
-               (detect-inline directive input))
-      (return directive))))
-
-(defmethod start-directive :after (directive (parser parser))
+(defmethod directives:enter :after (directive (parser parser) rest)
   (vector-push directive (directive-stack parser)))

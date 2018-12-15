@@ -6,7 +6,7 @@
 
 (defpackage #:cl-markless-components
   (:nicknames #:org.shirakumo.markless.components)
-  (:use) (:import-from #:cl #:defclass)
+  (:use) (:import-from #:cl #:defclass #:defmethod)
   (:export
    #:component
    #:unit-component
@@ -14,6 +14,7 @@
    #:text
    #:parent-component
    #:children
+   #:enter
    #:root-component
    #:paragraph
    #:blockquote
@@ -66,14 +67,25 @@
 (defpackage #:cl-markless-directives
   (:nicknames #:org.shirakumo.markless.directives)
   (:use #:cl)
+  (:local-nicknames
+   (#:components #:org.shirakumo.markless.components))
   (:export
    #:directive
    #:enabled-p
    #:ensure-directive
    #:block-directive
    #:inline-directive
+   #:dispatch
    #:paragraph
-   #:dispatch))
+   #:blockquote
+   #:unordered-list
+   #:ordered-list
+   #:header
+   #:code-block
+   #:instruction
+   #:comment
+   #:embed
+   #:footnote))
 
 (defpackage #:cl-markless
   (:nicknames #:org.shirakumo.markless)
