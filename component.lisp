@@ -28,7 +28,7 @@
   ())
 
 (defclass blockquote (parent-component)
-  ())
+  ((source :initarg :source :initform NIL :accessor source)))
 
 (defclass list (parent-component)
   ())
@@ -40,7 +40,7 @@
   ())
 
 (defclass ordered-list-item (list-item)
-  ())
+  ((number :initarg :number :initform 0 :accessor number)))
 
 (defclass unordered-list (list)
   ())
@@ -55,7 +55,8 @@
   ())
 
 (defclass code-block (text-component)
-  ())
+  ((language :initarg :language :initform NIL :accessor language)
+   (options :initarg :options :initform () :accessor options)))
 
 (defclass instruction ()
   ())

@@ -18,15 +18,19 @@
    #:root-component
    #:paragraph
    #:blockquote
+   #:source
    #:list
    #:list-item
    #:ordered-list
    #:ordered-list-item
+   #:number
    #:unordered-list
    #:unordered-list-item
    #:header
    #:horizontal-rule
    #:code-block
+   #:language
+   #:options
    #:instruction
    #:message-instruction
    #:message

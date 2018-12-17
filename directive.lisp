@@ -17,9 +17,6 @@
 (defmethod dispatch ((_ directive))
   (error "FIXME: better error"))
 
-(defmethod enter ((_ directive) parser rest)
-  (error "FIXME: better error"))
-
 (defclass block-directive (directive)
   ())
 
@@ -31,15 +28,6 @@
 
 (defmethod dispatch ((_ paragraph))
   #(" " " "))
-
-(defmethod enter ((paragraph paragraph) (parser parser) rest)
-  (disable parser (lambda (d) (typep d 'block-directive)))
-  (let ((para (make-instance 'components:paragraph)))
-    (components:enter rest para)
-    para))
-
-(defmethod leave ((paragraph paragraph) (parser parser))
-  (enable parser (constantly T)))
 
 (defclass blockquote (block-directive)
   ())
@@ -81,7 +69,7 @@
   ())
 
 (defmethod dispatch ((_ comment))
-  #(";" " "))
+  #(";" "; "))
 
 (defclass embed (block-directive)
   ())

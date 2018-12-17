@@ -58,14 +58,12 @@
   ((line-break-mode :initarg :line-break-mode :initform :unescaped :accessor line-break-mode)
    (directives :initform () :accessor directives)
    (label-table :initform (make-hash-table :test 'equalp) :accessor label-table)
-   (directive-stack :accessor directive-stack)
    (block-dispatch-table :accessor block-dispatch-table)
    (inline-dispatch-table :accessor inline-dispatch-table)
    (input :initform NIL :accessor input)
    (output :initform NIL :accessor output)))
 
 (defmethod initialize-instance :after ((parser parser) &key (stack-depth-limit 32) (directives *default-directives*) disabled-directives)
-  (setf (directive-stack parser) (make-array stack-depth-limit :fill-pointer T))
   (setf (directives parser) (mapcar #'directives:ensure-directive directives))
   ;; FIXME: Possible user-error trap: catchall directives like the paragraph must be
   ;;        last, and there should not be any duplicates.
@@ -136,36 +134,3 @@
     (let ((directive (directive directive parser)))
       (when directive
         (setf (directives:enabled-p directive) T)))))
-
-(defmethod consume-input ((parser parser))
-  (let ((stack (directive-stack parser)))
-    (handler-case
-        (loop (loop for i from 0 below (length stack)
-                    for directive = (aref stack i)
-                    do (unless (process directive parser)
-                         (loop for i downfrom (1- (length stack)) to i
-                               do (leave directive))
-                         (setf (fill-pointer stack) i)
-                         (return)))
-              (process NIL parser))
-      (end-of-file (e)
-        (declare (ignore e))))))
-
-(defmethod process ((directive null) (parser parser))
-  (let ((input (input parser)))
-    (cond ((char= #\Return (peek-char NIL input))
-           ;; FIXME: Proper line end handling
-           (read-char input))
-          (T
-           (multiple-value-bind (directive rest) (dispatch table input)
-             (let ((result (directives:enter
-                            (or directive (gethash #\Space (gethash #\Space (block-dispatch-table parser))))
-                            parser
-                            rest)))
-               ))))))
-
-(defmethod insert-component ((component components:component) (parser parser))
-  )
-
-(defmethod directives:enter :after (directive (parser parser) rest)
-  (vector-push directive (directive-stack parser)))
