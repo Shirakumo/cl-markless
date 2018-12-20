@@ -83,10 +83,10 @@
 (defclass directives (instruction)
   ((directives :initarg :directives :initform (error "DIRECTIVES required.") :accessor directives)))
 
-(defclass disable-directives (directives-instruction)
+(defclass disable (directives-instruction)
   ())
 
-(defclass enable-directives (directives-instruction)
+(defclass enable (directives-instruction)
   ())
 
 (defclass comment (text-component)

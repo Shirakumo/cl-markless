@@ -43,8 +43,8 @@
    #:include
    #:file
    #:directives
-   #:disable-directives
-   #:enable-directives
+   #:disable
+   #:enable
    #:comment
    #:embed
    #:target
@@ -68,33 +68,9 @@
    #:footnote-reference
    #:target))
 
-(defpackage #:cl-markless-directives
-  (:nicknames #:org.shirakumo.markless.directives)
-  (:use #:cl)
-  (:local-nicknames
-   (#:components #:org.shirakumo.markless.components))
-  (:export
-   #:directive
-   #:enabled-p
-   #:ensure-directive
-   #:block-directive
-   #:inline-directive
-   #:dispatch
-   #:paragraph
-   #:blockquote
-   #:unordered-list
-   #:ordered-list
-   #:header
-   #:code-block
-   #:instruction
-   #:comment
-   #:embed
-   #:footnote))
-
 (defpackage #:cl-markless
   (:nicknames #:org.shirakumo.markless)
   (:use #:cl)
   (:local-nicknames
-   (#:components #:org.shirakumo.markless.components)
-   (#:directives #:org.shirakumo.markless.directives))
+   (#:components #:org.shirakumo.markless.components))
   (:export))

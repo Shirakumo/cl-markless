@@ -15,7 +15,7 @@
   :components ((:file "package")
                (:file "conditions")
                (:file "component")
-               (:file "directive")
                (:file "parser")
+               (:file "directive")
                (:file "documentation"))
   :depends-on (:documentation-utils))
