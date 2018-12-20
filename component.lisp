@@ -6,6 +6,9 @@
 
 (in-package #:org.shirakumo.markless.components)
 
+(defvar *instructions*
+  '(set info warning error include disable enable))
+
 (defclass component ()
   ())
 
@@ -71,7 +74,7 @@
   ((variable :initarg :variable :initform (cl:error "VARIABLE required") :accessor variable)
    (value :initarg :value :initform (cl:error "VALUE required") :accessor value)))
 
-(defclass message (message-instruction)
+(defclass info (message-instruction)
   ())
 
 (defclass warning (message-instruction)

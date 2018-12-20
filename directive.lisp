@@ -155,6 +155,7 @@
     (commit (make-instance 'components:header :depth depth) parser)
     (+ cursor 1 depth)))
 
+;; FIXME: label table
 (defmethod invoke ((_ header) parser line cursor)
   (read-inline parser line cursor))
 
@@ -170,11 +171,56 @@
 (defmethod prefix ((_ instruction))
   #("!" " "))
 
+(defmethod begin ((_ instruction) parser line cursor)
+  (incf cursor 2)
+  (let* ((typename (with-output-to-string (stream)
+                     (loop for char = (aref line cursor)
+                           while (char/= #\  char)
+                           do (write-char char stream)
+                              (incf cursor))))
+         (type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*)))))
+    (unless (and type (subtypep type 'components:instruction))
+      (error "FIXME: better error"))
+    (parse-instruction type line (1+ cursor)))
+  (length line))
+
+(defmethod invoke ((_ instruction) parser line cursor)
+  (evaluate-instruction (car (component-stack parser)) parser))
+
+(defmethod parse-instruction ((type (eql 'components:set)) component line cursor)
+  )
+
+(defmethod parse-instruction ((type (eql 'components:info)) component line cursor)
+  (make-instance type :message (subseq line cursor)))
+
+(defmethod parse-instruction ((type (eql 'components:warning)) component line cursor)
+  (make-instance type :message (subseq line cursor)))
+
+(defmethod parse-instruction ((type (eql 'components:error)) component line cursor)
+  (make-instance type :message (subseq line cursor)))
+
+(defmethod parse-instruction ((type (eql 'components:include)) component line cursor)
+  (make-instance type :file (subseq line cursor)))
+
+(defmethod parse-instruction ((type (eql 'components:enable)) component line cursor)
+  )
+
+(defmethod parse-instruction ((type (eql 'components:disable)) component line cursor)
+  )
+
 (defclass comment (singular-line-directive)
   ())
 
 (defmethod prefix ((_ comment))
   #(";" "; "))
+
+(defmethod begin ((_ comment) parser line cursor)
+  (loop while (char= #\; (aref line cursor))
+        do (incf cursor))
+  (commit (make-instance 'components:comment :text (subseq line cursor)) parser)
+  (length line))
+
+(defmethod invoke ((_ comment) parser line cursor))
 
 (defclass embed (singular-line-directive)
   ())

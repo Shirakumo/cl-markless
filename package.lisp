@@ -9,6 +9,7 @@
   (:use #:cl)
   (:shadow #:list #:number #:set #:variable #:warning #:error #:float)
   (:export
+   #:*instructions*
    #:component
    #:unit-component
    #:text-component
@@ -36,7 +37,7 @@
    #:options
    #:instruction
    #:message-instruction
-   #:message
+   #:info
    #:set
    #:variable
    #:value

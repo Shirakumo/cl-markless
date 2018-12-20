@@ -30,6 +30,13 @@
     footnote-reference
     newline))
 
+(defun to-readtable-case (string case)
+  (ecase case
+    (:downcase (string-downcase string))
+    (:upcase (string-upcase string))
+    (:preserve string)
+    (:invert (error "FIXME: Implement INVERT read-case."))))
+
 (defun compile-dispatch-table (directives)
   ;; FIXME: catch directives that would clash
   (labels ((make-table (candidates i)
@@ -111,9 +118,6 @@
   (remhash label (label-table parser))
   NIL)
 
-(defmethod directive ((name string) (parser parser))
-  (directive (find-symbol (string-upcase name) '#:org.shirakumo.markless.directives) parser))
-
 (defmethod directive ((name symbol) (parser parser))
   (find name (directives parser) :key #'type-of))
 
@@ -128,37 +132,37 @@
   (dolist (directive (directives parser) parser)
     (setf (enabled-p directive) (funcall test directive))))
 
-(defmethod evaluate-instruction ((parser parser) instruction)
+(defmethod evaluate-instruction (instruction (parser parser))
   (error "FIXME: custom condition"))
 
-(defmethod evaluate-instruction ((parser parser) (instruction components:set))
+(defmethod evaluate-instruction ((instruction components:set) (parser parser))
   (case (components:variable instruction)
     (:line-break-mode)
     (T (error "FIXME: custom condition"))))
 
-(defmethod evaluate-instruction ((parser parser) (instruction components:message))
+(defmethod evaluate-instruction ((instruction components:message) (parser parser))
   (format *error-output* "~&[INFO ] ~a~%" (components:message instruction)))
 
-(defmethod evaluate-instruction ((parser parser) (instruction components:warning))
+(defmethod evaluate-instruction ((instruction components:warning) (parser parser))
   (format *error-output* "~&[WARN ] ~a~%" (components:message instruction))
   (warn "FIXME: custom condition"))
 
-(defmethod evaluate-instruction ((parser parser) (instruction components:error))
+(defmethod evaluate-instruction ((instruction components:error) (parser parser))
   (format *error-output* "~&[ERROR] ~a~%" (components:message instruction))
   (error "FIXME: custom condition"))
 
-(defmethod evaluate-instruction ((parser parser) (instruction components:include))
+(defmethod evaluate-instruction ((instruction components:include) (parser parser))
   (setf (input parser) (make-concatenated-stream
                         (open (components:file instruction) :element-type 'character)
                         (input parser))))
 
-(defmethod evaluate-instruction ((parser parser) (instruction components:disable))
+(defmethod evaluate-instruction ((instruction components:disable) (parser parser))
   (dolist (directive (components:directives instruction))
     (let ((directive (directive directive parser)))
       (when directive
         (setf (enabled-p directive) NIL)))))
 
-(defmethod evaluate-instruction ((parser parser) (instruction components:enable))
+(defmethod evaluate-instruction ((instruction components:enable) (parser parser))
   (dolist (directive (components:directives instruction))
     (let ((directive (directive directive parser)))
       (when directive
