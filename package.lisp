@@ -6,12 +6,14 @@
 
 (defpackage #:cl-markless-components
   (:nicknames #:org.shirakumo.markless.components)
-  (:use) (:import-from #:cl #:defclass #:defmethod)
+  (:use #:cl)
+  (:shadow #:list #:number #:set #:variable #:warning #:error #:float)
   (:export
    #:component
    #:unit-component
    #:text-component
    #:text
+   #:block-component
    #:parent-component
    #:children
    #:enter
@@ -27,6 +29,7 @@
    #:unordered-list
    #:unordered-list-item
    #:header
+   #:depth
    #:horizontal-rule
    #:code-block
    #:language

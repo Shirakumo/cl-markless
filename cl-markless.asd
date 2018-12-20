@@ -15,6 +15,7 @@
   :components ((:file "package")
                (:file "conditions")
                (:file "component")
+               (:file "printer")
                (:file "parser")
                (:file "directive")
                (:file "documentation"))

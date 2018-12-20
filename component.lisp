@@ -12,28 +12,31 @@
 (defclass unit-component (component)
   ())
 
-(defclass text-component ()
-  ((text :initarg :text :initform (error "TEXT required") :accessor text)))
+(defclass text-component (component)
+  ((text :initarg :text :initform (cl:error "TEXT required") :accessor text)))
 
 (defclass parent-component (component)
   ((children :initarg :children :initform (make-array 0 :adjustable T :fill-pointer T) :accessor children)))
 
 (defmethod enter (thing (parent parent-component))
-  (cl:vector-push-extend thing (children parent)))
+  (vector-push-extend thing (children parent)))
+
+(defclass block-component (component)
+  ())
 
 (defclass root-component (parent-component)
   ())
 
-(defclass paragraph (parent-component)
+(defclass paragraph (parent-component block-component)
   ())
 
-(defclass blockquote (parent-component)
+(defclass blockquote (parent-component block-component)
   ((source :initarg :source :initform NIL :accessor source)))
 
 (defclass list (parent-component)
   ())
 
-(defclass list-item (parent-component)
+(defclass list-item (parent-component block-component)
   ())
 
 (defclass ordered-list (list)
@@ -48,25 +51,25 @@
 (defclass unordered-list-item (list-item)
   ())
 
-(defclass header (parent-component)
+(defclass header (parent-component block-component)
+  ((depth :initarg :depth :initform 0 :accessor depth)))
+
+(defclass horizontal-rule (unit-component block-component)
   ())
 
-(defclass horizontal-rule (unit-component)
-  ())
-
-(defclass code-block (text-component)
+(defclass code-block (text-component block-component)
   ((language :initarg :language :initform NIL :accessor language)
    (options :initarg :options :initform () :accessor options)))
 
-(defclass instruction ()
+(defclass instruction (block-component)
   ())
 
-(defclass message-instruction ()
-  ((message :initarg :message :initform (error "MESSAGE required") :accessor message)))
+(defclass message-instruction (instruction)
+  ((message :initarg :message :initform (cl:error "MESSAGE required") :accessor message)))
 
 (defclass set (instruction)
-  ((variable :initarg :variable :initform (error "VARIABLE required") :accessor variable)
-   (value :initarg :value :initform (error "VALUE required") :accessor value)))
+  ((variable :initarg :variable :initform (cl:error "VARIABLE required") :accessor variable)
+   (value :initarg :value :initform (cl:error "VALUE required") :accessor value)))
 
 (defclass message (message-instruction)
   ())
@@ -78,10 +81,10 @@
   ())
 
 (defclass include (instruction)
-  ((file :initarg :file :initform (error "FILE required") :accessor file)))
+  ((file :initarg :file :initform (cl:error "FILE required") :accessor file)))
 
-(defclass directives (instruction)
-  ((directives :initarg :directives :initform (error "DIRECTIVES required.") :accessor directives)))
+(defclass directives-instruction (instruction)
+  ((directives :initarg :directives :initform (cl:error "DIRECTIVES required.") :accessor directives)))
 
 (defclass disable (directives-instruction)
   ())
@@ -89,11 +92,11 @@
 (defclass enable (directives-instruction)
   ())
 
-(defclass comment (text-component)
+(defclass comment (text-component block-component)
   ())
 
-(defclass embed (unit-component)
-  ((target :initarg :target :initform (error "TARGET required") :accessor target)
+(defclass embed (unit-component block-component)
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)
    (float :initarg :float :initform NIL :accessor float)
    (width :initarg :width :initform NIL :accessor width)
    (height :initarg :height :initform NIL :accessor height)))
@@ -107,8 +110,8 @@
 (defclass audio (embed)
   ())
 
-(defclass footnote (parent-component)
-  ())
+(defclass footnote (parent-component block-component)
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
 (defclass bold (parent-component)
   ())
@@ -138,4 +141,4 @@
   ((options :initarg :options :initform () :accessor options)))
 
 (defclass footnote-reference (unit-component)
-  ((target :initarg :target :initform (error "TARGET required") :accessor target)))
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
