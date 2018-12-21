@@ -246,7 +246,11 @@
              (incf stack-pointer))
     (loop for entry = (aref stack (1- (length stack)))
           do (setf cursor (invoke (stack-entry-directive entry) parser line cursor))
-          while (< cursor (length line)))))
+          while (< cursor (length line)))
+    ;; FIXME:
+    ;; (when (eq :show (line-break-mode parser))
+    ;;   (write-char #\Newline buffer))
+    ))
 
 (defun commit (directive component parser)
   (let* ((stack (stack parser))
@@ -303,8 +307,6 @@
                         (incf cursor))))))
       (loop while (< cursor (length line))
             do (read-inline-char))
-      (when (eq :show (line-break-mode parser))
-        (write-char #\Newline buffer))
       (commit-buffer)
       cursor)))
 
