@@ -28,7 +28,17 @@
   ())
 
 (defclass root-component (parent-component)
-  ())
+  ((labels :initform (make-hash-table :test 'equalp) :accessor labels)))
+
+(defmethod label ((label string) (root root-component))
+  (gethash label (labels root)))
+
+(defmethod (setf label) ((value component) (label string) (root root-component))
+  (setf (gethash label (labels root)) value))
+
+(defmethod (setf label) ((value null) (label string) (root root-component))
+  (remhash label (labels root))
+  NIL)
 
 (defclass paragraph (parent-component block-component)
   ())

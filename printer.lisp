@@ -39,7 +39,9 @@
 (defvar *level* 0)
 (define-output :debug (c s)
   (components:parent-component ()
-   (format s "~&~v@{|  ~}/~a" *level* (type-of c)))
+                               (format s "~&~v@{|  ~}/~a" *level* (type-of c))
+                               (let ((*level* (1+ *level*)))
+                                 (output-children)))
 
   (components:component ()
    (format s "~&~v@{|  ~} ~a" *level* (type-of c)))

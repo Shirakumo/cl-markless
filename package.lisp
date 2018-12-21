@@ -7,7 +7,7 @@
 (defpackage #:cl-markless-components
   (:nicknames #:org.shirakumo.markless.components)
   (:use #:cl)
-  (:shadow #:list #:number #:set #:variable #:warning #:error #:float)
+  (:shadow #:list #:number #:set #:variable #:warning #:error #:float #:labels)
   (:export
    #:*instructions*
    #:component
@@ -19,6 +19,8 @@
    #:children
    #:enter
    #:root-component
+   #:labels
+   #:label
    #:paragraph
    #:blockquote
    #:source
