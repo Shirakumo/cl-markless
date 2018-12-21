@@ -227,8 +227,9 @@
                (return))
              (setf cursor next-cursor)
              (incf stack-pointer))
-    (let ((entry (aref stack (1- stack-pointer))))
-      (invoke (stack-entry-directive entry) parser line cursor))))
+    (loop while (< cursor (length line))
+          for entry = (aref stack (1- (length stack)))
+          do (setf cursor (invoke (stack-entry-directive entry) parser line cursor)))))
 
 (defun commit (directive component parser)
   (let* ((stack (stack parser))
@@ -240,8 +241,7 @@
   (let* ((table (block-dispatch-table parser))
          (directive (or (dispatch table line cursor)
                         (gethash #\Nul table))))
-    (setf cursor (begin directive parser line cursor))
-    (invoke directive parser line cursor)))
+    (setf cursor (begin directive parser line cursor))))
 
 (defun read-inline (parser line cursor)
   (let ((buffer (make-string-output-stream))
@@ -264,7 +264,8 @@
             do (read-inline-char))
       (when (eq :show (line-break-mode parser))
         (write-char #\Newline buffer))
-      (commit-buffer))))
+      (commit-buffer)
+      cursor)))
 
 (defmacro match! (prefix line cursor)
   (let ((lineg (gensym "LINE")) (cursorg (gensym "CURSOR")))
