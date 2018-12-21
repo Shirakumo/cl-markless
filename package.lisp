@@ -20,8 +20,11 @@
    #:enter
    #:root-component
    #:labels
+   #:author
+   #:copyright
    #:label
    #:paragraph
+   #:indentation
    #:blockquote
    #:source
    #:list

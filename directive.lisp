@@ -34,6 +34,8 @@
 (defclass block-directive (directive)
   ())
 
+(defmethod end ((_ block-directive) component parser))
+
 (defclass singular-line-directive (block-directive)
   ())
 
@@ -43,6 +45,12 @@
 (defclass inline-directive (directive)
   ())
 
+(defmethod consume-prefix ((_ inline-directive) component parser line cursor)
+  cursor)
+
+(defmethod end ((_ inline-directive) component parser)
+  (change-class component 'components:parent-component))
+
 (defclass paragraph (block-directive)
   ())
 
@@ -50,16 +58,30 @@
   #())
 
 (defmethod begin ((_ paragraph) parser line cursor)
-  (commit _ (make-instance 'components:paragraph) parser)
-  cursor)
+  (let ((end cursor))
+    (loop while (and (< end (length line))
+                     (char= #\  (aref line end)))
+          do (incf end))
+    (commit _ (make-instance 'components:paragraph :indentation (- end cursor)) parser)
+    end))
 
 (defmethod consume-prefix ((_ paragraph) component parser line cursor)
-  (when (and (< cursor (length line))
-             (eql _ (dispatch (block-dispatch-table parser) line cursor)))
-    cursor))
+  (let ((end cursor))
+    (loop while (and (< end (length line))
+                     (char= #\  (aref line end)))
+          do (incf end))
+    (when (and (< end (length line))
+               (= end (+ cursor (components:indentation component)))
+               (not
+                (and (= end cursor)
+                     (not (eql _ (dispatch (block-dispatch-table parser) line end))))))
+      end)))
 
 (defmethod invoke ((_ paragraph) parser line cursor)
-  (read-inline parser line cursor))
+  (let ((inner (dispatch (block-dispatch-table parser) line cursor)))
+    (if (and inner (not (eq inner _)))
+        (begin inner parser line cursor)
+        (read-inline parser line cursor))))
 
 (defclass blockquote (block-directive)
   ())
@@ -115,8 +137,10 @@
           do (incf end))
     (cond ((or (<= (length line) end)
                (char/= #\. (aref line end)))
-           ;; We did a bad match, pretend we're a paragraph.
-           (begin (directive 'paragraph parser) parser line cursor))
+           ;; We did a bad match, pretend we're a paragraph and skip the match.
+           (let ((component (make-instance 'components:paragraph)))
+             (commit (directive 'paragraph parser) component parser)
+             (vector-push-extend (subseq line cursor (1+ end)) (components:children component))))
           (T
            ;; Construct item, just like for the ordered list.
            (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
@@ -128,8 +152,8 @@
                (setf container (make-instance 'components:ordered-list))
                (vector-push-extend container children))
              (vector-push-extend item (components:children container))
-             (stack-push _ item (stack parser))
-             (+ end 1))))))
+             (stack-push _ item (stack parser)))))
+    (+ end 1)))
 
 (defmethod invoke ((_ ordered-list) parser line cursor)
   (read-block parser line cursor))
@@ -172,41 +196,40 @@
   #("!" " "))
 
 (defmethod begin ((_ instruction) parser line cursor)
-  (incf cursor 2)
-  (let* ((typename (with-output-to-string (stream)
-                     (loop for char = (aref line cursor)
-                           while (char/= #\  char)
-                           do (write-char char stream)
-                              (incf cursor))))
-         (type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*)))))
-    (unless (and type (subtypep type 'components:instruction))
-      (error "FIXME: better error"))
-    (parse-instruction type line (1+ cursor)))
-  (length line))
+  (multiple-value-bind (typename cursor) (read-space-delimited line (+ cursor 2))
+    (let ((type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
+                             '#:org.shirakumo.markless.components)))
+      (unless (and type (subtypep type 'components:instruction))
+        (error "FIXME: better error"))
+      (commit _ (parse-instruction type line (1+ cursor)) parser))
+    cursor))
 
-(defmethod invoke ((_ instruction) parser line cursor)
-  (evaluate-instruction (car (component-stack parser)) parser))
+(defmethod parse-instruction ((type (eql 'components:set)) line cursor)
+  (multiple-value-bind (variable cursor) (read-space-delimited line cursor)
+    (let ((value (subseq line (1+ cursor))))
+      (make-instance type :variable variable :value value))))
 
-(defmethod parse-instruction ((type (eql 'components:set)) component line cursor)
-  )
-
-(defmethod parse-instruction ((type (eql 'components:info)) component line cursor)
+(defmethod parse-instruction ((type (eql 'components:info)) line cursor)
   (make-instance type :message (subseq line cursor)))
 
-(defmethod parse-instruction ((type (eql 'components:warning)) component line cursor)
+(defmethod parse-instruction ((type (eql 'components:warning)) line cursor)
   (make-instance type :message (subseq line cursor)))
 
-(defmethod parse-instruction ((type (eql 'components:error)) component line cursor)
+(defmethod parse-instruction ((type (eql 'components:error)) line cursor)
   (make-instance type :message (subseq line cursor)))
 
-(defmethod parse-instruction ((type (eql 'components:include)) component line cursor)
+(defmethod parse-instruction ((type (eql 'components:include)) line cursor)
   (make-instance type :file (subseq line cursor)))
 
-(defmethod parse-instruction ((type (eql 'components:enable)) component line cursor)
-  )
+(defmethod parse-instruction ((type (eql 'components:enable)) line cursor)
+  (make-instance type :directives (split-string line #\  cursor)))
 
-(defmethod parse-instruction ((type (eql 'components:disable)) component line cursor)
-  )
+(defmethod parse-instruction ((type (eql 'components:disable)) line cursor)
+  (make-instance type :directives (split-string line #\  cursor)))
+
+(defmethod invoke ((_ instruction) parser line cursor)
+  (evaluate-instruction (stack-entry-component (stack-top (stack parser))) parser)
+  (length line))
 
 (defclass comment (singular-line-directive)
   ())
@@ -228,11 +251,53 @@
 (defmethod prefix ((_ embed))
   #("[" " "))
 
+(defmethod begin ((_ embed) parser line cursor)
+  (multiple-value-bind (target cursor) (read-space-delimited line (+ cursor 2))
+    (let ((options (split-string line #\  cursor))
+          (component (make-instance 'components:embed :target target)))
+      (loop for (key val) on options by #'cddr
+            do (cond ((string-equal key "float")
+                      (setf (components:float component)
+                            (cond ((string-equal val "left") :left)
+                                  ((string-equal val "right") :right)
+                                  (T (error "FIXME: better error")))))
+                     ((string-equal key "width")
+                      (setf (components:width component) val))
+                     ((string-equal key "height")
+                      (setf (components:height component) val))
+                     ((and (string= key "]") (null val)))
+                     (T
+                      (error "FIXME: better error"))))
+      (commit _ component parser)
+      (length line))))
+
+(defmethod invoke ((_ embed) parser line cursor))
+
 (defclass footnote (singular-line-directive)
   ())
 
 (defmethod prefix ((_ footnote))
   #("[" "1234567890"))
+
+(defmethod begin ((_ footnote) parser line cursor)
+  (incf cursor)
+  (let ((end cursor))
+    (loop while (and (< end (length line))
+                     (<= (char-code #\0) (char-code (aref line end)) (char-code #\9)))
+          do (incf end))
+    (cond ((or (<= (length line) end)
+               (char/= #\] (aref line end)))
+           ;; Mismatch. Pretend we're a paragraph.
+           (let ((component (make-instance 'components:paragraph)))
+             (commit (directive 'paragraph parser) component parser)
+             (vector-push-extend (subseq line cursor (1+ end)) (components:children component))))
+          (T
+           (let ((target (parse-integer line :start cursor :end end)))
+             (commit _ (make-instance 'components:footnote :target target) parser))))
+    (1+ end)))
+
+(defmethod invoke ((_ footnote) parser line cursor)
+  (read-inline parser line cursor))
 
 ;;;; Inline Directives
 
@@ -241,6 +306,14 @@
 
 (defmethod prefix ((_ bold))
   #("*" "*"))
+
+(defmethod begin ((_ bold) parser line cursor)
+  (commit _ (make-instance 'components:bold) parser)
+  (+ 2 cursor))
+
+(defmethod invoke ((_ bold) parser line cursor)
+  ;; FIXME: find logic for termination
+  (read-inline parser line cursor))
 
 (defclass italic (inline-directive)
   ())

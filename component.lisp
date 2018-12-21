@@ -28,7 +28,9 @@
   ())
 
 (defclass root-component (parent-component)
-  ((labels :initform (make-hash-table :test 'equalp) :accessor labels)))
+  ((labels :initform (make-hash-table :test 'equalp) :accessor labels)
+   (author :initform NIL :accessor author)
+   (copyright :initform NIL :accessor copyright)))
 
 (defmethod label ((label string) (root root-component))
   (gethash label (labels root)))
@@ -41,7 +43,7 @@
   NIL)
 
 (defclass paragraph (parent-component block-component)
-  ())
+  ((indentation :initarg :indentation :initform 0 :accessor indentation)))
 
 (defclass blockquote (parent-component block-component)
   ((source :initarg :source :initform NIL :accessor source)))
