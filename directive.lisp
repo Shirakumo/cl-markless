@@ -94,10 +94,18 @@
   (+ 2 cursor))
 
 (defmethod consume-prefix ((_ blockquote) component parser line cursor)
-  (match! "| " line cursor))
+  (when (and (or (char= #\| (aref line cursor))
+                 (char= #\~ (aref line cursor)))
+             (char= #\  (aref line (+ 1 cursor))))
+    (+ 2 cursor)))
 
 (defmethod invoke ((_ blockquote) parser line cursor)
-  (read-block parser line cursor))
+  (cond ((char/= #\~ (aref line (- cursor 2)))
+         (read-block parser line cursor))
+        ((components:source ))
+      
+      (setf (components:source))
+      ))
 
 (defclass unordered-list (block-directive)
   ())
@@ -118,7 +126,7 @@
     (+ 2 cursor)))
 
 (defmethod invoke ((_ unordered-list) parser line cursor)
-  (read-block parser line cursor))
+  (read-bloc kparser line cursor))
 
 (defmethod consume-prefix ((_ unordered-list) component parser line cursor)
   (match! "  " line cursor))
