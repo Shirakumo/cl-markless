@@ -75,7 +75,7 @@
 (defclass horizontal-rule (unit-component block-component)
   ())
 
-(defclass code-block (text-component block-component)
+(defclass code-block (parent-component block-component)
   ((language :initarg :language :initform NIL :accessor language)
    (options :initarg :options :initform () :accessor options)))
 
@@ -143,7 +143,7 @@
 (defclass strikethrough (parent-component)
   ())
 
-(defclass code (text-component)
+(defclass code (parent-component)
   ())
 
 (defclass subtext (parent-component)

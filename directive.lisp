@@ -59,6 +59,21 @@
 (defmethod end ((_ inline-directive) component parser)
   (change-class component 'components:parent-component))
 
+(defmethod invoke ((_ inline-directive) component parser line cursor)
+  (read-inline parser line cursor))
+
+(defclass surrounding-inline-directive (inline-directive)
+  ())
+
+(defmethod begin :around ((_ surrounding-inline-directive) parser line cursor)
+  (let ((stack (stack parser)))
+    (cond ((eq _ (stack-entry-directive (stack-top stack)))
+           (stack-pop stack)
+           ;; KLUDGE
+           (+ cursor 2))
+          (T
+           (call-next-method)))))
+
 (defclass paragraph (block-directive)
   ())
 
@@ -209,6 +224,21 @@
 (defmethod prefix ((_ code-block))
   #(":" ":"))
 
+(defmethod begin ((_ code-block) parser line cursor)
+  (multiple-value-bind (language cursor) (read-space-delimited line (+ cursor 2))
+    (let ((options (split-string line #\  cursor)))
+      (commit _ (make-instance 'components:code-block :language language :options options) parser)
+      (length line))))
+
+(defmethod consume-prefix ((_ code-block) component parser line cursor)
+  cursor)
+
+(defmethod invoke ((_ code-block) component parser line cursor)
+  (if (string= line "::")
+      (stack-pop (stack parser))
+      (vector-push-extend line (components:children component)))
+  (length line))
+
 (defclass instruction (singular-line-directive)
   ())
 
@@ -314,7 +344,7 @@
 
 ;;;; Inline Directives
 
-(defclass bold (inline-directive)
+(defclass bold (surrounding-inline-directive)
   ())
 
 (defmethod prefix ((_ bold))
@@ -324,33 +354,66 @@
   (commit _ (make-instance 'components:bold) parser)
   (+ 2 cursor))
 
-(defmethod invoke ((_ bold) component parser line cursor)
-  ;; FIXME: find logic for termination
-  (read-inline parser line cursor))
-
-(defclass italic (inline-directive)
+(defclass italic (surrounding-inline-directive)
   ())
 
 (defmethod prefix ((_ italic))
   #("/" "/"))
 
-(defclass underline (inline-directive)
+(defmethod begin ((_ italic) parser line cursor)
+  (commit _ (make-instance 'components:italic) parser)
+  (+ 2 cursor))
+
+(defclass underline (surrounding-inline-directive)
   ())
 
 (defmethod prefix ((_ underline))
   #("_" "_"))
 
-(defclass strikethrough (inline-directive)
+(defmethod begin ((_ underline) parser line cursor)
+  (commit _ (make-instance 'components:underline) parser)
+  (+ 2 cursor))
+
+(defclass strikethrough (surrounding-inline-directive)
   ())
 
 (defmethod prefix ((_ strikethrough))
   #("<" "-"))
+
+(defmethod begin ((_ strikethrough) parser line cursor)
+  ;; FIXME: remove when completed
+  (commit _ (make-instance 'components:strikethrough) parser)
+  (setf (gethash #\> (gethash #\- (inline-dispatch-table parser))) _)
+  (+ 2 cursor))
+
+(defmethod end :after ((_ strikethrough) components parser)
+  (remhash #\> (gethash #\- (inline-dispatch-table parser))))
+
+(defmethod )
 
 (defclass code (inline-directive)
   ())
 
 (defmethod prefix ((_ code))
   #("`" "`"))
+
+(defmethod begin ((_ code) parser line cursor)
+  (commit _ (make-instance 'components:code) parser)
+  (+ 2 cursor))
+
+(defmethod invoke ((_ code) component parser line cursor)
+  (let ((end cursor))
+    (loop with first = NIL
+          while (< end (length line))
+          do (if (char= #\` (aref line end))
+                 (if first
+                     (return (vector-push-extend (subseq line cursor (1- end))
+                                                 (components:children component)))
+                     (setf first T))
+                 (setf first NIL))
+             (incf end))
+    (stack-pop (stack parser))
+    (+ 1 end)))
 
 (defclass dash (inline-directive)
   ())

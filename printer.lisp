@@ -63,9 +63,7 @@
     (format s "/~a (~d)" (type-of c) (components:depth c)))
 
   (components:code-block ()
-    (format s "/~a ~s~{ ~a~}" (type-of c) (components:language c) (components:options c))
-    (let ((*level* (1+ *level*)))
-      (output (components:text c))))
+    (format s "/~a ~s~{ ~a~}" (type-of c) (components:language c) (components:options c)))
 
   (components:message-instruction ()
     (format s " ~a ~s" (type-of c) (components:text c)))
