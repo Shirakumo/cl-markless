@@ -19,4 +19,5 @@
                (:file "parser")
                (:file "directive")
                (:file "documentation"))
-  :depends-on (:documentation-utils))
+  :depends-on (:documentation-utils
+               :trivial-indent))

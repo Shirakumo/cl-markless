@@ -8,6 +8,7 @@
 
 (defparameter *default-directives*
   '(paragraph
+    blockquote-header
     blockquote
     unordered-list
     ordered-list
@@ -225,7 +226,15 @@
     (loop while (peek-char NIL (input parser) NIL)
           for line = (read-full-line (input parser))
           do (process-stack parser stack line))
+    (stack-unwind stack parser 0)
     root))
+
+(defun stack-unwind (stack parser until)
+  (loop until (= (length stack) until)
+        for entry = (stack-pop stack)
+        do (end (stack-entry-directive entry)
+                (stack-entry-component entry)
+                parser)))
 
 (defun process-stack (parser stack line)
   (let ((cursor 0)
@@ -236,16 +245,14 @@
                                             (stack-entry-component entry)
                                             parser line cursor)
           do (unless next-cursor
-               (loop until (= (length stack) stack-pointer)
-                     for entry = (stack-pop stack)
-                     do (end (stack-entry-directive entry)
-                             (stack-entry-component entry)
-                             parser))
+               (stack-unwind stack parser stack-pointer)
                (return))
              (setf cursor next-cursor)
              (incf stack-pointer))
     (loop for entry = (aref stack (1- (length stack)))
-          do (setf cursor (invoke (stack-entry-directive entry) parser line cursor))
+          do (setf cursor (invoke (stack-entry-directive entry)
+                                  (stack-entry-component entry)
+                                  parser line cursor))
           while (< cursor (length line)))
     ;; FIXME:
     ;; (when (eq :show (line-break-mode parser))
@@ -300,8 +307,7 @@
                (let ((directive (dispatch table line cursor)))
                  (cond (directive
                         (commit-buffer)
-                        (setf cursor (begin directive parser line cursor))
-                        (setf cursor (invoke directive parser line cursor)))
+                        (return-from read-inline (begin directive parser line cursor)))
                        (T
                         (write-char (aref line cursor) buffer)
                         (incf cursor))))))

@@ -45,6 +45,9 @@
 (defclass paragraph (parent-component block-component)
   ((indentation :initarg :indentation :initform 0 :accessor indentation)))
 
+(defclass blockquote-header (parent-component block-component)
+  ())
+
 (defclass blockquote (parent-component block-component)
   ((source :initarg :source :initform NIL :accessor source)))
 

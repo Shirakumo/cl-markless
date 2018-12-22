@@ -25,6 +25,7 @@
    #:label
    #:paragraph
    #:indentation
+   #:blockquote-header
    #:blockquote
    #:source
    #:list
@@ -51,6 +52,7 @@
    #:error
    #:include
    #:file
+   #:directives-instruction
    #:directives
    #:disable
    #:enable

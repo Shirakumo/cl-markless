@@ -28,19 +28,27 @@
 (defmethod (setf enabled-p) ((value null) (root root-directive))
   (error "FIXME: better error"))
 
-(defmethod invoke ((_ root-directive) parser line cursor)
+(defmethod invoke ((_ root-directive) component parser line cursor)
   (read-block parser line cursor))
+
+(defmethod end ((_ root-directive) component parser))
 
 (defclass block-directive (directive)
   ())
 
 (defmethod end ((_ block-directive) component parser))
 
+(defmethod invoke ((_ block-directive) component parser line cursor)
+  (read-block parser line cursor))
+
 (defclass singular-line-directive (block-directive)
   ())
 
 (defmethod consume-prefix ((_ singular-line-directive) component parser line cursor)
   NIL)
+
+(defmethod invoke ((_ singular-line-directive) component parser line cursor)
+  (read-inline parser line cursor))
 
 (defclass inline-directive (directive)
   ())
@@ -77,35 +85,47 @@
                      (not (eql _ (dispatch (block-dispatch-table parser) line end))))))
       end)))
 
-(defmethod invoke ((_ paragraph) parser line cursor)
+(defmethod invoke ((_ paragraph) component parser line cursor)
   (let ((inner (dispatch (block-dispatch-table parser) line cursor)))
     (if (and inner (not (eq inner _)))
         (begin inner parser line cursor)
         (read-inline parser line cursor))))
 
+(defclass blockquote-header (singular-line-directive)
+  ())
+
+(defmethod prefix ((_ blockquote-header))
+  #("~" " "))
+
+(defmethod begin ((_ blockquote-header) parser line cursor)
+  (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
+         (predecessor (when (< 0 (length children))
+                      (aref children (1- (length children)))))
+         (component (make-instance 'components:blockquote-header)))
+    (when (and (typep predecessor 'components:blockquote)
+               (null (components:source predecessor)))
+      (setf (components:source predecessor) component))
+    (commit _ component parser)
+    (+ 2 cursor)))
+
 (defclass blockquote (block-directive)
   ())
 
 (defmethod prefix ((_ blockquote))
-  #("~|" " "))
+  #("|" " "))
 
 (defmethod begin ((_ blockquote) parser line cursor)
-  (commit _ (make-instance 'components:blockquote) parser)
-  (+ 2 cursor))
-
-(defmethod consume-prefix ((_ blockquote) component parser line cursor)
-  (when (and (or (char= #\| (aref line cursor))
-                 (char= #\~ (aref line cursor)))
-             (char= #\  (aref line (+ 1 cursor))))
+  (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
+         (predecessor (when (< 0 (length children))
+                      (aref children (1- (length children)))))
+         (component (make-instance 'components:blockquote)))
+    (when (typep predecessor 'components:blockquote-header)
+      (setf (components:source component) predecessor))
+    (commit _ component parser)
     (+ 2 cursor)))
 
-(defmethod invoke ((_ blockquote) parser line cursor)
-  (cond ((char/= #\~ (aref line (- cursor 2)))
-         (read-block parser line cursor))
-        ((components:source ))
-      
-      (setf (components:source))
-      ))
+(defmethod consume-prefix ((_ blockquote) component parser line cursor)
+  (match! "| " line cursor))
 
 (defclass unordered-list (block-directive)
   ())
@@ -124,9 +144,6 @@
     (vector-push-extend item (components:children container))
     (stack-push _ item (stack parser))
     (+ 2 cursor)))
-
-(defmethod invoke ((_ unordered-list) parser line cursor)
-  (read-bloc kparser line cursor))
 
 (defmethod consume-prefix ((_ unordered-list) component parser line cursor)
   (match! "  " line cursor))
@@ -163,9 +180,6 @@
              (stack-push _ item (stack parser)))))
     (+ end 1)))
 
-(defmethod invoke ((_ ordered-list) parser line cursor)
-  (read-block parser line cursor))
-
 (defmethod consume-prefix ((_ ordered-list) component parser line cursor)
   (let ((numcnt (1+ (ceiling (log (components:number component) 10)))))
     (when (loop for i from cursor
@@ -188,8 +202,6 @@
     (+ cursor 1 depth)))
 
 ;; FIXME: label table
-(defmethod invoke ((_ header) parser line cursor)
-  (read-inline parser line cursor))
 
 (defclass code-block (block-directive)
   ())
@@ -235,8 +247,8 @@
 (defmethod parse-instruction ((type (eql 'components:disable)) line cursor)
   (make-instance type :directives (split-string line #\  cursor)))
 
-(defmethod invoke ((_ instruction) parser line cursor)
-  (evaluate-instruction (stack-entry-component (stack-top (stack parser))) parser)
+(defmethod invoke ((_ instruction) component parser line cursor)
+  (evaluate-instruction component parser)
   (length line))
 
 (defclass comment (singular-line-directive)
@@ -250,8 +262,6 @@
         do (incf cursor))
   (commit _ (make-instance 'components:comment :text (subseq line cursor)) parser)
   (length line))
-
-(defmethod invoke ((_ comment) parser line cursor))
 
 (defclass embed (singular-line-directive)
   ())
@@ -279,8 +289,6 @@
       (commit _ component parser)
       (length line))))
 
-(defmethod invoke ((_ embed) parser line cursor))
-
 (defclass footnote (singular-line-directive)
   ())
 
@@ -304,9 +312,6 @@
              (commit _ (make-instance 'components:footnote :target target) parser))))
     (1+ end)))
 
-(defmethod invoke ((_ footnote) parser line cursor)
-  (read-inline parser line cursor))
-
 ;;;; Inline Directives
 
 (defclass bold (inline-directive)
@@ -319,7 +324,7 @@
   (commit _ (make-instance 'components:bold) parser)
   (+ 2 cursor))
 
-(defmethod invoke ((_ bold) parser line cursor)
+(defmethod invoke ((_ bold) component parser line cursor)
   ;; FIXME: find logic for termination
   (read-inline parser line cursor))
 

@@ -29,6 +29,8 @@
                           (declare (ignorable #'output #'output-children))
                           ,@body)))))
 
+(trivial-indent:define-indentation define-output (4 6 &rest (&whole 2 4 &body)))
+
 (defmethod output-component ((root components:parent-component) stream format)
   (loop for child across (components:children root)
         do (output-component child stream format)))
@@ -38,111 +40,156 @@
 
 (defvar *level* 0)
 (define-output :debug (c s)
-  (components:parent-component ()
-                               (format s "~&~v@{|  ~}/~a" *level* (type-of c))
-                               (let ((*level* (1+ *level*)))
-                                 (output-children)))
+  (T (:before)
+    (format s "~&~v@{|  ~}" *level* NIL))
+
+  (T ()
+    (format s " ~s" c))
 
   (components:component ()
-   (format s "~&~v@{|  ~} ~a" *level* (type-of c)))
-
-  (string ()
-   (format s "~&~v@{|  ~} ~s" *level* (string-trim '(#\Newline) c))))
-
-;; FIXME: stacks on lines
-(define-output :markless (c s)
-  ;; FIXME: escape string writes
-  (components:block-component (:after)
-   (fresh-line s))
+    (format s " ~a" (type-of c)))
   
-  (components:paragraph ()
-   (output-children))
+  (components:parent-component ()
+    (format s "/~a" (type-of c)))
   
-  (components:blockquote ()
-   (format s "| ")
-   (output-children))
+  (components:parent-component (:after)
+    (let ((*level* (1+ *level*)))
+      (output-children)))
 
   (components:ordered-list-item ()
-   (format s "~d. " (components:number c))
-   (output-children))
-
-  (components:unordered-list-item ()
-   (format s "- ")
-   (output-children))
+    (format s "/~a (~d)" (type-of c) (components:number c)))
 
   (components:header ()
-   (format s "~v@{#~} " (components:depth c) NIL)
-   (output-children))
-
-  (components:horizontal-rule ()
-   (format s "=="))
+    (format s "/~a (~d)" (type-of c) (components:depth c)))
 
   (components:code-block ()
-   (format s "::~@[ ~a~{ ~a~}~]" (components:language c) (components:options c))
-   (write-string (components:text c) s)
-   (format s "~&::"))
- 
-  (components:instruction ()
-   (format s "! ")
-   ;; FIXME: decode instructions
-   )
+    (format s "/~a ~s~{ ~a~}" (type-of c) (components:language c) (components:options c))
+    (let ((*level* (1+ *level*)))
+      (output (components:text c))))
 
-  (components:comment ()
-   (format s "; ~a" (components:text c)))
+  (components:message-instruction ()
+    (format s " ~a ~s" (type-of c) (components:text c)))
+
+  (components:set ()
+    (format s " ~a ~a => ~a" (type-of c) (components:variable c) (components:value c)))
+
+  (components:include ()
+    (format s " ~a ~s" (type-of c) (components:file c)))
+
+  (components:directives-instruction ()
+    (format s " ~a ~a" (type-of c) (components:directives c)))
 
   (components:embed ()
-   (format s "[ ~(~a~) ~a~@[float ~a~]~@[width ~a~]~@[height ~a~] ]"
-           (type-of c) (components:target c) (components:float c) (components:width c) (components:height c)))
+    (format s " ~a ~s" (type-of c) (components:target c)))
 
   (components:footnote ()
-   (format s "[~d] " (components:target c))
-   (output-children))
+    (format s "/~a (~d)" (type-of c) (components:target c))))
+
+;; FIXME: stacks on lines
+(defvar *prefixes* ())
+(define-output :markless (c s)
+  ;; FIXME: escape string writes
+  
+  (components:block-component (:before)
+    ;; FIXME: only do this on new lines...
+    (format s "~{~a~}" (reverse *prefixes*)))
+  
+  (components:block-component (:after)
+    (fresh-line))
+  
+  (components:paragraph ()
+    (output-children))
+
+  (components:blockquote-header ()
+    (format s "~~ ")
+    (output-children))
+  
+  (components:blockquote ()
+    (format s "| ")
+    (let ((*prefixes* (list* "| " *prefixes*)))
+      (output-children)))
+
+  (components:ordered-list-item ()
+    (format s "~d. " (components:number c))
+    (output-children))
+
+  (components:unordered-list-item ()
+    (format s "- ")
+    (output-children))
+
+  (components:header ()
+    (format s "~v@{#~} " (components:depth c) NIL)
+    (output-children))
+
+  (components:horizontal-rule ()
+    (format s "=="))
+
+  (components:code-block ()
+    (format s "::~@[ ~a~{ ~a~}~]" (components:language c) (components:options c))
+    (write-string (components:text c) s)
+    (format s "~&::"))
+  
+  (components:instruction ()
+    (format s "! ")
+    ;; FIXME: decode instructions
+    )
+
+  (components:comment ()
+    (format s "; ~a" (components:text c)))
+
+  (components:embed ()
+    (format s "[ ~(~a~) ~a~@[float ~a~]~@[width ~a~]~@[height ~a~] ]"
+            (type-of c) (components:target c) (components:float c) (components:width c) (components:height c)))
+
+  (components:footnote ()
+    (format s "[~d] " (components:target c))
+    (output-children))
 
   (components:bold ()
-   (format s "**")
-   (output-children)
-   (format s "**"))
+    (format s "**")
+    (output-children)
+    (format s "**"))
 
   (components:italic ()
-   (format s "//")
-   (output-children)
-   (format s "//"))
+    (format s "//")
+    (output-children)
+    (format s "//"))
 
   (components:underline ()
-   (format s "__")
-   (output-children)
-   (format s "__"))
+    (format s "__")
+    (output-children)
+    (format s "__"))
 
   (components:strikethrough ()
-   (format s "<-")
-   (output-children)
-   (format s "->"))
+    (format s "<-")
+    (output-children)
+    (format s "->"))
 
   (components:code ()
-   (format s "``~a``" (components:text c)))
+    (format s "``~a``" (components:text c)))
 
   (components:subtext ()
-   (format s "v(")
-   (output-children)
-   (format s ")"))
+    (format s "v(")
+    (output-children)
+    (format s ")"))
 
   (components:supertext ()
-   (format s "^(")
-   (output-children)
-   (format s ")"))
+    (format s "^(")
+    (output-children)
+    (format s ")"))
 
   (components:url ()
-   (write-string (components:text c) s))
+    (write-string (components:text c) s))
 
   (components:compound ()
-   (format s "\"")
-   (output-children)
-   (format s "\"(in")
-   (dolist (option (components:options c))
-     (output option))
-   (format s ")"))
+    (format s "\"")
+    (output-children)
+    (format s "\"(in")
+    (dolist (option (components:options c))
+      (output option))
+    (format s ")"))
 
   ;; FIXME: compound options
 
   (components:footnote-reference ()
-   (format s "[~d]" (components:target c))))
+    (format s "[~d]" (components:target c))))
