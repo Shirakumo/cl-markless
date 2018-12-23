@@ -6,6 +6,11 @@
 
 (in-package #:org.shirakumo.markless.components)
 
+(defmacro define-printer (class format &rest args)
+  `(defmethod print-object ((c ,class) s)
+     (print-unreadable-object (c s :type T :identity T)
+       (format s ,format ,@args))))
+
 (defvar *instructions*
   '(set info warning error include disable enable))
 
@@ -42,6 +47,9 @@
    (author :initform NIL :accessor author)
    (copyright :initform NIL :accessor copyright)))
 
+(define-printer root-component
+  "~@[~a ~]~@[(c) ~a~]" (author c) (copyright c))
+
 (defmethod label ((label string) (root root-component))
   (gethash label (labels root)))
 
@@ -73,6 +81,9 @@
 (defclass ordered-list-item (list-item)
   ((number :initarg :number :initform 0 :accessor number)))
 
+(define-printer ordered-list-item
+  "(~d)" (number c))
+
 (defclass unordered-list (list)
   ())
 
@@ -82,6 +93,9 @@
 (defclass header (parent-component block-component)
   ((depth :initarg :depth :initform 0 :accessor depth)))
 
+(define-printer header
+  "(~d)" (depth c))
+
 (defclass horizontal-rule (unit-component block-component)
   ())
 
@@ -89,15 +103,24 @@
   ((language :initarg :language :initform NIL :accessor language)
    (options :initarg :options :initform () :accessor options)))
 
+(define-printer code-block
+  "~@[~a~]~{ ~a~}" (language c) (options c))
+
 (defclass instruction (block-component)
   ())
 
 (defclass message-instruction (instruction)
   ((message :initarg :message :initform (cl:error "MESSAGE required") :accessor message)))
 
+(define-printer message-instruction
+  "~s" (message c))
+
 (defclass set (instruction)
   ((variable :initarg :variable :initform (cl:error "VARIABLE required") :accessor variable)
    (value :initarg :value :initform (cl:error "VALUE required") :accessor value)))
+
+(define-printer set
+  "~a ~s" (variable c) (value c))
 
 (defclass info (message-instruction)
   ())
@@ -111,8 +134,14 @@
 (defclass include (instruction)
   ((file :initarg :file :initform (cl:error "FILE required") :accessor file)))
 
+(define-printer include
+  "~s" (file c))
+
 (defclass directives-instruction (instruction)
   ((directives :initarg :directives :initform (cl:error "DIRECTIVES required.") :accessor directives)))
+
+(define-printer directives-instruction
+  "~{~a~^ ~}" (directives c))
 
 (defclass disable (directives-instruction)
   ())
@@ -129,6 +158,9 @@
    (width :initarg :width :initform NIL :accessor width)
    (height :initarg :height :initform NIL :accessor height)))
 
+(define-printer embed
+  "~s" (target c))
+
 (defclass image (embed)
   ())
 
@@ -140,6 +172,9 @@
 
 (defclass footnote (parent-component block-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+
+(define-printer footnote
+  "(~d)" (target c))
 
 (defclass bold (parent-component)
   ())
@@ -172,23 +207,47 @@
   ())
 
 (defclass bold-option (option) ())
+
 (defclass italic-option (option) ())
+
 (defclass underline-option (option) ())
+
 (defclass strikethrough-option (option) ())
+
 (defclass spoiler-option (option) ())
+
 (defclass font-option (option)
   ((font-family :initarg :font-family :initform (cl:error "FONT-FAMILY required") :accessor font-family)))
+
+(define-printer font-option
+  "~s" (font-family c))
+
 (defclass color-option (option)
   ((red :initarg :red :initform (cl:error "RED required") :accessor red)
    (green :initarg :green :initform (cl:error "GREEN required") :accessor green)
    (blue :initarg :blue :initform (cl:error "BLUE required") :accessor blue)))
+
+(define-printer color-option
+  "~d,~d,~d" (red c) (green c) (blue c))
+
 (defclass size-option (option)
   ((unit :initarg :unit :initform :em :accessor unit)
    (size :initarg :size :initform (cl:error "SIZE required") :accessor size)))
+
+(define-printer size-option
+  "~f~(~a~)" (size c) (unit c))
+
 (defclass hyperlink-option (option)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+
+(define-printer hyperlink-option
+  "~s" (target c))
+
 (defclass internal-hyperlink-option (hyperlink-option)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
 (defclass footnote-reference (unit-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+
+(define-printer footnote-reference
+  "(~d)" (target c))
