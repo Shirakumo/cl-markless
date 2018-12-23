@@ -221,6 +221,28 @@
   (let ((target (components:text component)))
     (setf (components:label target (root parser)) component)))
 
+(defclass horizontal-rule (singular-line-directive)
+  ())
+
+(defmethod prefix ((_ horizontal-rule))
+  #("=" "="))
+
+(defmethod begin ((_ horizontal-rule) parser line cursor)
+  (commit _ (make-instance 'components:horizontal-rule) parser)
+  (+ cursor 2))
+
+(defmethod invoke ((_ horizontal-rule) component parser line cursor)
+  (let ((end cursor))
+    (unless (loop while (< end (length line))
+                  always (char= #\= (aref line end))
+                  do (incf end))
+      ;; We did a bad match, pretend we're a paragraph and skip the match.
+      (change-class component 'components:paragraph)
+      (vector-push-extend (subseq line (- cursor 2) end) (components:children component))
+      (setf (stack-entry-directive (stack-top (stack parser)))
+            (directive 'paragraph parser)))
+    end))
+
 (defclass code-block (block-directive)
   ())
 
