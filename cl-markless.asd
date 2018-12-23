@@ -13,6 +13,7 @@
   :homepage "https://github.com/Shinmera/cl-markless"
   :serial T
   :components ((:file "package")
+               (:file "toolkit")
                (:file "conditions")
                (:file "component")
                (:file "color-table")

@@ -507,11 +507,6 @@
           do (setf (gethash (string name) table) (make-instance type)))
     table))
 
-(defun decompose-rgb (hex)
-  (list (ldb (byte 8 16) hex)
-        (ldb (byte 8  8) hex)
-        (ldb (byte 8  0) hex)))
-
 (defun parse-compound-option (option)
   (or (gethash option *color-table*)
       (gethash option *size-table*)
