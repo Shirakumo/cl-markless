@@ -15,6 +15,8 @@
   :components ((:file "package")
                (:file "conditions")
                (:file "component")
+               (:file "color-table")
+               (:file "size-table")
                (:file "printer")
                (:file "parser")
                (:file "directive")

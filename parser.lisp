@@ -131,6 +131,13 @@
   (declare (type (vector stack-entry) stack))
   (aref stack (1- (length stack))))
 
+(defun stack-bottom (stack)
+  (declare (type (vector stack-entry) stack))
+  (aref stack 0))
+
+(defun root (parser)
+  (stack-entry-component (stack-bottom (stack parser))))
+
 (defmethod directive ((name symbol) (parser parser))
   (find name (directives parser) :key #'type-of))
 
@@ -289,30 +296,61 @@
             finally (commit))
       (nreverse parts))))
 
+(defun starts-with (beginning string &optional (start 0))
+  (and (<= (length beginning) (- (length string) start))
+       (string= beginning string :start2 start :end2 (+ start (length beginning)))))
+
+(defun ends-with (end string)
+  (and (<= (length end) (length string))
+       (string= end string :start2 (- (length string) (length end)))))
+
+(defun parse-float (string &key (start 0) (end (length string)))
+  (let* ((dot (or (position #\. string :start start :end end) end))
+         (whole (parse-integer string :start start :end dot)))
+    (incf dot)
+    (float
+     (if (< dot end)
+         (let ((fractional (parse-integer string :start dot :end end)))
+           (+ whole (/ fractional (expt 10 (- end dot)))))
+         whole))))
+
 (defun read-block (parser line cursor)
   (let* ((table (block-dispatch-table parser))
          (directive (or (dispatch table line cursor)
                         (gethash #\Nul table))))
     (setf cursor (begin directive parser line cursor))))
 
-(defun read-inline (parser line cursor)
-  (let ((buffer (make-string-output-stream))
-        (table (inline-dispatch-table parser))
-        (children (components:children (stack-entry-component (stack-top (stack parser))))))
+(defun read-inline (parser line cursor end-char)
+  (let* ((buffer (make-string-output-stream))
+         (table (inline-dispatch-table parser))
+         (top (stack-top (stack parser))))
     (labels ((commit-buffer ()
                (let ((string (get-output-stream-string buffer)))
                  (when (string/= "" string)
-                   (vector-push-extend string children))))
-             (read-inline-char ()
+                   (vector-push-extend string (components:children (stack-entry-component top))))))
+             (read-inline-char (char)
                (let ((directive (dispatch table line cursor)))
                  (cond (directive
                         (commit-buffer)
                         (return-from read-inline (begin directive parser line cursor)))
                        (T
-                        (write-char (aref line cursor) buffer)
+                        (write-char char buffer)
                         (incf cursor))))))
       (loop while (< cursor (length line))
-            do (read-inline-char))
+            for char = (aref line cursor)
+            do (when (char= end-char char)
+                 (let ((next (consume-end (stack-entry-directive top)
+                                          (stack-entry-component top)
+                                          parser line cursor)))
+                   (when next
+                     (commit-buffer)
+                     (stack-pop (stack parser))
+                     (return-from read-inline next))))
+               (cond ((char= char #\\)
+                      (write-char (aref line (+ 1 cursor)) buffer)
+                      (incf cursor 2))
+                     (T
+                      (read-inline-char char))))
       (commit-buffer)
       cursor)))
 
@@ -327,4 +365,5 @@
               then `(when (char= ,(aref prefix i) (aref ,lineg (+ ,cursorg ,i)))
                       ,form)
               for i downfrom (1- (length prefix)) to 0
-              finally (return form)))))
+              finally (return `(when (< (+ ,cursorg ,(length prefix)) (length ,lineg))
+                                 ,form))))))

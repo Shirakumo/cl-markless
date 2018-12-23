@@ -21,6 +21,16 @@
 (defclass parent-component (component)
   ((children :initarg :children :initform (make-array 0 :adjustable T :fill-pointer T) :accessor children)))
 
+(defmethod text ((component parent-component))
+  (with-output-to-string (out)
+    (cl:labels ((r (component)
+                  (loop for child across (children component)
+                        do (typecase child
+                             (string (write-string child out))
+                             (text-component (write-string (text child) out))
+                             (parent-component (r child))))))
+      (r component))))
+
 (defmethod enter (thing (parent parent-component))
   (vector-push-extend thing (children parent)))
 
@@ -157,6 +167,28 @@
 
 (defclass compound (parent-component)
   ((options :initarg :options :initform () :accessor options)))
+
+(defclass option ()
+  ())
+
+(defclass bold-option (option) ())
+(defclass italic-option (option) ())
+(defclass underline-option (option) ())
+(defclass strikethrough-option (option) ())
+(defclass spoiler-option (option) ())
+(defclass font-option (option)
+  ((font-family :initarg :font-family :initform (cl:error "FONT-FAMILY required") :accessor font-family)))
+(defclass color-option (option)
+  ((red :initarg :red :initform (cl:error "RED required") :accessor red)
+   (green :initarg :green :initform (cl:error "GREEN required") :accessor green)
+   (blue :initarg :blue :initform (cl:error "BLUE required") :accessor blue)))
+(defclass size-option (option)
+  ((unit :initarg :unit :initform :em :accessor unit)
+   (size :initarg :size :initform (cl:error "SIZE required") :accessor size)))
+(defclass hyperlink-option (option)
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass internal-hyperlink-option (hyperlink-option)
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
 (defclass footnote-reference (unit-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))

@@ -48,7 +48,7 @@
   NIL)
 
 (defmethod invoke ((_ singular-line-directive) component parser line cursor)
-  (read-inline parser line cursor))
+  (read-inline parser line cursor #\Nul))
 
 (defclass inline-directive (directive)
   ())
@@ -60,7 +60,7 @@
   (change-class component 'components:parent-component))
 
 (defmethod invoke ((_ inline-directive) component parser line cursor)
-  (read-inline parser line cursor))
+  (read-inline parser line cursor #\Nul))
 
 (defclass surrounding-inline-directive (inline-directive)
   ())
@@ -104,7 +104,7 @@
   (let ((inner (dispatch (block-dispatch-table parser) line cursor)))
     (if (and inner (not (eq inner _)))
         (begin inner parser line cursor)
-        (read-inline parser line cursor))))
+        (read-inline parser line cursor #\Nul))))
 
 (defclass blockquote-header (singular-line-directive)
   ())
@@ -180,7 +180,8 @@
            ;; We did a bad match, pretend we're a paragraph and skip the match.
            (let ((component (make-instance 'components:paragraph)))
              (commit (directive 'paragraph parser) component parser)
-             (vector-push-extend (subseq line cursor (1+ end)) (components:children component))))
+             (vector-push-extend (subseq line cursor end) (components:children component))
+             end))
           (T
            ;; Construct item, just like for the ordered list.
            (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
@@ -192,8 +193,8 @@
                (setf container (make-instance 'components:ordered-list))
                (vector-push-extend container children))
              (vector-push-extend item (components:children container))
-             (stack-push _ item (stack parser)))))
-    (+ end 1)))
+             (stack-push _ item (stack parser))
+             (+ end 1))))))
 
 (defmethod consume-prefix ((_ ordered-list) component parser line cursor)
   (let ((numcnt (1+ (ceiling (log (components:number component) 10)))))
@@ -215,6 +216,10 @@
           do (incf depth))
     (commit _ (make-instance 'components:header :depth depth) parser)
     (+ cursor 1 depth)))
+
+(defmethod end :after ((_ header) component parser)
+  (let ((target (components:text component)))
+    (setf (components:label target (root parser)) component)))
 
 ;; FIXME: label table
 
@@ -332,15 +337,19 @@
                      (<= (char-code #\0) (char-code (aref line end)) (char-code #\9)))
           do (incf end))
     (cond ((or (<= (length line) end)
+               (= end cursor)
                (char/= #\] (aref line end)))
            ;; Mismatch. Pretend we're a paragraph.
            (let ((component (make-instance 'components:paragraph)))
              (commit (directive 'paragraph parser) component parser)
-             (vector-push-extend (subseq line cursor (1+ end)) (components:children component))))
+             (vector-push-extend (subseq line cursor end) (components:children component))
+             end))
           (T
-           (let ((target (parse-integer line :start cursor :end end)))
-             (commit _ (make-instance 'components:footnote :target target) parser))))
-    (1+ end)))
+           (let* ((target (parse-integer line :start cursor :end end))
+                  (component (make-instance 'components:footnote :target target)))
+             (setf (components:label target (root parser)) component)
+             (commit _ component parser)
+             (1+ end))))))
 
 ;;;; Inline Directives
 
@@ -374,22 +383,21 @@
   (commit _ (make-instance 'components:underline) parser)
   (+ 2 cursor))
 
-(defclass strikethrough (surrounding-inline-directive)
+(defclass strikethrough (inline-directive)
   ())
 
 (defmethod prefix ((_ strikethrough))
   #("<" "-"))
 
 (defmethod begin ((_ strikethrough) parser line cursor)
-  ;; FIXME: remove when completed
   (commit _ (make-instance 'components:strikethrough) parser)
-  (setf (gethash #\> (gethash #\- (inline-dispatch-table parser))) _)
   (+ 2 cursor))
 
-(defmethod end :after ((_ strikethrough) components parser)
-  (remhash #\> (gethash #\- (inline-dispatch-table parser))))
+(defmethod invoke ((_ strikethrough) component parser line cursor)
+  (read-inline parser line cursor #\-))
 
-(defmethod )
+(defmethod consume-end ((_ strikethrough) component parser line cursor)
+  (match! "->" line cursor))
 
 (defclass code (inline-directive)
   ())
@@ -402,24 +410,24 @@
   (+ 2 cursor))
 
 (defmethod invoke ((_ code) component parser line cursor)
-  (let ((end cursor))
-    (loop with first = NIL
-          while (< end (length line))
-          do (if (char= #\` (aref line end))
-                 (if first
-                     (return (vector-push-extend (subseq line cursor (1- end))
-                                                 (components:children component)))
-                     (setf first T))
-                 (setf first NIL))
-             (incf end))
-    (stack-pop (stack parser))
-    (+ 1 end)))
-
-(defclass dash (inline-directive)
-  ())
-
-(defmethod prefix ((_ dash))
-  #("-" "-"))
+  (vector-push-extend
+   (with-output-to-string (output)
+     (loop while (< cursor (length line))
+           for char = (aref line cursor)
+           do (cond ((and (char= #\` char)
+                          (< (1+ cursor) (length line))
+                          (char= #\` (aref line (1+ cursor))))
+                     (incf cursor 2)
+                     (stack-pop (stack parser))
+                     (return))
+                    ((char= #\\ char)
+                     (incf cursor)
+                     (write-char (aref line cursor) output))
+                    (T
+                     (write-char char output)))
+              (incf cursor)))
+   (components:children component))
+  cursor)
 
 (defclass supertext (inline-directive)
   ())
@@ -427,11 +435,31 @@
 (defmethod prefix ((_ supertext))
   #("^" "("))
 
+(defmethod begin ((_ supertext) parser line cursor)
+  (commit _ (make-instance 'components:supertext) parser)
+  (+ 2 cursor))
+
+(defmethod invoke ((_ supertext) component parser line cursor)
+  (read-inline parser line cursor #\)))
+
+(defmethod consume-end ((_ supertext) component parser line cursor)
+  (match! ")" line cursor))
+
 (defclass subtext (inline-directive)
   ())
 
 (defmethod prefix ((_ subtext))
   #("v" "("))
+
+(defmethod begin ((_ subtext) parser line cursor)
+  (commit _ (make-instance 'components:subtext) parser)
+  (+ 2 cursor))
+
+(defmethod invoke ((_ subtext) component parser line cursor)
+  (read-inline parser line cursor #\)))
+
+(defmethod consume-end ((_ subtext) component parser line cursor)
+  (match! ")" line cursor))
 
 (defclass compound (inline-directive)
   ())
@@ -439,14 +467,124 @@
 (defmethod prefix ((_ compound))
   #("\""))
 
+(defmethod begin ((_ compound) parser line cursor)
+  (commit _ (make-instance 'components:compound) parser)
+  (+ 1 cursor))
+
+(defmethod invoke ((_ compound) component parser line cursor)
+  (read-inline parser line cursor #\"))
+
+(defmethod consume-end ((_ compound) component parser line cursor)
+  (when (and (< (+ 2 cursor) (length line))
+             (char= #\( (aref line (+ 1 cursor))))
+    (incf cursor 2)
+    (let* ((options ())
+           (buffer (make-string-output-stream)))
+      (loop while (< cursor (length line))
+            for char = (aref line cursor)
+            do (cond ((char= #\\ char)
+                      (incf cursor)
+                      (write-char (aref line cursor) buffer))
+                     ((char= #\, char)
+                      (push (get-output-stream-string buffer) options))
+                     ((char= #\) char)
+                      (incf cursor)
+                      (push (get-output-stream-string buffer) options)
+                      (return))
+                     (T
+                      (write-char char buffer)))
+               (incf cursor))
+      (setf (components:options component) options)
+      cursor)))
+
+(defvar *style-table*
+  (let ((table (make-hash-table :test 'equalp)))
+    (loop for (name type) in '((bold components:bold-option)
+                               (italic components:italic-option)
+                               (underline components:underline-option)
+                               (strikethrough components:strikethrough-option)
+                               (spoiler components:spoiler-option))
+          do (setf (gethash (string name) table) (make-instance type)))
+    table))
+
+(defun decompose-rgb (hex)
+  (list (ldb (byte 8 16) hex)
+        (ldb (byte 8  8) hex)
+        (ldb (byte 8  0) hex)))
+
+(defun parse-compound-option (option)
+  (or (gethash option *color-table*)
+      (gethash option *size-table*)
+      (gethash option *style-table*)
+      (cond ((starts-with "font " option)
+             (make-instance 'components:font-option :font-family (subseq option (length "font "))))
+            ((starts-with "color #" option)
+             (let ((hex (parse-integer option :start (length "color #") :radix 16)))
+               (destructuring-bind (r g b) (decompose-rgb hex)
+                 (make-instance 'components:color-option :red r :green g :blue b))))
+            ((starts-with "color " option)
+             (let ((parts (split-string option #\, (length "color "))))
+               (destructuring-bind (r g b) (mapcar #'parse-integer parts)
+                 (make-instance 'components:color-option :red r :green g :blue b))))
+            ((starts-with "size " option)
+             (let ((unit (cond ((ends-with "em" option) :em)
+                               ((ends-with "pt" option) :pt)
+                               (T (error "FIXME: better error"))))
+                   (size (parse-float option :start (length "size ") :end (- (length option) 2))))
+               (make-instance 'components:size-option :unit unit :size size)))
+            ((starts-with "#" option)
+             (make-instance 'components:internal-hyperlink-option :target (subseq option 1)))
+            ((starts-with "link " option)
+             (make-instance 'components:hyperlink-option :target (subseq option (length "link "))))
+            (T
+             (error "FIXME: better error")))))
+
 (defclass footnote-reference (inline-directive)
   ())
 
 (defmethod prefix ((_ footnote-reference))
   #("[" "1234567890"))
 
+(defmethod begin ((_ footnote-reference) parser line cursor)
+  (incf cursor)
+  (let* ((end cursor)
+         (stack (stack parser))
+         (component (stack-entry-component (stack-top stack)))
+         (children (components:children component)))
+    (loop while (and (< end (length line))
+                     (<= (char-code #\0) (char-code (aref line end)) (char-code #\9)))
+          do (incf end))
+    (cond ((or (<= (length line) end)
+               (= end cursor)
+               (char/= #\] (aref line end)))
+           ;; Mismatch. Pretend we're nothing
+           (vector-push-extend "[" children)
+           cursor)
+          (T
+           (let ((target (parse-integer line :start cursor :end end)))
+             (vector-push-extend (make-instance 'components:footnote-reference :target target) children)
+             (1+ end))))))
+
+(defclass dash (inline-directive)
+  ())
+
+(defmethod prefix ((_ dash))
+  #("-" "-"))
+
+(defmethod begin ((_ dash) parser line cursor)
+  (let* ((stack (stack parser))
+         (children (components:children (stack-entry-component (stack-top stack)))))
+    (vector-push-extend #.(string (code-char #x2014)) children)
+    (+ 2 cursor)))
+
 (defclass newline (inline-directive)
   ())
 
 (defmethod prefix ((_ newline))
   #("-" "/" "-"))
+
+(defmethod begin ((_ newline) parser line cursor)
+  (let* ((stack (stack parser))
+         (children (components:children (stack-entry-component (stack-top stack)))))
+    (vector-push-extend #.(string #\Linefeed) children)
+    (+ 3 cursor)))

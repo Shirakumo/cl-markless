@@ -81,7 +81,13 @@
     (format s " ~a ~s" (type-of c) (components:target c)))
 
   (components:footnote ()
-    (format s "/~a (~d)" (type-of c) (components:target c))))
+    (format s "/~a (~d)" (type-of c) (components:target c)))
+
+  (components:footnote-reference ()
+    (format s " ~a (~d)" (type-of c) (components:target c)))
+
+  (components:compound ()
+    (format s "/~a ~{~a~}" (type-of c) (components:options c))))
 
 ;; FIXME: stacks on lines
 (defvar *prefixes* ())

@@ -76,6 +76,24 @@
    #:url
    #:compound
    #:options
+   #:option
+   #:bold-option
+   #:italic-option
+   #:underline-option
+   #:strikethrough-option
+   #:spoiler-option
+   #:font-option
+   #:font-family
+   #:color-option
+   #:red
+   #:green
+   #:blue
+   #:size-option
+   #:unit
+   #:size
+   #:internal-hyperlink-option
+   #:hyperlink-option
+   #:target
    #:footnote-reference
    #:target))
 
