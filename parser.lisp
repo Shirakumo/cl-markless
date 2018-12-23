@@ -13,6 +13,7 @@
     unordered-list
     ordered-list
     header
+    horizontal-rule
     code-block
     instruction
     comment
@@ -256,9 +257,10 @@
                                   (stack-entry-component entry)
                                   parser line cursor))
           while (< cursor (length line)))
-     (when (eq :show (line-break-mode parser))
-       (vector-push-extend #.(string #\Linefeed)
-                           (components:children (stack-entry-component (stack-top stack)))))))
+    (when (eq :show (line-break-mode parser))
+      (let ((top (stack-entry-component (stack-top stack))))
+        (when (typep top 'components:parent-component)
+          (vector-push-extend #.(string #\Linefeed) (components:children top)))))))
 
 (defun commit (directive component parser)
   (let* ((stack (stack parser))
