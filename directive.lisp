@@ -221,8 +221,6 @@
   (let ((target (components:text component)))
     (setf (components:label target (root parser)) component)))
 
-;; FIXME: label table
-
 (defclass code-block (block-directive)
   ())
 
@@ -494,7 +492,8 @@
                      (T
                       (write-char char buffer)))
                (incf cursor))
-      (setf (components:options component) options)
+      (setf (components:options component)
+            (mapcar #'parse-compound-option options))
       cursor)))
 
 (defvar *style-table*

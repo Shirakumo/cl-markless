@@ -43,8 +43,12 @@
   (T (:before)
     (format s "~&~v@{|  ~}" *level* NIL))
 
-  (T ()
-    (format s " ~s" c))
+  (string ()
+    (format s " ")
+    (loop for char across c
+          do (case char
+               (#\Newline (write-char #\Return s))
+               (T (write-char char s)))))
 
   (components:component ()
     (format s " ~a" (type-of c)))

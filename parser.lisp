@@ -196,11 +196,13 @@
 
 (defun read-full-line (stream)
   (let ((line (read-line stream)))
+    (declare (type simple-string line))
+    (declare (optimize speed))
     (if (and (< 0 (length line)) (eql #\\ (char line (1- (length line)))))
         (with-output-to-string (out)
-          (loop for current = line then (read-line stream)
-                do (cond ((eql #\\ (char current (1- (length current))))
-                          (write-string current out :end (- (length current) 2)))
+          (loop for current of-type simple-string = line then (read-line stream)
+                do (cond ((eql #\\ (aref current (1- (length (the simple-string current)))))
+                          (write-string current out :end (1- (length current))))
                          (T
                           (write-string current out)
                           (return)))))
@@ -254,10 +256,9 @@
                                   (stack-entry-component entry)
                                   parser line cursor))
           while (< cursor (length line)))
-    ;; FIXME:
-    ;; (when (eq :show (line-break-mode parser))
-    ;;   (write-char #\Newline buffer))
-    ))
+     (when (eq :show (line-break-mode parser))
+       (vector-push-extend #.(string #\Linefeed)
+                           (components:children (stack-entry-component (stack-top stack)))))))
 
 (defun commit (directive component parser)
   (let* ((stack (stack parser))
