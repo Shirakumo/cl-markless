@@ -17,7 +17,6 @@
    #:block-component
    #:parent-component
    #:children
-   #:enter
    #:root-component
    #:labels
    #:author

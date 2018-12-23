@@ -36,9 +36,6 @@
                              (parent-component (r child))))))
       (r component))))
 
-(defmethod enter (thing (parent parent-component))
-  (vector-push-extend thing (children parent)))
-
 (defclass block-component (component)
   ())
 
