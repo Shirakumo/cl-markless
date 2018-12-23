@@ -6,6 +6,13 @@
 
 (in-package #:org.shirakumo.markless)
 
+(defgeneric prefix (directive))
+(defgeneric begin (directive parser line cursor))
+(defgeneric invoke (directive component parser line cursor))
+(defgeneric end (directive component parser))
+(defgeneric consume-prefix (directive component parser line cursor))
+(defgeneric consume-end (directive component parser line cursor))
+
 (defclass directive ()
   ((enabled-p :initarg :enabled-p :initform T :accessor enabled-p)))
 

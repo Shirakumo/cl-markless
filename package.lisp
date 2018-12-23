@@ -102,4 +102,93 @@
   (:use #:cl)
   (:local-nicknames
    (#:components #:org.shirakumo.markless.components))
-  (:export))
+  ;; color-table.lisp
+  (:export
+   #:*color-table*)
+  ;; conditions.lisp
+  (:export)
+  ;; directive.lisp
+  (:export
+   #:prefix
+   #:begin
+   #:invoke
+   #:end
+   #:consume-prefix
+   #:consume-end
+   #:directive
+   #:enabled-p
+   #:ensure-directive
+   #:root-directive
+   #:block-directive
+   #:singular-line-directive
+   #:inline-directive
+   #:surrounding-inline-directive
+   #:paragraph
+   #:blockquote-header
+   #:blockquote
+   #:unordered-list
+   #:ordered-list
+   #:header
+   #:horizontal-rule
+   #:code-block
+   #:instruction
+   #:comment
+   #:embed
+   #:footnote
+   #:bold
+   #:italic
+   #:underline
+   #:strikethrough
+   #:code
+   #:supertext
+   #:subtext
+   #:compound
+   #:*style-table*
+   #:footnote-reference
+   #:dash
+   #:newline)
+  ;; parser.lisp
+  (:export
+   #:*default-directives*
+   #:compile-dispatch-table
+   #:dispatch
+   #:parser
+   #:line-break-mode
+   #:directives
+   #:block-dispatch-table
+   #:inline-dispatch-table
+   #:input
+   #:stack
+   #:stack-push
+   #:stack-pop
+   #:stack-top
+   #:stack-bottom
+   #:root
+   #:directive
+   #:directives-of
+   #:disable
+   #:enable
+   #:evaluate-instruction
+   #:read-full-line
+   #:parse
+   #:stack-unwind
+   #:commit
+   #:read-block
+   #:read-inline)
+  ;; printer.lisp
+  (:export
+   #:output
+   #:define-output
+   #:output-component)
+  ;; size-table.lisp
+  (:export
+   #:*size-table*)
+  ;; toolkit.lisp
+  (:export
+   #:match!
+   #:read-space-delimited
+   #:split-string
+   #:starts-with
+   #:ends-with
+   #:parse-float
+   #:to-readtable-case))
