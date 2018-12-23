@@ -23,4 +23,5 @@
                (:file "directive")
                (:file "documentation"))
   :depends-on (:documentation-utils
-               :trivial-indent))
+               :trivial-indent)
+  :in-order-to ((asdf:test-op (asdf:test-op :cl-markless-test))))
