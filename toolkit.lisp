@@ -22,7 +22,7 @@
               then `(when (char= ,(aref prefix i) (aref ,lineg (+ ,cursorg ,i)))
                       ,form)
               for i downfrom (1- (length prefix)) to 0
-              finally (return `(when (< (+ ,cursorg ,(length prefix)) (length ,lineg))
+              finally (return `(when (<= (+ ,cursorg ,(length prefix)) (length ,lineg))
                                  ,form))))))
 
 (defun read-space-delimited (line cursor)
@@ -49,6 +49,29 @@
             finally (commit))
       (nreverse parts))))
 
+(defun split-options (line cursor end)
+  (let* ((options ())
+         (buffer (make-string-output-stream)))
+    (flet ((commit ()
+             (let ((string (string-trim " " (get-output-stream-string buffer))))
+               (when (string/= "" string)
+                 (push string options)))))
+      (loop while (< cursor (length line))
+            for char = (aref line cursor)
+            do (cond ((char= #\\ char)
+                      (incf cursor)
+                      (write-char (aref line cursor) buffer))
+                     ((char= #\, char)
+                      (commit))
+                     ((char= end char)
+                      (incf cursor)
+                      (return))
+                     (T
+                      (write-char char buffer)))
+               (incf cursor))
+      (commit))
+    (values (nreverse options) cursor)))
+
 (defun starts-with (beginning string &optional (start 0))
   (and (<= (length beginning) (- (length string) start))
        (string= beginning string :start2 start :end2 (+ start (length beginning)))))
@@ -67,13 +90,21 @@
            (+ whole (/ fractional (expt 10 (- end dot)))))
          whole))))
 
+(defun parse-unit (string &key (start 0))
+  (let* ((unit (cond ((ends-with "em" string) :em)
+                     ((ends-with "pt" string) :pt)
+                     ((ends-with "px" string) :px)
+                     ((ends-with "%" string) :%)
+                     (T (error "FIXME: better error"))))
+         (size (parse-float string :start start :end (- (length string) (length (string unit))))))
+    (values size unit)))
+
 (defun to-readtable-case (string case)
   (ecase case
     (:downcase (string-downcase string))
     (:upcase (string-upcase string))
     (:preserve string)
     (:invert (error "FIXME: Implement INVERT read-case."))))
-
 
 (defun condense-children (children)
   (let ((buffer (make-string-output-stream))
@@ -86,6 +117,8 @@
                (loop for child across children
                      do (cond ((stringp child)
                                (write-string child buffer))
+                              ((typep child 'components:instruction))
+                              ((typep child 'components:comment))
                               ((eql 'components:parent-component (type-of child))
                                (traverse (components:children child)))
                               (T
@@ -103,3 +136,19 @@
         do (when (typep child 'components:parent-component)
              (condense-component-tree child)))
   component)
+
+(defun vector-push-front (element vector)
+  (vector-push-extend (aref vector (1- (length vector))) vector)
+  (loop for i downfrom (- (length vector) 2) to 1
+        do (setf (aref vector i) (aref vector (1- i))))
+  (setf (aref vector 0) element))
+
+(defun delegate-paragraph (parser line cursor)
+  (let* ((component (stack-entry-component (stack-top (stack parser))))
+         (children (components:children component))
+         (sibling (when (< 0 (length children))
+                      (aref children (1- (length children))))))
+    (unless (or (typep sibling 'components:paragraph)
+                (typep component 'components:paragraph))
+      (commit (directive 'paragraph parser) (make-instance 'components:paragraph) parser))
+    (read-inline parser line cursor #\Nul)))

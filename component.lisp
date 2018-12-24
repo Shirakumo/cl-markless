@@ -14,6 +14,13 @@
 (defvar *instructions*
   '(set info warning error include disable enable))
 
+(defclass sized ()
+  ((unit :initarg :unit :initform (cl:error "UNIT required") :accessor unit)
+   (size :initarg :size :initform (cl:error "SIZE required") :accessor size)))
+
+(define-printer sized
+  "~f~(~a~)" (size c) (unit c))
+
 (defclass component ()
   ())
 
@@ -96,7 +103,7 @@
 (defclass horizontal-rule (unit-component block-component)
   ())
 
-(defclass code-block (parent-component block-component)
+(defclass code-block (text-component block-component)
   ((language :initarg :language :initform NIL :accessor language)
    (options :initarg :options :initform () :accessor options)))
 
@@ -151,9 +158,7 @@
 
 (defclass embed (unit-component block-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)
-   (float :initarg :float :initform NIL :accessor float)
-   (width :initarg :width :initform NIL :accessor width)
-   (height :initarg :height :initform NIL :accessor height)))
+   (options :initarg :options :initform () :accessor options)))
 
 (define-printer embed
   "~s" (target c))
@@ -166,6 +171,24 @@
 
 (defclass audio (embed)
   ())
+
+(defclass embed-option ()
+  ())
+
+(defclass loop-option (embed-option)
+  ())
+
+(defclass autoplay-option (embed-option)
+  ())
+
+(defclass width-option (embed-option sized)
+  ())
+
+(defclass height-option (embed-option sized)
+  ())
+
+(defclass float-option (embed-option)
+  ((direction :initarg :direction :initform (cl:error "DIRECTION required") :accessor direction)))
 
 (defclass footnote (parent-component block-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
@@ -200,26 +223,26 @@
 (defclass compound (parent-component)
   ((options :initarg :options :initform () :accessor options)))
 
-(defclass option ()
+(defclass compound-option ()
   ())
 
-(defclass bold-option (option) ())
+(defclass bold-option (compound-option) ())
 
-(defclass italic-option (option) ())
+(defclass italic-option (compound-option) ())
 
-(defclass underline-option (option) ())
+(defclass underline-option (compound-option) ())
 
-(defclass strikethrough-option (option) ())
+(defclass strikethrough-option (compound-option) ())
 
-(defclass spoiler-option (option) ())
+(defclass spoiler-option (compound-option) ())
 
-(defclass font-option (option)
+(defclass font-option (compound-option)
   ((font-family :initarg :font-family :initform (cl:error "FONT-FAMILY required") :accessor font-family)))
 
 (define-printer font-option
   "~s" (font-family c))
 
-(defclass color-option (option)
+(defclass color-option (compound-option)
   ((red :initarg :red :initform (cl:error "RED required") :accessor red)
    (green :initarg :green :initform (cl:error "GREEN required") :accessor green)
    (blue :initarg :blue :initform (cl:error "BLUE required") :accessor blue)))
@@ -227,14 +250,13 @@
 (define-printer color-option
   "~d,~d,~d" (red c) (green c) (blue c))
 
-(defclass size-option (option)
-  ((unit :initarg :unit :initform :em :accessor unit)
-   (size :initarg :size :initform (cl:error "SIZE required") :accessor size)))
+(defclass size-option (compound-option sized)
+  ())
 
 (define-printer size-option
   "~f~(~a~)" (size c) (unit c))
 
-(defclass hyperlink-option (option)
+(defclass hyperlink-option (compound-option)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
 (define-printer hyperlink-option

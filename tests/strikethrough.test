@@ -1,0 +1,37 @@
+<-a->
+~~
+(root (paragraph (strikethrough "a")))
+
+<-a<-b->c->
+~~
+(root (paragraph (strikethrough "a" (strikethrough "b") "c")))
+
+<-\-->
+~~
+(root (paragraph (strikethrough "-")))
+
+<-a
+b->
+~~
+(root (paragraph (strikethrough "a
+b")))
+
+<-a
+~~
+(root (paragraph "<-a"))
+
+<-a->b->
+~~
+(root (paragraph (strikethrough "a") "b->"))
+
+a->
+~~
+(root (paragraph "a->"))
+
+<\-a->
+~~
+(root (paragraph "<-a->"))
+
+\<-a->
+~~
+(root (paragraph "<-a->"))

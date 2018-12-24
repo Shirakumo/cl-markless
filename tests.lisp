@@ -18,12 +18,15 @@
 
 (define-test cl-markless)
 
+(defun reloc-symbol (symbol)
+  (intern (string symbol) #.*package*))
+
 (defgeneric to-ast (component))
 
 (defmethod to-ast ((_ string)) _)
 
 (defmethod to-ast ((_ components:component))
-  (list (intern (string (type-of _)) #.*package*)))
+  (list (reloc-symbol (type-of _))))
 
 (defmethod to-ast ((_ components:root-component))
   (list* 'root
@@ -31,25 +34,106 @@
                collect (to-ast child))))
 
 (defmethod to-ast ((_ components:text-component))
-  (list (intern (string (type-of _)) #.*package*)
+  (list (reloc-symbol (type-of _))
         (to-ast (components:text _))))
 
 (defmethod to-ast ((_ components:parent-component))
-  (list* (intern (string (type-of _)) #.*package*)
+  (list* (reloc-symbol (type-of _))
          (loop for child across (cl-markless::condense-children (components:children _))
                collect (to-ast child))))
 
 (defmethod to-ast ((_ components:ordered-list-item))
-  (list* (intern (string (type-of _)) #.*package*)
+  (list* (reloc-symbol (type-of _))
          (list (components:number _))
          (loop for child across (cl-markless::condense-children (components:children _))
                collect (to-ast child))))
 
 (defmethod to-ast ((_ components:header))
-  (list* (intern (string (type-of _)) #.*package*)
+  (list* (reloc-symbol (type-of _))
          (list (components:depth _))
          (loop for child across (cl-markless::condense-children (components:children _))
                collect (to-ast child))))
+
+(defmethod to-ast ((_ components:code-block))
+  (list (reloc-symbol (type-of _))
+        (when (components:language _) (list* (components:language _) (components:options _)))
+        (to-ast (components:text _))))
+
+(defmethod to-ast ((_ components:embed))
+  (list* 'embed
+         (reloc-symbol (type-of _))
+         (components:target _)
+         (mapcar #'to-ast (components:options _))))
+
+(defmethod to-ast ((_ components:autoplay-option))
+  (list 'autoplay))
+
+(defmethod to-ast ((_ components:loop-option))
+  (list 'loop))
+
+(defmethod to-ast ((_ components:width-option))
+  (list 'width
+        (components:size _)
+        (reloc-symbol (components:unit _))))
+
+(defmethod to-ast ((_ components:height-option))
+  (list 'height
+        (components:size _)
+        (reloc-symbol (components:unit _))))
+
+(defmethod to-ast ((_ components:float-option))
+  (list 'float
+        (reloc-symbol (components:direction _))))
+
+(defmethod to-ast ((_ components:footnote))
+  (list* (reloc-symbol (type-of _))
+         (list (components:target _))
+         (loop for child across (cl-markless::condense-children (components:children _))
+               collect (to-ast child))))
+
+(defmethod to-ast ((_ components:footnote-reference))
+  (list (reloc-symbol (type-of _))
+        (components:target _)))
+
+(defmethod to-ast ((_ components:compound))
+  (list* (reloc-symbol (type-of _))
+         (mapcar #'to-ast (components:options _))
+         (loop for child across (cl-markless::condense-children (components:children _))
+               collect (to-ast child))))
+
+(defmethod to-ast ((_ components:bold-option))
+  (list 'bold))
+
+(defmethod to-ast ((_ components:italic-option))
+  (list 'italic))
+
+(defmethod to-ast ((_ components:underline-option))
+  (list 'underline))
+
+(defmethod to-ast ((_ components:strikethrough-option))
+  (list 'strikethrough))
+
+(defmethod to-ast ((_ components:spoiler-option))
+  (list 'spoiler))
+
+(defmethod to-ast ((_ components:font-option))
+  (list 'font
+        (components:font-family _)))
+
+(defmethod to-ast ((_ components:color-option))
+  (list 'color
+        (components:red _)
+        (components:green _)
+        (components:blue _)))
+
+(defmethod to-ast ((_ components:size-option))
+  (list 'size
+        (components:size _)
+        (reloc-symbol (components:unit _))))
+
+(defmethod to-ast ((_ components:hyperlink-option))
+  (list 'hyperlink
+        (components:target _)))
 
 (defun ensure-ast (thing)
   (etypecase thing
@@ -61,9 +145,17 @@
      (to-ast (cl-markless:parse thing T)))))
 
 (defun ast= (a b)
-  (let ((a (ensure-ast a))
-        (b (ensure-ast b)))
-    (equal a b)))
+  (labels ((r (a b)
+             (typecase a
+               (number (and (numberp b) (= a b)))
+               (list (and (listp b)
+                          (= (length a) (length b))
+                          (loop for ai in a
+                                for bi in b
+                                always (r ai bi))))
+               (T (equal a b)))))
+    (r (ensure-ast a)
+       (ensure-ast b))))
 
 (defclass ast-result (value-result)
   ((expected :initarg :expected :accessor expected)))

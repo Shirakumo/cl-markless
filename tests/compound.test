@@ -1,0 +1,67 @@
+"a"()
+~~
+(root (paragraph (compound () "a")))
+
+"a"(bold)
+~~
+(root (paragraph (compound ((bold)) "a")))
+
+"a"(bold, italic, underline, strikethrough, spoiler)
+~~
+(root (paragraph (compound ((bold) (italic) (underline) (strikethrough) (spoiler)) "a")))
+
+"a"(font Comic Sans MS)
+~~
+(root (paragraph (compound ((font "Comic Sans MS")) "a")))
+
+"a"(color #FFFFFF)
+~~
+(root (paragraph (compound ((color 255 255 255)) "a")))
+
+"a"(color 0 0 0)
+~~
+(root (paragraph (compound ((color 0 0 0)) "a")))
+
+"a"(size 0.5em)
+~~
+(root (paragraph (compound ((size 0.5 em)) "a")))
+
+"a"(size 10pt)
+~~
+(root (paragraph (compound ((size 10 pt)) "a")))
+
+"a"(normal)
+~~
+(root (paragraph (compound ((size 1 em)) "a")))
+
+"a"(#a)
+~~
+(root (paragraph (compound ((hyperlink "a")) "a")))
+
+"a"(link a)
+~~
+(root (paragraph (compound ((hyperlink "a")) "a")))
+
+"a"b"(bold)c"(italic)
+~~
+(root (paragraph (compound ((italic)) "a" (compound ((bold)) "b") "c")))
+
+"a"
+~~
+(root (paragraph "\"a\""))
+
+"a" ()
+~~
+(root (paragraph "\"a\" ()"))
+
+\"a"()
+~~
+(root (paragraph "\"a\"()"))
+
+"a\"()
+~~
+(root (paragraph "\"a\"()"))
+
+"a"\()
+~~
+(root (paragraph "\"a\"()"))

@@ -1,0 +1,30 @@
+**a//b//c**
+~~
+(root (paragraph (bold "a" (italic "b") "c")))
+
+**a//
+b//c**
+~~
+(root (paragraph (bold "a" (italic "
+b") "c")))
+
+| # **a**
+~~
+(root (blockquote (header (1) (bold "a"))))
+
+|   # **a**
+|   b
+~~
+(root (blockquote (paragraph (header (1) (bold "a")) "b")))
+
+**a//b**c**d//e**
+~~
+(root (paragraph (bold "a" (italic "b" (bold "c") "d") "e")))
+
+"**a**"(italic)
+~~
+(root (paragraph (compound ((italic)) (bold "a"))))
+
+//"a"(bold)//
+~~
+(root (paragraph (italic (compound ((bold)) "a"))))

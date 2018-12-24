@@ -185,10 +185,7 @@
     (cond ((or (<= (length line) end)
                (char/= #\. (aref line end)))
            ;; We did a bad match, pretend we're a paragraph and skip the match.
-           (let ((component (make-instance 'components:paragraph)))
-             (commit (directive 'paragraph parser) component parser)
-             (vector-push-extend (subseq line cursor end) (components:children component))
-             end))
+           (delegate-paragraph parser line cursor))
           (T
            ;; Construct item, just like for the ordered list.
            (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
@@ -217,12 +214,19 @@
   #("#" "# "))
 
 (defmethod begin ((_ header) parser line cursor)
-  (let ((depth 0))
-    (loop for i from cursor below (length line)
-          while (char= #\# (aref line i))
-          do (incf depth))
-    (commit _ (make-instance 'components:header :depth depth) parser)
-    (+ cursor 1 depth)))
+  (let ((end cursor))
+    (loop while (and (< end (length line))
+                     (char= #\# (aref line end)))
+          do (incf end))
+    (cond ((or (<= (length line) end)
+               (char/= #\  (aref line end)))
+           (let ((component (make-instance 'components:paragraph)))
+             (commit (directive 'paragraph parser) component parser)
+             (vector-push-extend (subseq line cursor end) (components:children component))
+             end))
+          (T
+           (commit _ (make-instance 'components:header :depth (- end cursor)) parser)
+           (1+ end)))))
 
 (defmethod end :after ((_ header) component parser)
   (let ((target (components:text component)))
@@ -257,19 +261,29 @@
   #(":" ":"))
 
 (defmethod begin ((_ code-block) parser line cursor)
-  (multiple-value-bind (language cursor) (read-space-delimited line (+ cursor 2))
-    (let ((options (split-string line #\  cursor)))
-      (commit _ (make-instance 'components:code-block :language language :options options) parser)
-      (length line))))
+  (multiple-value-bind (language cursor) (read-space-delimited line (+ cursor 3))
+    (let ((options (split-string line #\  cursor))
+          (language (when (string/= "" language) language)))
+      (commit _ (make-instance 'components:code-block :language language :options options :text "") parser)
+      0)))
 
 (defmethod consume-prefix ((_ code-block) component parser line cursor)
   cursor)
 
 (defmethod invoke ((_ code-block) component parser line cursor)
-  (if (string= line "::")
-      (stack-pop (stack parser))
-      (vector-push-extend line (components:children component)))
-  (length line))
+  (let ((input (input parser))
+        (end (length line)))
+    (setf line (read-line input))
+    (when (string/= line "::")
+      (setf (components:text component)
+            (with-output-to-string (output)
+              (loop (write-string line output)
+                    (setf line (read-line input))
+                    (if (string= "::" line)
+                        (return)
+                        (write-char #\Linefeed output))))))
+    (stack-pop (stack parser))
+    end))
 
 (defclass instruction (singular-line-directive)
   ())
@@ -332,24 +346,37 @@
   #("[" " "))
 
 (defmethod begin ((_ embed) parser line cursor)
-  (multiple-value-bind (target cursor) (read-space-delimited line (+ cursor 2))
-    (let ((options (split-string line #\  cursor))
-          (component (make-instance 'components:embed :target target)))
-      (loop for (key val) on options by #'cddr
-            do (cond ((string-equal key "float")
-                      (setf (components:float component)
-                            (cond ((string-equal val "left") :left)
-                                  ((string-equal val "right") :right)
-                                  (T (error "FIXME: better error")))))
-                     ((string-equal key "width")
-                      (setf (components:width component) val))
-                     ((string-equal key "height")
-                      (setf (components:height component) val))
-                     ((and (string= key "]") (null val)))
-                     (T
-                      (error "FIXME: better error"))))
-      (commit _ component parser)
-      (length line))))
+  (multiple-value-bind (type cursor) (read-space-delimited line (+ cursor 2))
+    (multiple-value-bind (target cursor) (read-space-delimited line (+ cursor 1))
+      (let ((type (find-symbol (to-readtable-case type #.(readtable-case *readtable*))
+                               '#:org.shirakumo.markless.components)))
+        (unless (and type (subtypep type 'components:embed))
+          (error "FIXME: better error"))
+        (let ((component (make-instance type :target target)))
+          (multiple-value-bind (options cursor) (split-options line cursor #\])
+            (setf (components:options component)
+                  (mapcar #'parse-embed-option options))
+            (commit _ component parser)
+            cursor))))))
+
+(defun parse-embed-option (option)
+  (cond ((string-equal "loop" option)
+         (make-instance 'components:loop-option))
+        ((string-equal "autoplay" option)
+         (make-instance 'components:autoplay-option))
+        ((starts-with "float " option)
+         (make-instance 'components:float-option
+                        :direction (cond ((string-equal "float left" option) :left)
+                                         ((string-equal "float right" option) :right)
+                                         (T (error "FIXME: better error")))))
+        ((starts-with "width " option)
+         (multiple-value-bind (size unit) (parse-unit option :start (length "width "))
+           (make-instance 'components:width-option :size size :unit unit)))
+        ((starts-with "height " option)
+         (multiple-value-bind (size unit) (parse-unit option :start (length "height "))
+           (make-instance 'components:height-option :size size :unit unit)))
+        (T
+         (error "FIXME: better error"))))
 
 (defclass footnote (singular-line-directive)
   ())
@@ -363,20 +390,17 @@
     (loop while (and (< end (length line))
                      (<= (char-code #\0) (char-code (aref line end)) (char-code #\9)))
           do (incf end))
-    (cond ((or (<= (length line) end)
+    (cond ((or (<= (length line) (1+ end))
                (= end cursor)
                (char/= #\] (aref line end)))
            ;; Mismatch. Pretend we're a paragraph.
-           (let ((component (make-instance 'components:paragraph)))
-             (commit (directive 'paragraph parser) component parser)
-             (vector-push-extend (subseq line cursor end) (components:children component))
-             end))
+           (delegate-paragraph parser line (1- cursor)))
           (T
            (let* ((target (parse-integer line :start cursor :end end))
                   (component (make-instance 'components:footnote :target target)))
-             (setf (components:label target (root parser)) component)
+             (setf (components:label (princ-to-string target) (root parser)) component)
              (commit _ component parser)
-             (1+ end))))))
+             (+ 2 end))))))
 
 ;;;; Inline Directives
 
@@ -390,6 +414,9 @@
   (commit _ (make-instance 'components:bold) parser)
   (+ 2 cursor))
 
+(defmethod end :after ((_ bold) component parser)
+  (vector-push-front "**" (components:children component)))
+
 (defclass italic (surrounding-inline-directive)
   ())
 
@@ -400,6 +427,9 @@
   (commit _ (make-instance 'components:italic) parser)
   (+ 2 cursor))
 
+(defmethod end :after ((_ italic) component parser)
+  (vector-push-front "//" (components:children component)))
+
 (defclass underline (surrounding-inline-directive)
   ())
 
@@ -409,6 +439,9 @@
 (defmethod begin ((_ underline) parser line cursor)
   (commit _ (make-instance 'components:underline) parser)
   (+ 2 cursor))
+
+(defmethod end :after ((_ underline) component parser)
+  (vector-push-front "__" (components:children component)))
 
 (defclass strikethrough (inline-directive)
   ())
@@ -425,6 +458,9 @@
 
 (defmethod consume-end ((_ strikethrough) component parser line cursor)
   (match! "->" line cursor))
+
+(defmethod end :after ((_ strikethrough) component parser)
+  (vector-push-front "<-" (components:children component)))
 
 (defclass code (inline-directive)
   ())
@@ -456,6 +492,9 @@
    (components:children component))
   cursor)
 
+(defmethod end :after ((_ code) component parser)
+  (vector-push-front "``" (components:children component)))
+
 (defclass supertext (inline-directive)
   ())
 
@@ -472,6 +511,9 @@
 (defmethod consume-end ((_ supertext) component parser line cursor)
   (match! ")" line cursor))
 
+(defmethod end :after ((_ supertext) component parser)
+  (vector-push-front "^(" (components:children component)))
+
 (defclass subtext (inline-directive)
   ())
 
@@ -487,6 +529,9 @@
 
 (defmethod consume-end ((_ subtext) component parser line cursor)
   (match! ")" line cursor))
+
+(defmethod end :after ((_ subtext) component parser)
+  (vector-push-front "v(" (components:children component)))
 
 (defclass compound (inline-directive)
   ())
@@ -505,25 +550,13 @@
   (when (and (< (+ 2 cursor) (length line))
              (char= #\( (aref line (+ 1 cursor))))
     (incf cursor 2)
-    (let* ((options ())
-           (buffer (make-string-output-stream)))
-      (loop while (< cursor (length line))
-            for char = (aref line cursor)
-            do (cond ((char= #\\ char)
-                      (incf cursor)
-                      (write-char (aref line cursor) buffer))
-                     ((char= #\, char)
-                      (push (get-output-stream-string buffer) options))
-                     ((char= #\) char)
-                      (incf cursor)
-                      (push (get-output-stream-string buffer) options)
-                      (return))
-                     (T
-                      (write-char char buffer)))
-               (incf cursor))
+    (multiple-value-bind (options cursor) (split-options line cursor #\))
       (setf (components:options component)
             (mapcar #'parse-compound-option options))
       cursor)))
+
+(defmethod end :after ((_ compound) component parser)
+  (vector-push-front "\"" (components:children component)))
 
 (defvar *style-table*
   (let ((table (make-hash-table :test 'equalp)))
@@ -546,15 +579,12 @@
                (destructuring-bind (r g b) (decompose-rgb hex)
                  (make-instance 'components:color-option :red r :green g :blue b))))
             ((starts-with "color " option)
-             (let ((parts (split-string option #\, (length "color "))))
+             (let ((parts (split-string option #\  (length "color "))))
                (destructuring-bind (r g b) (mapcar #'parse-integer parts)
                  (make-instance 'components:color-option :red r :green g :blue b))))
             ((starts-with "size " option)
-             (let ((unit (cond ((ends-with "em" option) :em)
-                               ((ends-with "pt" option) :pt)
-                               (T (error "FIXME: better error"))))
-                   (size (parse-float option :start (length "size ") :end (- (length option) 2))))
-               (make-instance 'components:size-option :unit unit :size size)))
+             (multiple-value-bind (size unit) (parse-unit option :start (length "size "))
+               (make-instance 'components:size-option :size size :unit unit)))
             ((starts-with "#" option)
              (make-instance 'components:internal-hyperlink-option :target (subseq option 1)))
             ((starts-with "link " option)

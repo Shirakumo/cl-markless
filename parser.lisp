@@ -135,6 +135,11 @@
 (defmethod directive ((name symbol) (parser parser))
   (find name (directives parser) :key #'type-of))
 
+(defmethod directive ((name string) parser)
+  (directive (find-symbol (to-readtable-case name #.(readtable-case *readtable*))
+                          '#:org.shirakumo.markless)
+             parser))
+
 (defmethod directives-of (type (parser parser))
   (remove-if-not (lambda (d) (typep d type)) (directives parser)))
 

@@ -10,6 +10,9 @@
   (:shadow #:list #:number #:set #:variable #:warning #:error #:float #:labels)
   (:export
    #:*instructions*
+   #:sized
+   #:unit
+   #:size
    #:component
    #:unit-component
    #:text-component
@@ -58,12 +61,16 @@
    #:comment
    #:embed
    #:target
-   #:float
-   #:width
-   #:height
    #:image
    #:video
    #:audio
+   #:embed-option
+   #:loop-option
+   #:autoplay-option
+   #:width-option
+   #:height-option
+   #:float-option
+   #:direction
    #:footnote
    #:bold
    #:italic
@@ -88,8 +95,6 @@
    #:green
    #:blue
    #:size-option
-   #:unit
-   #:size
    #:internal-hyperlink-option
    #:hyperlink-option
    #:target

@@ -146,8 +146,11 @@
     (format s "; ~a" (components:text c)))
 
   (components:embed ()
-    (format s "[ ~(~a~) ~a~@[float ~a~]~@[width ~a~]~@[height ~a~] ]"
-            (type-of c) (components:target c) (components:float c) (components:width c) (components:height c)))
+    (format s "[ ~(~a~) ~a"
+            (type-of c) (components:target c))
+    (loop for option in (components:options c)
+          do (format s ", ")
+             (output option)))
 
   (components:footnote ()
     (format s "[~d] " (components:target c))

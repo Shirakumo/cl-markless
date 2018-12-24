@@ -1,0 +1,30 @@
+--
+~~
+(root (paragraph "—"))
+
+<---->
+~~
+(root (paragraph (strikethrough "—")))
+
+-/-
+~~
+(root (paragraph "
+"))
+
+<--/-->
+~~
+(root (paragraph (strikethrough "
+")))
+
+---/---
+~~
+(root (paragraph "—
+—"))
+
+! set line-break-mode hide
+-/-
+-/-
+~~
+(root (paragraph "
+
+"))

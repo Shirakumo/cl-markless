@@ -1,0 +1,33 @@
+[1] 
+~~
+(root (footnote (1)))
+
+[10] 
+~~
+(root (footnote (10)))
+
+[1] a
+~~
+(root (footnote (1) "a"))
+
+[1] **b**
+~~
+(root (footnote (1) (bold "b")))
+
+[1
+~~
+(root (paragraph "[1"))
+
+[10
+~~
+(root (paragraph "[10"))
+
+[1] 
+[1] 
+~~
+(root (footnote (1)) (footnote (1)))
+
+[1] a
+    b
+~~
+(root (footnote (1) "a") (paragraph "b"))
