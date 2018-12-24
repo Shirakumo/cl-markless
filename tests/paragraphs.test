@@ -1,7 +1,0 @@
-a
-
-b
-  c
-d
-~~
-(root (paragraph "a") (paragraph "b") (paragraph "c") (paragraph "d"))

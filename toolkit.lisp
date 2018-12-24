@@ -73,3 +73,33 @@
     (:upcase (string-upcase string))
     (:preserve string)
     (:invert (error "FIXME: Implement INVERT read-case."))))
+
+
+(defun condense-children (children)
+  (let ((buffer (make-string-output-stream))
+        (result (make-array 0 :adjustable T :fill-pointer T)))
+    (labels ((commit ()
+               (let ((string (get-output-stream-string buffer)))
+                 (when (string/= "" string)
+                   (vector-push-extend string result))))
+             (traverse (children)
+               (loop for child across children
+                     do (cond ((stringp child)
+                               (write-string child buffer))
+                              ((eql 'components:parent-component (type-of child))
+                               (traverse (components:children child)))
+                              (T
+                               (commit)
+                               (vector-push-extend child result))))))
+      (traverse children)
+      (let ((string (string-right-trim '(#\Newline) (get-output-stream-string buffer))))
+        (when (string/= "" string)
+          (vector-push-extend string result)))
+      result)))
+
+(defun condense-component-tree (component)
+  (loop for child across (setf (components:children component)
+                               (condense-children component))
+        do (when (typep child 'components:parent-component)
+             (condense-component-tree child)))
+  component)

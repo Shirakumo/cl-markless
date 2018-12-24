@@ -201,12 +201,22 @@
     (declare (optimize speed))
     (if (and (< 0 (length line)) (eql #\\ (char line (1- (length line)))))
         (with-output-to-string (out)
-          (loop for current of-type simple-string = line then (read-line stream)
-                do (cond ((eql #\\ (aref current (1- (length (the simple-string current)))))
-                          (write-string current out :end (1- (length current))))
+          (loop with i of-type fixnum = 0
+                with length of-type fixnum = (length line)
+                while (< i length)
+                for char of-type character = (aref line i)
+                do (cond ((char= #\\ char)
+                          (incf i)
+                          (cond ((= i length)
+                                 (setf i -1)
+                                 (setf line (read-line stream))
+                                 (setf length (length line)))
+                                (T
+                                 (write-char char out)
+                                 (write-char (aref line i) out))))
                          (T
-                          (write-string current out)
-                          (return)))))
+                          (write-char char out)))
+                   (incf i)))
         line)))
 
 (defmethod parse (thing (parser (eql T)))
@@ -239,6 +249,12 @@
                 (stack-entry-component entry)
                 parser)))
 
+(defun commit (directive component parser)
+  (let* ((stack (stack parser))
+         (children (components:children (stack-entry-component (stack-top stack)))))
+    (vector-push-extend component children)
+    (stack-push directive component stack)))
+
 (defun process-stack (parser stack line)
   (let ((cursor 0)
         (stack-pointer 1))
@@ -261,12 +277,6 @@
       (let ((top (stack-entry-component (stack-top stack))))
         (when (typep top 'components:parent-component)
           (vector-push-extend #.(string #\Linefeed) (components:children top)))))))
-
-(defun commit (directive component parser)
-  (let* ((stack (stack parser))
-         (children (components:children (stack-entry-component (stack-top stack)))))
-    (vector-push-extend component children)
-    (stack-push directive component stack)))
 
 (defun read-block (parser line cursor)
   (let* ((table (block-dispatch-table parser))

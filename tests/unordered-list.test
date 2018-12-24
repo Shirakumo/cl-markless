@@ -1,0 +1,54 @@
+- 
+~~
+(root (unordered-list (unordered-list-item)))
+
+- a
+~~
+(root (unordered-list (unordered-list-item (paragraph "a"))))
+
+- 
+- 
+~~
+(root (unordered-list (unordered-list-item) (unordered-list-item)))
+
+-
+~~
+(root (paragraph "-"))
+
+-a
+~~
+(root (paragraph "-a"))
+
+- a
+  b
+~~
+(root (unordered-list (unordered-list-item (paragraph "a
+b"))))
+
+- a
+  b
+- c
+~~
+(root (unordered-list (unordered-list-item (paragraph "a
+b")) (unordered-list-item (paragraph "c"))))
+
+- - 
+~~
+(root (unordered-list (unordered-list-item (unordered-list (unordered-list-item)))))
+
+- - a
+    b
+~~
+(root (unordered-list (unordered-list-item (unordered-list (unordered-list-item (paragraph "a
+b"))))))
+
+-  a
+   b
+~~
+(root (unordered-list (unordered-list-item (paragraph "a
+b"))))
+
+- a
+   b
+~~
+(root (unordered-list (unordered-list-item (paragraph "a") (paragraph "b"))))

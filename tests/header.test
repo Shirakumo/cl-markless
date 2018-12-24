@@ -1,0 +1,28 @@
+# 
+~~
+(root (header (1)))
+
+## 
+~~
+(root (header (2)))
+
+###### 
+~~
+(root (header (6)))
+
+# a
+~~
+(root (header (1) "a"))
+
+# a
+# b
+~~
+(root (header (1) "a") (header (1) "b"))
+
+#
+~~
+(root (paragraph "#"))
+
+##
+~~
+(root (paragraph "##"))

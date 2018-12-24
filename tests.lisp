@@ -27,12 +27,28 @@
 
 (defmethod to-ast ((_ components:root-component))
   (list* 'root
-         (loop for child across (components:children _)
+         (loop for child across (cl-markless::condense-children (components:children _))
                collect (to-ast child))))
+
+(defmethod to-ast ((_ components:text-component))
+  (list (intern (string (type-of _)) #.*package*)
+        (to-ast (components:text _))))
 
 (defmethod to-ast ((_ components:parent-component))
   (list* (intern (string (type-of _)) #.*package*)
-         (loop for child across (components:children _)
+         (loop for child across (cl-markless::condense-children (components:children _))
+               collect (to-ast child))))
+
+(defmethod to-ast ((_ components:ordered-list-item))
+  (list* (intern (string (type-of _)) #.*package*)
+         (list (components:number _))
+         (loop for child across (cl-markless::condense-children (components:children _))
+               collect (to-ast child))))
+
+(defmethod to-ast ((_ components:header))
+  (list* (intern (string (type-of _)) #.*package*)
+         (list (components:depth _))
+         (loop for child across (cl-markless::condense-children (components:children _))
                collect (to-ast child))))
 
 (defun ensure-ast (thing)
@@ -47,7 +63,6 @@
 (defun ast= (a b)
   (let ((a (ensure-ast a))
         (b (ensure-ast b)))
-    ;; FIXME: some leniency is allowed.
     (equal a b)))
 
 (defclass ast-result (value-result)
@@ -80,11 +95,13 @@ which is not ast= ~20t~s"
             do (loop for line = (read-line stream)
                      until (string= line "~~")
                      do (write-line line source))
-            collect (cons (string-right-trim '(#\Linefeed) (get-output-stream-string source))
-                          (read stream))))))
+            collect (list (let ((string (get-output-stream-string source)))
+                            (subseq string 0 (max 0 (1- (length string)))))
+                          (read stream))
+            do (read-line stream NIL)))))
 
 (defun compile-test-case (test-case)
-  (destructuring-bind (input . expected-structure) test-case
+  (destructuring-bind (input expected-structure) test-case
     (lambda ()
       (eval-in-context *context*
                        (make-instance 'ast-result

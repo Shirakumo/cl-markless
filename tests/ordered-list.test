@@ -1,0 +1,67 @@
+1.
+~~
+(root (ordered-list (ordered-list-item (1))))
+
+3.
+~~
+(root (ordered-list (ordered-list-item (3))))
+
+10.
+~~
+(root (ordered-list (ordered-list-item (10))))
+
+1.a
+~~
+(root (ordered-list (ordered-list-item (1) (paragraph "a"))))
+
+1.1.
+~~
+(root (ordered-list (ordered-list-item (1) (ordered-list (ordered-list-item (1))))))
+
+1.a
+  b
+~~
+(root (ordered-list (ordered-list-item (1) (paragraph "a
+b"))))
+
+1. a
+   b
+~~
+(root (ordered-list (ordered-list-item (1) (paragraph "a
+b"))))
+
+1. a
+    b
+~~
+(root (ordered-list (ordered-list-item (1) (paragraph "a") (paragraph "b"))))
+
+10.a
+   b
+~~
+(root (ordered-list (ordered-list-item (10) (paragraph "a
+b"))))
+
+1.
+2.
+~~
+(root (ordered-list (ordered-list-item (1)) (ordered-list-item (2))))
+
+3.
+10.
+~~
+(root (ordered-list (ordered-list-item (3)) (ordered-list-item (10))))
+
+1.a
+  b
+2.c
+~~
+(root (ordered-list (ordered-list-item (1) (paragraph "a
+b")) (ordered-list-item (2) (paragraph "c"))))
+
+1
+~~
+(root (paragraph "1"))
+
+10
+~~
+(root (paragraph "10"))
