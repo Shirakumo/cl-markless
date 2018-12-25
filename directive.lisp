@@ -342,9 +342,9 @@
   #("[" " "))
 
 (defmethod begin ((_ embed) parser line cursor)
-  (multiple-value-bind (type cursor) (read-space-delimited line (+ cursor 2))
+  (multiple-value-bind (typename cursor) (read-space-delimited line (+ cursor 2))
     (multiple-value-bind (target cursor) (read-space-delimited line (+ cursor 1))
-      (let ((type (find-symbol (to-readtable-case type #.(readtable-case *readtable*))
+      (let ((type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
                                '#:org.shirakumo.markless.components)))
         (cond ((and type (subtypep type 'components:embed))
                (let ((component (make-instance type :target target)))
@@ -354,7 +354,7 @@
                    (commit _ component parser)
                    cursor)))
               (T
-               (warn 'unknown-embed-type :embed-type type)
+               (warn 'unknown-embed-type :embed-type typename)
                (let ((paragraph (make-instance 'components:paragraph))
                      (url (make-instance 'components:url :target target)))
                  (vector-push-extend url (components:children paragraph))

@@ -18,6 +18,10 @@
 ~~
 (root (embed video "a" (loop) (autoplay) (float left) (width 10 px) (height 10 %)))
 
+[ unknown a ]
+~~
+(root (paragraph (url "a")))
+
 [
 ~~
 (root (paragraph "["))

@@ -102,6 +102,10 @@
   (list (reloc-symbol (type-of _))
         (components:target _)))
 
+(defmethod to-ast ((_ components:url))
+  (list (reloc-symbol (type-of _))
+        (components:target _)))
+
 (defmethod to-ast ((_ components:compound))
   (list* (reloc-symbol (type-of _))
          (mapcar #'to-ast (components:options _))
