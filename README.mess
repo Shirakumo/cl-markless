@@ -1,0 +1,24 @@
+# About cl-markless
+This is an implementation of the "Markless standard"(link https://github.com/shirakumo/markless) at version 1.0. It handles the parsing of plaintext from a stream into an abstract syntax tree composed out of strings and component objects. From there the AST can be easily compiled into a target markup language like HTML.
+
+# How To
+To parse a Markless document, simply call the function ``parse``:
+
+:: common-lisp
+(cl-markless:parse "Hello!" T)
+::
+
+This will return the generated AST. From there on you can manipulate, inspect, or compile it further.
+
+:: common-lisp
+(cl-markless:output * :format :debug)
+::
+
+## Extension
+The Markless standard permits extension in a few ways, all of which cl-markless supports. Furthermore, cl-markless allows the seamless addition of output compilers to allow integrating more target languages.
+
+### Directives
+### Instructions
+### Variables
+### Embed Types
+### Output Translators
