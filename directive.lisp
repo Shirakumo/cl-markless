@@ -588,9 +588,9 @@
              (multiple-value-bind (size unit) (parse-unit option :start (length "size "))
                (make-instance 'components:size-option :size size :unit unit)))
             ((starts-with "#" option)
-             (make-instance 'components:internal-hyperlink-option :target (subseq option 1)))
+             (make-instance 'components:internal-link-option :target (subseq option 1)))
             ((starts-with "link " option)
-             (make-instance 'components:hyperlink-option :target (subseq option (length "link "))))
+             (make-instance 'components:link-option :target (subseq option (length "link "))))
             (T
              (error 'bad-option :option option)))))
 

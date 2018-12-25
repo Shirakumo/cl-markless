@@ -36,11 +36,11 @@
 
 "a"(#a)
 ~~
-(root (paragraph (compound ((hyperlink "a")) "a")))
+(root (paragraph (compound ((link "a")) "a")))
 
 "a"(link a)
 ~~
-(root (paragraph (compound ((hyperlink "a")) "a")))
+(root (paragraph (compound ((link "a")) "a")))
 
 "a"b"(bold)c"(italic)
 ~~

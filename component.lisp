@@ -76,22 +76,22 @@
 (defclass list (parent-component)
   ())
 
-(defclass list-item (parent-component block-component)
+(defclass list-item (parent-component)
   ())
 
-(defclass ordered-list (list)
+(defclass ordered-list (list block-component)
   ())
 
-(defclass ordered-list-item (list-item)
+(defclass ordered-list-item (list-item block-component)
   ((number :initarg :number :initform 0 :accessor number)))
 
 (define-printer ordered-list-item
   "(~d)" (number c))
 
-(defclass unordered-list (list)
+(defclass unordered-list (list block-component)
   ())
 
-(defclass unordered-list-item (list-item)
+(defclass unordered-list-item (list-item block-component)
   ())
 
 (defclass header (parent-component block-component)
@@ -119,6 +119,12 @@
 (define-printer message-instruction
   "~s" (message c))
 
+(defclass directives-instruction (instruction)
+  ((directives :initarg :directives :initform (cl:error "DIRECTIVES required.") :accessor directives)))
+
+(define-printer directives-instruction
+  "~{~a~^ ~}" (directives c))
+
 (defclass set (instruction)
   ((variable :initarg :variable :initform (cl:error "VARIABLE required") :accessor variable)
    (value :initarg :value :initform (cl:error "VALUE required") :accessor value)))
@@ -140,12 +146,6 @@
 
 (define-printer include
   "~s" (file c))
-
-(defclass directives-instruction (instruction)
-  ((directives :initarg :directives :initform (cl:error "DIRECTIVES required.") :accessor directives)))
-
-(define-printer directives-instruction
-  "~{~a~^ ~}" (directives c))
 
 (defclass disable (directives-instruction)
   ())
@@ -256,14 +256,14 @@
 (define-printer size-option
   "~f~(~a~)" (size c) (unit c))
 
-(defclass hyperlink-option (compound-option)
+(defclass link-option (compound-option)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
-(define-printer hyperlink-option
+(define-printer link-option
   "~s" (target c))
 
-(defclass internal-hyperlink-option (hyperlink-option)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass internal-link-option (link-option)
+  ())
 
 (defclass footnote-reference (unit-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))

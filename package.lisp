@@ -95,8 +95,8 @@
    #:green
    #:blue
    #:size-option
-   #:internal-hyperlink-option
-   #:hyperlink-option
+   #:internal-link-option
+   #:link-option
    #:target
    #:footnote-reference
    #:target))

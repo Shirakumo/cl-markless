@@ -142,8 +142,8 @@
         (components:size _)
         (reloc-symbol (components:unit _))))
 
-(defmethod to-ast ((_ components:hyperlink-option))
-  (list 'hyperlink
+(defmethod to-ast ((_ components:link-option))
+  (list 'link
         (components:target _)))
 
 (defun ensure-ast (thing)
