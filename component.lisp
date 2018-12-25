@@ -217,8 +217,8 @@
 (defclass supertext (parent-component)
   ())
 
-(defclass url (text-component)
-  ())
+(defclass url (unit-component)
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
 (defclass compound (parent-component)
   ((options :initarg :options :initform () :accessor options)))

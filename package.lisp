@@ -110,7 +110,32 @@
   (:export
    #:*color-table*)
   ;; conditions.lisp
-  (:export)
+  (:export
+   #:markless-condition
+   #:implementation-condition
+   #:stack-exhausted
+   #:instruction-evaluation-undefined
+   #:instruction
+   #:parser-error
+   #:parser-warning
+   #:deactivation-disallowed
+   #:directive-instance
+   #:unknown-instruction
+   #:instruction
+   #:unknown-embed-type
+   #:embed-type
+   #:bad-option
+   #:option
+   #:bad-unit
+   #:bad-variable
+   #:variable-name
+   #:bad-value
+   #:variable-name
+   #:value
+   #:user-warning
+   #:message
+   #:user-error
+   #:message)
   ;; directive.lisp
   (:export
    #:prefix
@@ -195,4 +220,6 @@
    #:starts-with
    #:ends-with
    #:parse-float
-   #:to-readtable-case))
+   #:to-readtable-case
+   #:condense-children
+   #:condense-component-tree))

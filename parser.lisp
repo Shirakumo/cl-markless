@@ -120,7 +120,7 @@
 (defun stack-pop (stack)
   (declare (type (vector stack-entry) stack))
   (when (= 0 (fill-pointer stack))
-    (error "FIXME: better error"))
+    (error 'stack-exhausted))
   (decf (fill-pointer stack))
   (aref stack (fill-pointer stack)))
 
@@ -158,7 +158,7 @@
     (setf (enabled-p directive) (funcall test directive))))
 
 (defmethod evaluate-instruction (instruction (parser parser))
-  (error "FIXME: custom condition"))
+  (error 'instruction-evaluation-undefined :instruction instruction))
 
 (defmethod evaluate-instruction ((instruction components:set) (parser parser))
   (let ((v (components:variable instruction)))
@@ -168,7 +168,8 @@
                  ((string= (components:value instruction) "hide")
                   (setf (line-break-mode parser) :hide))
                  (T
-                  (error "FIXME: better error"))))
+                  (error 'bad-value :variable (components:variable instruction)
+                                    :value (components:value instruction)))))
           ((string-equal v "author")
            (setf (components:author (stack-entry-component (aref (stack parser) 0)))
                  (components:value instruction)))
@@ -176,18 +177,18 @@
            (setf (components:copyright (stack-entry-component (aref (stack parser) 0)))
                  (components:value instruction)))
           (T
-           (error "FIXME: better error")))))
+           (error 'bad-variable :variable (components:variable instruction))))))
 
 (defmethod evaluate-instruction ((instruction components:info) (parser parser))
   (format *error-output* "~&[INFO ] ~a~%" (components:message instruction)))
 
 (defmethod evaluate-instruction ((instruction components:warning) (parser parser))
   (format *error-output* "~&[WARN ] ~a~%" (components:message instruction))
-  (warn "FIXME: custom condition"))
+  (warn 'user-warning :message (components:message instruction)))
 
 (defmethod evaluate-instruction ((instruction components:error) (parser parser))
   (format *error-output* "~&[ERROR] ~a~%" (components:message instruction))
-  (error "FIXME: custom condition"))
+  (error 'user-error :message (components:message instruction)))
 
 (defmethod evaluate-instruction ((instruction components:include) (parser parser))
   (setf (input parser) (make-concatenated-stream

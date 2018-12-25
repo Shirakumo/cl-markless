@@ -95,7 +95,7 @@
                      ((ends-with "pt" string) :pt)
                      ((ends-with "px" string) :px)
                      ((ends-with "%" string) :%)
-                     (T (error "FIXME: better error"))))
+                     (T (error 'bad-unit :option string))))
          (size (parse-float string :start start :end (- (length string) (length (string unit))))))
     (values size unit)))
 

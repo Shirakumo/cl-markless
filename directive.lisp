@@ -26,14 +26,11 @@
     (directive directive-ish)
     (symbol (ensure-directive (make-instance directive-ish)))))
 
-(defmethod prefix ((_ directive))
-  (error "FIXME: better error"))
-
 (defclass root-directive (directive)
   ())
 
-(defmethod (setf enabled-p) ((value null) (root root-directive))
-  (error "FIXME: better error"))
+(defmethod (setf enabled-p) ((value null) (_ root-directive))
+  (error 'deactivation-disallowed :directive _))
 
 (defmethod invoke ((_ root-directive) component parser line cursor)
   (read-block parser line cursor))
@@ -295,7 +292,7 @@
     (let ((type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
                              '#:org.shirakumo.markless.components)))
       (unless (and type (subtypep type 'components:instruction))
-        (error "FIXME: better error"))
+        (error 'unknown-instruction :instruction typename))
       (commit _ (parse-instruction type line (1+ cursor)) parser))
     cursor))
 
@@ -349,14 +346,20 @@
     (multiple-value-bind (target cursor) (read-space-delimited line (+ cursor 1))
       (let ((type (find-symbol (to-readtable-case type #.(readtable-case *readtable*))
                                '#:org.shirakumo.markless.components)))
-        (unless (and type (subtypep type 'components:embed))
-          (error "FIXME: better error"))
-        (let ((component (make-instance type :target target)))
-          (multiple-value-bind (options cursor) (split-options line cursor #\])
-            (setf (components:options component)
-                  (mapcar #'parse-embed-option options))
-            (commit _ component parser)
-            cursor))))))
+        (cond ((and type (subtypep type 'components:embed))
+               (let ((component (make-instance type :target target)))
+                 (multiple-value-bind (options cursor) (split-options line cursor #\])
+                   (setf (components:options component)
+                         (mapcar #'parse-embed-option options))
+                   (commit _ component parser)
+                   cursor)))
+              (T
+               (warn 'unknown-embed-type :embed-type type)
+               (let ((paragraph (make-instance 'components:paragraph))
+                     (url (make-instance 'components:url :target target)))
+                 (vector-push-extend url (components:children paragraph))
+                 (commit (directive 'paragraph parser) paragraph parser)
+                 (length line))))))))
 
 (defun parse-embed-option (option)
   (cond ((string-equal "loop" option)
@@ -367,7 +370,7 @@
          (make-instance 'components:float-option
                         :direction (cond ((string-equal "float left" option) :left)
                                          ((string-equal "float right" option) :right)
-                                         (T (error "FIXME: better error")))))
+                                         (T (error 'bad-option :option option)))))
         ((starts-with "width " option)
          (multiple-value-bind (size unit) (parse-unit option :start (length "width "))
            (make-instance 'components:width-option :size size :unit unit)))
@@ -375,7 +378,7 @@
          (multiple-value-bind (size unit) (parse-unit option :start (length "height "))
            (make-instance 'components:height-option :size size :unit unit)))
         (T
-         (error "FIXME: better error"))))
+         (error 'bad-option :option option))))
 
 (defclass footnote (singular-line-directive)
   ())
@@ -589,7 +592,7 @@
             ((starts-with "link " option)
              (make-instance 'components:hyperlink-option :target (subseq option (length "link "))))
             (T
-             (error "FIXME: better error")))))
+             (error 'bad-option :option option)))))
 
 (defclass footnote-reference (inline-directive)
   ())
