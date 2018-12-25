@@ -102,9 +102,8 @@
           do (incf end))
     (when (and (< end (length line))
                (= end (+ cursor (components:indentation component)))
-               (not
-                (and (= end cursor)
-                     (not (eql _ (dispatch (block-dispatch-table parser) line end))))))
+               (or (/= end cursor)
+                   (eql _ (or (dispatch (block-dispatch-table parser) line end) _))))
       end)))
 
 (defmethod invoke ((_ paragraph) component parser line cursor)

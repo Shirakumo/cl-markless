@@ -28,3 +28,9 @@ b") "c")))
 //"a"(bold)//
 ~~
 (root (paragraph (italic (compound ((bold)) "a"))))
+
+| a
+| 
+| b
+~~
+(root (blockquote (paragraph "a") (paragraph "b")))

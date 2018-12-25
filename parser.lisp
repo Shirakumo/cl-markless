@@ -236,6 +236,14 @@
   (with-input-from-string (stream string)
     (parse stream parser)))
 
+(defun pop-newline (stack)
+  (let ((component (stack-entry-component (stack-top stack))))
+    (when (typep component 'components:parent-component)
+      (let ((children (components:children component)))
+        (when (and (< 0 (length children))
+                   (string= #.(string #\Linefeed) (aref children (1- (length children)))))
+          (vector-pop children))))))
+
 (defmethod parse ((stream stream) (parser parser))
   (let* ((root (make-instance 'components:root-component))
          (stack (stack parser)))
@@ -244,6 +252,8 @@
     (loop while (peek-char NIL (input parser) NIL)
           for line = (read-full-line (input parser))
           do (process-stack parser stack line))
+    (when (eq :show (line-break-mode parser))
+      (pop-newline stack))
     (stack-unwind stack parser 0)
     root))
 
@@ -269,6 +279,8 @@
                                             (stack-entry-component entry)
                                             parser line cursor)
           do (unless next-cursor
+               (when (eq :show (line-break-mode parser))
+                 (pop-newline stack))
                (stack-unwind stack parser stack-pointer)
                (return))
              (setf cursor next-cursor)
@@ -284,10 +296,12 @@
           (vector-push-extend #.(string #\Linefeed) (components:children top)))))))
 
 (defun read-block (parser line cursor)
-  (let* ((table (block-dispatch-table parser))
-         (directive (or (dispatch table line cursor)
-                        (gethash #\Nul table))))
-    (setf cursor (begin directive parser line cursor))))
+  (if (= cursor (length line))
+      cursor
+      (let* ((table (block-dispatch-table parser))
+             (directive (or (dispatch table line cursor)
+                            (gethash #\Nul table))))
+        (begin directive parser line cursor))))
 
 (defun read-inline (parser line cursor end-char)
   (let* ((buffer (make-string-output-stream))

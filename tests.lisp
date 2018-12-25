@@ -8,7 +8,14 @@
   (:nicknames #:org.shirakumo.markless.test)
   (:use #:cl #:parachute)
   (:local-nicknames
-   (#:components #:org.shirakumo.markless.components)))
+   (#:components #:org.shirakumo.markless.components))
+  (:export
+   #:*test-case-directory*
+   #:cl-markless
+   #:to-ast
+   #:ast=
+   #:create-test-from-file
+   #:compile-all-test-cases))
 (in-package #:org.shirakumo.markless.test)
 
 (defparameter *here* (make-pathname :name NIL :type NIL

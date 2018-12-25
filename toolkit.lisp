@@ -125,7 +125,7 @@
                                (commit)
                                (vector-push-extend child result))))))
       (traverse children)
-      (let ((string (string-right-trim '(#\Newline) (get-output-stream-string buffer))))
+      (let ((string (get-output-stream-string buffer)))
         (when (string/= "" string)
           (vector-push-extend string result)))
       result)))
@@ -138,10 +138,13 @@
   component)
 
 (defun vector-push-front (element vector)
-  (vector-push-extend (aref vector (1- (length vector))) vector)
-  (loop for i downfrom (- (length vector) 2) to 1
-        do (setf (aref vector i) (aref vector (1- i))))
-  (setf (aref vector 0) element))
+  (cond ((= 0 (length vector))
+         (vector-push-extend element vector))
+        (T
+         (vector-push-extend (aref vector (1- (length vector))) vector)
+         (loop for i downfrom (- (length vector) 2) to 1
+               do (setf (aref vector i) (aref vector (1- i))))
+         (setf (aref vector 0) element))))
 
 (defun delegate-paragraph (parser line cursor)
   (let* ((component (stack-entry-component (stack-top (stack parser))))
