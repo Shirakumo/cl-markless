@@ -60,8 +60,9 @@
 (defun dispatch (table string cursor)
   (declare (type hash-table table))
   (declare (type simple-string string))
+  (declare (optimize speed))
   (loop with target = table
-        for i from cursor below (length string)
+        for i of-type (unsigned-byte 32) from cursor below (length string)
         for char of-type character = (aref string i)
         do (setf target (or (gethash char target)
                             (gethash #\Nul target)))
@@ -106,6 +107,7 @@
   (setf (block-dispatch-table parser) (compile-dispatch-table (directives-of 'block-directive parser)))
   (setf (inline-dispatch-table parser) (compile-dispatch-table (directives-of 'inline-directive parser))))
 
+(declaim (inline stack-push))
 (defun stack-push (directive component stack)
   (declare (type (vector stack-entry) stack))
   (let ((entry (aref stack (fill-pointer stack))))
@@ -114,6 +116,7 @@
     (setf (stack-entry-component entry) component)
     entry))
 
+(declaim (inline stack-pop))
 (defun stack-pop (stack)
   (declare (type (vector stack-entry) stack))
   (when (= 0 (fill-pointer stack))
@@ -121,14 +124,17 @@
   (decf (fill-pointer stack))
   (aref stack (fill-pointer stack)))
 
+(declaim (inline stack-top))
 (defun stack-top (stack)
   (declare (type (vector stack-entry) stack))
   (aref stack (1- (length stack))))
 
+(declaim (inline stack-bottom))
 (defun stack-bottom (stack)
   (declare (type (vector stack-entry) stack))
   (aref stack 0))
 
+(declaim (inline root))
 (defun root (parser)
   (stack-entry-component (stack-bottom (stack parser))))
 
@@ -201,9 +207,10 @@
         (setf (enabled-p directive) T)))))
 
 (defun read-full-line (stream)
+  (declare (type stream stream))
+  (declare (optimize speed))
   (let ((line (read-line stream)))
     (declare (type simple-string line))
-    (declare (optimize speed))
     (if (and (< 0 (length line)) (eql #\\ (char line (1- (length line)))))
         (with-output-to-string (out)
           (loop with i of-type fixnum = 0
@@ -271,8 +278,13 @@
     (stack-push directive component stack)))
 
 (defun process-stack (parser stack line)
+  (declare (type parser parser))
+  (declare (type simple-string line))
+  (declare (type (vector stack-entry) stack))
+  (declare (optimize speed))
   (let ((cursor 0)
         (stack-pointer 1))
+    (declare (type (unsigned-byte 32) cursor stack-pointer))
     (loop while (< stack-pointer (length stack))
           for entry = (aref stack stack-pointer)
           for next-cursor = (consume-prefix (stack-entry-directive entry)
@@ -296,6 +308,10 @@
           (vector-push-extend #.(string #\Linefeed) (components:children top)))))))
 
 (defun read-block (parser line cursor)
+  (declare (type parser parser))
+  (declare (type simple-string line))
+  (declare (type (unsigned-byte 32) cursor))
+  (declare (optimize speed))
   (if (= cursor (length line))
       cursor
       (let* ((table (block-dispatch-table parser))
@@ -304,6 +320,11 @@
         (begin directive parser line cursor))))
 
 (defun read-inline (parser line cursor end-char)
+  (declare (type parser parser))
+  (declare (type simple-string line))
+  (declare (type (unsigned-byte 32) cursor))
+  (declare (type character end-char))
+  (declare (optimize speed))
   (let* ((buffer (make-string-output-stream))
          (table (inline-dispatch-table parser))
          (top (stack-top (stack parser))))
