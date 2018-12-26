@@ -15,4 +15,6 @@
   :components ((:file "tests"))
   :depends-on (:parachute
                :cl-markless)
-  :perform (asdf:test-op (op c) (uiop:symbol-call :parachute :test :cl-markless-test)))
+  :perform (asdf:test-op (op c)
+                         (uiop:symbol-call :cl-markless-test :compile-all-test-cases)
+                         (uiop:symbol-call :parachute :test :cl-markless-test)))
