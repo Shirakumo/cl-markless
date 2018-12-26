@@ -647,14 +647,8 @@
   #())
 
 (defmethod begin ((_ url) parser line cursor)
-  (let ((end (read-url line cursor)))
-    (if end
-        (let* ((stack (stack parser))
-               (children (components:children (stack-entry-component (stack-top stack)))))
-          (vector-push-extend (make-instance 'components:url :target (subseq line cursor end))
-                              children)
-          end)
-        cursor)))
+  (or (read-url line cursor)
+      cursor))
 
 (defclass dash (inline-directive)
   ())

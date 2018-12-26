@@ -16,6 +16,10 @@ b//
 (root (paragraph (italic "a
 b")))
 
+a//b//c
+~~
+(root (paragraph "a" (italic "b") "c"))
+
 //a
 ~~
 (root (paragraph "//a"))

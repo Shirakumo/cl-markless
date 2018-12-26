@@ -50,6 +50,16 @@
 ~~
 (root (paragraph (compound ((link "a")) "a")))
 
+a"b"()c
+~~
+(root (paragraph "a" (compound () "b") "c"))
+
+"a
+b"()
+~~
+(root (paragraph (compound () "a
+b")))
+
 "a"b"(bold)c"(italic)
 ~~
 (root (paragraph (compound ((italic)) "a" (compound ((bold)) "b") "c")))

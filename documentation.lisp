@@ -1128,6 +1128,20 @@ See COMPOUND")
 See CL-MARKLESS-COMPONENTS:FOOTNOTE-REFERENCE
 See INLINE-DIRECTIVE")
 
+  (type url
+    "The directive for an inline URL.
+
+The handling of the URL directive is a bit special due to the lack of
+a dedicated prefix that can be uniquely matched to initiate the scan
+of an URL. Thus, special handling code in READ-INLINE is present to
+make this case at least somewhat efficient.
+
+This directive will, unlike all others, return the same cursor on
+BEGIN if the complete URL does not match.
+
+See CL-MARKLESS-COMPONENTS:URL
+See INLINE-DIRECTIVE")
+
   (type dash
     "The directive for a dash.
 
@@ -1413,6 +1427,12 @@ See PARSER
 See BEGIN
 See DISPATCH
 See BLOCK-DISPATCH-TABLE")
+
+  (function read-url
+    "Attempts to match a URL.
+
+If the match succeeds, a new cursor for the end of the URL is returned
+and NIL otherwise.")
 
   (function read-inline
     "Attempts to match inline content.

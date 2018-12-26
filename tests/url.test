@@ -1,0 +1,50 @@
+http://example.com
+~~
+(root (paragraph (url "http://example.com")))
+
+a http://example.com b
+~~
+(root (paragraph "a " (url "http://example.com") " b"))
+
+a://b
+~~
+(root (paragraph (url "a://b")))
+
+a://b0$-_.+!*'()&,/:;=?@z%
+~~
+(root (paragraph (url "a://b0$-_.+!*'()&,/:;=?@z%")))
+
+http://
+~~
+(root (paragraph "http://"))
+
+example.com
+~~
+(root (paragraph "example.com"))
+
+http//example.com
+~~
+(root (paragraph "http//example.com"))
+
+http:/example.com
+~~
+(root (paragraph "http:/example.com"))
+
+-://example.com
+~~
+(root (paragraph "-://example.com"))
+
+http://~
+~~
+(root (paragraph "http://~"))
+
+http://
+example.com
+~~
+(root (paragraph "http://
+example.com"))
+
+http://\
+example.com
+~~
+(root (paragraph (url "http://example.com")))

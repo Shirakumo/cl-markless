@@ -387,6 +387,7 @@
                  (cond ((typep directive 'url)
                         (let ((end (the (unsigned-byte 32) (begin directive parser line cursor))))
                           (cond ((/= cursor end)
+                                 (commit-buffer)
                                  (vector-push-extend (make-instance 'components:url :target (subseq line cursor end))
                                                      (components:children (stack-entry-component top)))
                                  (setf cursor end))

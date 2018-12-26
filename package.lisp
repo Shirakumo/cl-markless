@@ -213,6 +213,7 @@
    #:stack-unwind
    #:commit
    #:read-block
+   #:read-url
    #:read-inline)
   ;; printer.lisp
   (:export

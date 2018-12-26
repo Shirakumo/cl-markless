@@ -16,6 +16,10 @@ b__
 (root (paragraph (underline "a
 b")))
 
+a__b__c
+~~
+(root (paragraph "a" (underline "b") "c"))
+
 __a
 ~~
 (root (paragraph "__a"))
