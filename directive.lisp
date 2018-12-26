@@ -299,7 +299,7 @@
 (defmethod parse-instruction ((proto components:set) line cursor)
   (multiple-value-bind (variable cursor) (read-space-delimited line cursor)
     (let ((value (subseq line (1+ cursor))))
-      (make-instance (class-op proto) :variable variable :value value))))
+      (make-instance (class-of proto) :variable variable :value value))))
 
 (defmethod parse-instruction ((proto components:message-instruction) line cursor)
   (make-instance (class-of proto) :message (subseq line cursor)))
@@ -377,7 +377,7 @@
 
 (defmethod parse-embed-option-type ((type components:height-option) option)
   (multiple-value-bind (size unit) (parse-unit option :start (length "height "))
-    (make-instance 'components:width-option :size size :unit unit)))
+    (make-instance 'components:height-option :size size :unit unit)))
 
 (defclass footnote (singular-line-directive)
   ())
