@@ -80,6 +80,10 @@
     (p table 0)
     table))
 
+(defstruct stack-entry
+  (directive NIL)
+  (component NIL))
+
 ;; FIXME: Future: separate out parser state so that parsers can
 ;;        be re-used
 
@@ -90,10 +94,6 @@
    (inline-dispatch-table :accessor inline-dispatch-table)
    (input :accessor input)
    (stack :accessor stack)))
-
-(defstruct stack-entry
-  (directive NIL)
-  (component NIL))
 
 (defmethod initialize-instance :after ((parser parser) &key (directives *default-directives*)
                                                             disabled-directives
@@ -134,6 +134,13 @@
   (declare (type (vector stack-entry) stack))
   (aref stack 0))
 
+(defun stack-unwind (stack parser until)
+  (loop until (= (length stack) until)
+        for entry = (stack-pop stack)
+        do (end (stack-entry-directive entry)
+                (stack-entry-component entry)
+                parser)))
+
 (declaim (inline root))
 (defun root (parser)
   (stack-entry-component (stack-bottom (stack parser))))
@@ -149,11 +156,11 @@
 (defmethod directives-of (type (parser parser))
   (remove-if-not (lambda (d) (typep d type)) (directives parser)))
 
-(defmethod disable ((parser parser) test)
+(defmethod disable ((parser parser) (test function))
   (dolist (directive (directives parser) parser)
     (setf (enabled-p directive) (funcall test directive))))
 
-(defmethod enable ((parser parser) test)
+(defmethod enable ((parser parser) (test function))
   (dolist (directive (directives parser) parser)
     (setf (enabled-p directive) (funcall test directive))))
 
@@ -264,13 +271,6 @@
       (pop-newline stack))
     (stack-unwind stack parser 0)
     root))
-
-(defun stack-unwind (stack parser until)
-  (loop until (= (length stack) until)
-        for entry = (stack-pop stack)
-        do (end (stack-entry-directive entry)
-                (stack-entry-component entry)
-                parser)))
 
 (defun commit (directive component parser)
   (let* ((stack (stack parser))

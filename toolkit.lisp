@@ -76,9 +76,9 @@
   (and (<= (length beginning) (- (length string) start))
        (string= beginning string :start2 start :end2 (+ start (length beginning)))))
 
-(defun ends-with (end string)
-  (and (<= (length end) (length string))
-       (string= end string :start2 (- (length string) (length end)))))
+(defun ends-with (ending string)
+  (and (<= (length ending) (length string))
+       (string= ending string :start2 (- (length string) (length ending)))))
 
 (defun parse-float (string &key (start 0) (end (length string)))
   (let* ((dot (or (position #\. string :start start :end end) end))
@@ -155,3 +155,20 @@
                 (typep component 'components:paragraph))
       (commit (directive 'paragraph parser) (make-instance 'components:paragraph) parser))
     (read-inline parser line cursor #\Nul)))
+
+(defun class-prototype (class)
+  (let ((class (etypecase class
+                 (class class)
+                 (symbol (find-class class)))))
+    #+abcl      (mop:class-prototype class)
+    #+allegro   (mop:class-prototype class)
+    #+clisp     (clos:class-prototype class)
+    #+clozure   (ccl:class-prototype class)
+    #+cmu       (clos-mop:class-prototype class)
+    #+ecl       (clos:class-prototype class)
+    #+lispworks (clos:class-prototype class)
+    #+mcl       (ccl:class-prototype class)
+    #+sbcl      (sb-mop:class-prototype class)
+    #+scl       (clos:class-prototype class)
+    #-(or abcl allegro clisp clozure cmu ecl lispworks mcl sbcl scl)
+    (allocate-instance class)))

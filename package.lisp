@@ -82,7 +82,7 @@
    #:url
    #:compound
    #:options
-   #:option
+   #:compound-option
    #:bold-option
    #:italic-option
    #:underline-option
@@ -161,8 +161,11 @@
    #:horizontal-rule
    #:code-block
    #:instruction
+   #:parse-insruction
    #:comment
    #:embed
+   #:parse-embed-option
+   #:parse-embed-option-type
    #:footnote
    #:bold
    #:italic
@@ -172,7 +175,8 @@
    #:supertext
    #:subtext
    #:compound
-   #:*style-table*
+   #:parse-compound-option
+   #:parse-compound-option-type
    #:footnote-reference
    #:dash
    #:newline)
@@ -181,6 +185,9 @@
    #:*default-directives*
    #:compile-dispatch-table
    #:dispatch
+   #:stack-entry
+   #:stack-entry-component
+   #:stack-entry-directive
    #:parser
    #:line-break-mode
    #:directives

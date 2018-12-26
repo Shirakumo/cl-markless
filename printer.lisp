@@ -20,7 +20,7 @@
 (defmacro define-output (format (component stream) &body methods)
   `(progn
      ,@(loop for (class qualifiers . body) in methods
-             collect `(defmethod output-component ,@qualifiers ((,component ,class) ,stream (_ (eql ,format)))
+             collect `(defmethod output-component ,@qualifiers ((,component ,class) (,stream stream) (_ (eql ,format)))
                         (labels ((output (,component)
                                    (output-component ,component ,stream _))
                                  (output-children ()
@@ -35,7 +35,7 @@
   (loop for child across (components:children root)
         do (output-component child stream format)))
 
-(defmethod output-component ((string string) stream format)
+(defmethod output-component ((string string) (stream stream) format)
   (write-string string stream))
 
 (defvar *level* 0)
