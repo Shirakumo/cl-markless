@@ -6,6 +6,12 @@
 
 (in-package #:org.shirakumo.markless)
 
+(declaim (ftype (function (directive parser simple-string (unsigned-byte 32)) (unsigned-byte 32)) begin))
+(declaim (ftype (function (directive components:component parser simple-string (unsigned-byte 32)) (unsigned-byte 32)) invoke))
+(declaim (ftype (function (directive components:component parser) T) end))
+(declaim (ftype (function (directive components:component parser simple-string (unsigned-byte 32)) (or null (unsigned-byte 32))) consume-prefix))
+(declaim (ftype (function (directive components:component parser simple-string (unsigned-byte 32)) (or null (unsigned-byte 32))) consume-end))
+
 (defparameter *default-directives*
   '(paragraph
     blockquote-header
@@ -30,24 +36,28 @@
     subtext
     compound
     footnote-reference
+    url
     newline))
 
-(defun compile-dispatch-table (directives)
-  ;; FIXME: catch directives that would clash
-  (labels ((make-table (candidates i)
-             (loop with table = (make-hash-table :test #+sbcl 'eq #-sbcl 'eql
-                                                 :size (1+ (length candidates))
-                                                 :rehash-threshold 1)
+(defun compile-dispatch-table  (directives)
+  (labels ((max-char (candidates i)
+             (loop for candidate in candidates
+                   maximize (if (<= (length (car candidate)) i)
+                                0
+                                (loop for char across (aref (car candidate) i)
+                                      maximize (char-code char)))))
+           (make-table (candidates i)
+             (loop with table = (make-array (1+ (max-char candidates i)) :initial-element ())
                    for candidate in candidates
                    do (if (<= (length (car candidate)) i)
-                          (push candidate (gethash #\Nul table))
+                          (push candidate (aref table 0))
                           (loop for char across (aref (car candidate) i)
-                                do (push candidate (gethash char table))))
+                                do (push candidate (aref table (char-code char)))))
                    finally (return (fill-table table (1+ i)))))
            (fill-table (table i)
-             (loop for key being the hash-keys of table
-                   for candidates being the hash-values of table
-                   do (setf (gethash key table)
+             (loop for key from 0 below (length table)
+                   for candidates = (aref table key)
+                   do (setf (aref table key)
                             (if (or (cdr candidates)
                                     (<= i (1- (length (caar candidates)))))
                                 (make-table candidates i)
@@ -58,27 +68,22 @@
                 0)))
 
 (defun dispatch (table string cursor)
-  (declare (type hash-table table))
+  (declare (type simple-vector table))
   (declare (type simple-string string))
-  (declare (optimize speed))
-  (loop with target = table
+  (declare (optimize speed (safety 1)))
+  (loop with target of-type simple-vector = table
         for i of-type (unsigned-byte 32) from cursor below (length string)
         for char of-type character = (aref string i)
-        do (setf target (or (gethash char target)
-                            (gethash #\Nul target)))
-        while (typep target 'hash-table)
-        finally (return (when (and (typep target 'directive) (enabled-p target))
-                          target))))
-
-(defun print-dispatch-table (table &optional (stream *standard-output*))
-  (labels ((p (table level)
-             (loop for char being the hash-keys of table using (hash-value target)
-                   do (format stream "~&~vt~a" (* 4 level) char)
-                      (etypecase target
-                        (hash-table (p target (1+ level)))
-                        (directive (format stream "  ~a" (type-of target)))))))
-    (p table 0)
-    table))
+        for code of-type (unsigned-byte 32) = (char-code char)
+        do (let ((next (or (when (< code (length target))
+                             (aref target code))
+                           (aref target 0))))
+             (if (arrayp next)
+                 (setf target next)
+                 (return (if (and (typep next 'directive) (enabled-p next))
+                             next
+                             (aref table 0)))))
+        finally (return (aref table 0))))
 
 (defstruct stack-entry
   (directive NIL)
@@ -280,7 +285,6 @@
     (stack-push directive component stack)))
 
 (defun process-stack (parser stack line)
-  (declare (type parser parser))
   (declare (type simple-string line))
   (declare (type (vector stack-entry) stack))
   (declare (optimize speed))
@@ -311,23 +315,66 @@
           (vector-push-extend #.(string #\Linefeed) (components:children top)))))))
 
 (defun read-block (parser line cursor)
-  (declare (type parser parser))
   (declare (type simple-string line))
   (declare (type (unsigned-byte 32) cursor))
   (declare (optimize speed))
   (if (= cursor (length line))
       cursor
       (let* ((table (block-dispatch-table parser))
-             (directive (or (dispatch table line cursor)
-                            (gethash #\Nul table))))
+             (directive (dispatch table line cursor)))
         (begin directive parser line cursor))))
 
+(defun read-url (line cursor)
+  (declare (type simple-string line))
+  (declare (type (unsigned-byte 32) cursor))
+  (declare (optimize speed (safety 0)))
+  (flet ((alpha-p (char)
+           (<= (char-code #\A) (char-code char) (char-code #\z)))
+         (number-p (char)
+           (<= (char-code #\0) (char-code char) (char-code #\9)))
+         (drop ()
+           (return-from read-url NIL)))
+    (declare (inline alpha-p number-p drop))
+    (unless (alpha-p (aref line cursor))
+      (drop))
+    (let ((end cursor)
+          (length (length line)))
+      (declare (type (unsigned-byte 32) end length))
+      ;; Match scheme
+      (loop while (< end length)
+            for char of-type character = (aref line end)
+            do (when (char= #\: char)
+                 (return))
+               (unless (or (alpha-p char)
+                           (number-p char)
+                           (char= char #\+)
+                           (char= char #\-)
+                           (char= char #\.))
+                 (drop))
+               (incf end))
+      (unless (and (< (+ 2 end) length)
+                   (char= #\/ (aref line (+ 1 end)))
+                   (char= #\/ (aref line (+ 2 end))))
+        (drop))
+      (incf end 3)
+      (let ((start end))
+        ;; Match path
+        (loop while (< end length)
+              for char of-type character = (aref line end)
+              do (unless (or (alpha-p char)
+                             (number-p char)
+                             (find char "$-_.+!*'()&,/:;=?@z%"))
+                   (return))
+                 (incf end))
+        (unless (< start end)
+          (drop))
+        end))))
+
 (defun read-inline (parser line cursor end-char)
-  (declare (type parser parser))
   (declare (type simple-string line))
   (declare (type (unsigned-byte 32) cursor))
   (declare (type character end-char))
-  (declare (optimize speed))
+  (declare (optimize speed (safety 1)))
   (let* ((buffer (make-string-output-stream))
          (table (inline-dispatch-table parser))
          (top (stack-top (stack parser))))
@@ -337,7 +384,16 @@
                    (vector-push-extend string (components:children (stack-entry-component top))))))
              (read-inline-char (char)
                (let ((directive (dispatch table line cursor)))
-                 (cond (directive
+                 (cond ((typep directive 'url)
+                        (let ((end (the (unsigned-byte 32) (begin directive parser line cursor))))
+                          (cond ((/= cursor end)
+                                 (vector-push-extend (make-instance 'components:url :target (subseq line cursor end))
+                                                     (components:children (stack-entry-component top)))
+                                 (setf cursor end))
+                                (T
+                                 (write-char char buffer)
+                                 (incf cursor)))))
+                       (directive
                         (commit-buffer)
                         (return-from read-inline (begin directive parser line cursor)))
                        (T

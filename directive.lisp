@@ -6,13 +6,6 @@
 
 (in-package #:org.shirakumo.markless)
 
-(defgeneric prefix (directive))
-(defgeneric begin (directive parser line cursor))
-(defgeneric invoke (directive component parser line cursor))
-(defgeneric end (directive component parser))
-(defgeneric consume-prefix (directive component parser line cursor))
-(defgeneric consume-end (directive component parser line cursor))
-
 (defclass directive ()
   ((enabled-p :initarg :enabled-p :initform T :accessor enabled-p)))
 
@@ -25,6 +18,13 @@
   (etypecase directive-ish
     (directive directive-ish)
     (symbol (ensure-directive (make-instance directive-ish)))))
+
+(defgeneric prefix (directive))
+(defgeneric begin (directive parser line cursor))
+(defgeneric invoke (directive component parser line cursor))
+(defgeneric end (directive component parser))
+(defgeneric consume-prefix (directive component parser line cursor))
+(defgeneric consume-end (directive component parser line cursor))
 
 (defclass root-directive (directive)
   ())
@@ -81,6 +81,9 @@
 (defclass paragraph (block-directive)
   ())
 
+(defmethod (setf enabled-p) ((value null) (_ paragraph))
+  (error 'deactivation-disallowed :directive _))
+
 (defmethod prefix ((_ paragraph))
   #())
 
@@ -100,14 +103,14 @@
     (when (and (< end (length line))
                (= end (+ cursor (components:indentation component)))
                (or (/= end cursor)
-                   (eql _ (or (dispatch (block-dispatch-table parser) line end) _))))
+                   (eql _ (dispatch (block-dispatch-table parser) line end))))
       end)))
 
 (defmethod invoke ((_ paragraph) component parser line cursor)
   (let ((inner (dispatch (block-dispatch-table parser) line cursor)))
-    (if (and inner (not (eq inner _)))
-        (begin inner parser line cursor)
-        (read-inline parser line cursor #\Nul))))
+    (if (eq inner _)
+        (read-inline parser line cursor #\Nul)
+        (begin inner parser line cursor))))
 
 (defclass blockquote-header (singular-line-directive)
   ())
@@ -577,6 +580,8 @@
       (gethash option *size-table*)
       (cond ((starts-with "#" option)
              (make-instance 'components:internal-link-option :target (subseq option 1)))
+            ((eql (read-url option 0) (length option))
+             (make-instance 'components:link-option :target option))
             (T
              (let* ((typename (format NIL "~a-option"
                                       (subseq option 0 (or (position #\  option)
@@ -634,6 +639,22 @@
            (let ((target (parse-integer line :start cursor :end end)))
              (vector-push-extend (make-instance 'components:footnote-reference :target target) children)
              (1+ end))))))
+
+(defclass url (inline-directive)
+  ())
+
+(defmethod prefix ((_ url))
+  #())
+
+(defmethod begin ((_ url) parser line cursor)
+  (let ((end (read-url line cursor)))
+    (if end
+        (let* ((stack (stack parser))
+               (children (components:children (stack-entry-component (stack-top stack)))))
+          (vector-push-extend (make-instance 'components:url :target (subseq line cursor end))
+                              children)
+          end)
+        cursor)))
 
 (defclass dash (inline-directive)
   ())

@@ -1,3 +1,7 @@
+""()
+~~
+(root (paragraph (compound ())))
+
 "a"()
 ~~
 (root (paragraph (compound () "a")))
@@ -37,6 +41,10 @@
 "a"(#a)
 ~~
 (root (paragraph (compound ((link "a")) "a")))
+
+"a"(http://example.com)
+~~
+(root (paragraph (compound ((link "http://example.com")) "a")))
 
 "a"(link a)
 ~~
