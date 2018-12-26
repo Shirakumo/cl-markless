@@ -8,14 +8,17 @@
 
 (defun output (component &key (target T) (format :markless))
   (typecase target
+    (pathname
+     (with-open-file (target target :direction :output
+                                    :element-type 'character)
+       (output-component component target format)))
     ((eql NIL)
      (with-output-to-string (target)
        (output-component component target format)))
     ((eql T)
      (output-component component *standard-output* format))
     (T
-     (output-component component target format)))
-  component)
+     (output-component component target format))))
 
 (defgeneric output-component (component target format))
 
@@ -32,10 +35,6 @@
                           ,@body)))))
 
 (trivial-indent:define-indentation define-output (4 6 &rest (&whole 2 4 &body)))
-
-(defmethod output-component ((root components:parent-component) target format)
-  (loop for child across (components:children root)
-        do (output-component child target format)))
 
 (defmethod output-component ((string string) (stream stream) format)
   (write-string string stream))

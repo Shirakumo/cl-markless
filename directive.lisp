@@ -200,7 +200,8 @@
   (let ((numcnt (1+ (ceiling (log (components:number component) 10)))))
     (when (loop for i from cursor
                 repeat numcnt
-                always (char= #\  (aref line i)))
+                always (and (< i (length line))
+                            (char= #\  (aref line i))))
       (+ cursor numcnt 1))))
 
 (defclass header (singular-line-directive)

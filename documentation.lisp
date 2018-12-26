@@ -1440,8 +1440,10 @@ See INLINE-DISPATCH-TABLE"))
 
 If the target is T, it is substituted for *STANDARD-OUTPUT*. If the
 target is NIL, it is substituted for a STRING-OUTPUT-STREAM whose
-contents are returned in the end. Otherwise, the target is passed on
-to OUTPUT-COMPONENT directly
+contents are returned in the end. If the target is a PATHNAME, the
+denoted file is opened and the target is substituted for a stream to
+that file. Otherwise, the target is passed on to OUTPUT-COMPONENT
+directly.
 
 By default the :MARKLESS and :DEBUG outputs are provided.
 

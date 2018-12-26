@@ -106,7 +106,7 @@ You may note that in this algorithm it is not typical for the cursor to move bac
 A similar strategy can be employed for block directives that need to match more than the standard two prefix chars: on an invalid match they can pretend to be a paragraph and insert the paragraph directive and component into the stack instead of their own. Since Markless has a guarantee that each directive must match a unique prefix, this strategy is possible without excessive backtracking and reparsing.
 
 # Tests
-This implementation includes a test suite that should cover most of the aspects of the Markless standard. The tests are intentionally formatted in a simple way that should allow re-using them to verify other implementations for correctness. See the "tests"(to tests/) directory for more information.
+This implementation includes a test suite that should cover most of the aspects of the Markless standard. The tests are intentionally formatted in a simple way that should allow re-using them to verify other implementations for correctness. See the "tests"(link tests/) directory for more information.
 
 To run the test suite on this implementation:
 
