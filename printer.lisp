@@ -7,18 +7,22 @@
 (in-package #:org.shirakumo.markless)
 
 (defun output (component &key (target T) (format :markless))
-  (typecase target
-    (pathname
-     (with-open-file (target target :direction :output
-                                    :element-type 'character)
-       (output-component component target format)))
-    ((eql NIL)
-     (with-output-to-string (target)
-       (output-component component target format)))
-    ((eql T)
-     (output-component component *standard-output* format))
+  (typecase component
+    (components:component
+     (typecase target
+       (pathname
+        (with-open-file (target target :direction :output
+                                       :element-type 'character)
+          (output-component component target format)))
+       ((eql NIL)
+        (with-output-to-string (target)
+          (output-component component target format)))
+       ((eql T)
+        (output-component component *standard-output* format))
+       (T
+        (output-component component target format))))
     (T
-     (output-component component target format))))
+     (output (parse component T) :target target :format format))))
 
 (defgeneric output-component (component target format))
 

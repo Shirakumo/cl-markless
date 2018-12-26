@@ -1465,8 +1465,12 @@ denoted file is opened and the target is substituted for a stream to
 that file. Otherwise, the target is passed on to OUTPUT-COMPONENT
 directly.
 
+If the component is not an instance of COMPONENT, it is replaced by
+the return value of calling PARSE on the passed component argument.
+
 By default the :MARKLESS and :DEBUG outputs are provided.
 
+See PARSE
 See OUTPUT-COMPONENT")
 
   (function define-output
