@@ -9,7 +9,6 @@
   (:use #:cl)
   (:shadow #:list #:number #:set #:variable #:warning #:error #:float #:labels)
   (:export
-   #:*instructions*
    #:sized
    #:unit
    #:size
@@ -18,6 +17,7 @@
    #:text-component
    #:text
    #:block-component
+   #:inline-component
    #:parent-component
    #:children
    #:root-component
@@ -127,6 +127,8 @@
    #:bad-option
    #:option
    #:bad-unit
+   #:option-disallowed
+   #:embed-type
    #:bad-variable
    #:variable-name
    #:bad-value
@@ -166,6 +168,7 @@
    #:embed
    #:parse-embed-option
    #:parse-embed-option-type
+   #:embed-option-allowed-p
    #:footnote
    #:bold
    #:italic

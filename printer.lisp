@@ -6,16 +6,18 @@
 
 (in-package #:org.shirakumo.markless)
 
-(defun output (component &key (stream T) (format :markless))
-  (etypecase stream
-    (stream
-     (output-component component stream format))
+(defun output (component &key (target T) (format :markless))
+  (typecase target
     ((eql NIL)
-     (with-output-to-string (stream)
-       (output-component component stream format)))
+     (with-output-to-string (target)
+       (output-component component target format)))
     ((eql T)
-     (output-component component *standard-output* format)))
+     (output-component component *standard-output* format))
+    (T
+     (output-component component target format)))
   component)
+
+(defgeneric output-component (component target format))
 
 (defmacro define-output (format (component stream) &body methods)
   `(progn
@@ -31,9 +33,9 @@
 
 (trivial-indent:define-indentation define-output (4 6 &rest (&whole 2 4 &body)))
 
-(defmethod output-component ((root components:parent-component) stream format)
+(defmethod output-component ((root components:parent-component) target format)
   (loop for child across (components:children root)
-        do (output-component child stream format)))
+        do (output-component child target format)))
 
 (defmethod output-component ((string string) (stream stream) format)
   (write-string string stream))

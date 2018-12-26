@@ -14,11 +14,102 @@ This will return the generated AST. From there on you can manipulate, inspect, o
 (cl-markless:output * :format :debug)
 ::
 
-## Extension
+## Writing Markless
+TODO: tutorial
+
+## Extending cl-markless
 The Markless standard permits extension in a few ways, all of which cl-markless supports. Furthermore, cl-markless allows the seamless addition of output compilers to allow integrating more target languages.
 
 ### Directives
+Adding a new directive will involve some work, as parsing the proper syntax can be complicated. Please read the section for the "parser algorithm"(#parser algorithm) as well. Generally the parsing behaviour is controlled via 6 central functions.
+
+- ``prefix``
+- ``begin``
+- ``invoke``
+- ``end``
+- ``consume-prefix``
+- ``consume-end``
+
+All of these functions return a cursor -- an index into the current line. ``consume-prefix`` and ``consume-end`` may also return ``NIL`` in order to signify a failed match.
+
+Depending on the type of directive and the complexity of its syntax, some or most of these functions require specific methods for your directive. Within those methods, the directive can manipulate the parser state using
+
+- ``commit``
+- ``read-block``
+- ``read-inline``
+- ``stack-pop``
+- ``stack-push``
+
+Naturally a directive can do whatever it pleases when called, so the above is only an outline of the most useful functions.
+
+#### Block Directives
+Block directives must be a subclass of ``block-directive`` and define methods on ``prefix``, ``begin``, ``consume-prefix``, and optionally ``invoke``. By default the ``invoke`` on a block directive will call ``read-block``, causing further blocks to be read.
+
+If your directive can only span a single line, you should subclass ``singular-line-directive`` instead, for which only methods on ``prefix``, ``begin``, and optionally ``invoke`` are necessary. By default ``read-inline`` is called for ``invoke``.
+
+#### Inline Directives
+Inline directives must be a subclass of ``inline-directive`` and define methods on ``prefix``, ``begin``, ``consume-end``, and optionally ``invoke``. By default the ``invoke`` on an inline directive will call ``read-inline``.
+
+If your directive has a constant prefix that is also the same as its ending suffix, you should subclass ``singular-line-directive`` instead.
+
 ### Instructions
-### Variables
+Adding a new instruction type requires the following steps:
+
+1. Add a new component that is a subclass of ``instruction`` and whose name is from the ``cl-markless-components`` package.
+2. Add a method to ``parse-instruction`` that specialises on this new component class, and use it to parse the line into the appropriate instance of your instruction component.
+3. Add a method to ``evaluate-instruction`` that specialises on your component class and performs whatever task that your instruction should allow.
+
 ### Embed Types
+A new embed type requires only two steps:
+
+1. Add a new component that is a subclass of ``embed`` and whose name is from the ``cl-markless-components`` package.
+2. Add methods to ``embed-option-allowed-p`` specialised on your component and each permitted option that simply return ``T``.
+
+### Embed Options
+Adding new embed options requires a couple more steps:
+
+1. Add a new component that is a subclass of ``embed-option``, and whose name is from the ``cl-markless-components`` package and ends with ``-option``.
+2. Add a method to ``parse-embed-option-type`` specialised on your new option class, which parses the given option string into a new instance of your class.
+3. Define methods on ``embed-option-allowed-p`` that just return ``T`` for all embed types that your new option would be appropriate for.
+
+### Compound Options
+New compound options requires a similar procedure as for embed options.
+
+1. Add a new component that is a subclass of ``compound-option``, and whose name is from the ``cl-markless-components`` package and ends with ``-option``.
+2. Add a method to ``parse-compound-option-type`` specialised on your new option class, which parses the given option string into a new instance of your class.
+
+Unlike embed options there's no verification step, as any combination of compound options is allowed.
+
+### Colour and Size Names
+Cl-markless includes a number of colour and size names for the compound option out of the box. If you would like to add or modify those, simply modify the ``*color-table*`` and ``*size-table*``.
+
 ### Output Translators
+Defining a new output translator is only a matter of adding the appropriate methods to ``output-component``. To make this a bit shorter for the default case of wanting to output to streams, ``define-output`` can be used. Since each format has very different constraints on what it should look like, nothing beyond these two functions is really offered.
+
+# Parser Algorithm
+The parser operates via a set of ``directive``s and a ``stack``. Each entry in the stack holds a ``component`` and a ``directive``. At the beginning of a parse, the stack is emptied and a first stack item is filled composed out of fresh ``root-directive`` and ``root-component`` instances. The parser then operates as follows:
+
+1. If the stream has things to read, it reads a new line via ``read-full-line``.
+   1. If it does not have anything new to read, the parse is completed:
+   2. The stack is unwound to 0, causing all directives still active to be ``end``ed.
+   3. The ``root-component`` is returned.
+2. ``process-stack`` is called on the parser, its stack, and the new line.
+   1. The stack is traversed upwards, calling ``consume-prefix`` on each directive in turn and updating the cursor.
+      1. If ``consume-prefix`` returns ``NIL`` for a directive:
+      2. The stack is unwound to and including the current point, calling ``end`` on each directive that is popped off the stack.
+   2. ``invoke`` is called on the directive at the top of the stack and the cursor is updated.
+   3. If the cursor is not yet at the end of the line, go back to 2.2.
+3. Go back to 1.
+
+You may note that in this algorithm it is not typical for the cursor to move backwards, and straight out impossible to go back a line. This is despite the fact that Markless may seem to force a lot of backtracking on invalidly matched inline directives. The crux here is that when an inline directive is aborted via ``end``, it can invoke ``change-class`` on the component it inserted to transform it into an invisible ``parent-component`` and then push its consumed prefix to the front of the child array.
+
+A similar strategy can be employed for block directives that need to match more than the standard two prefix chars: on an invalid match they can pretend to be a paragraph and insert the paragraph directive and component into the stack instead of their own. Since Markless has a guarantee that each directive must match a unique prefix, this strategy is possible without excessive backtracking and reparsing.
+
+# Tests
+This implementation includes a test suite that should cover most of the aspects of the Markless standard. The tests are intentionally formatted in a simple way that should allow re-using them to verify other implementations for correctness. See the "tests"(to tests/) directory for more information.
+
+To run the test suite on this implementation:
+
+:: common-lisp
+(asdf:test-system :cl-markless)
+::

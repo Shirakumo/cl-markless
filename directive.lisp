@@ -340,8 +340,11 @@
         (cond ((and type (subtypep type 'components:embed))
                (let ((component (make-instance type :target target)))
                  (multiple-value-bind (options cursor) (split-options line cursor #\])
-                   (setf (components:options component)
-                         (mapcar #'parse-embed-option options))
+                   (let ((options (mapcar #'parse-embed-option options)))
+                     (loop for option in options
+                           do (assert (embed-option-allowed-p option component) ()
+                                      'option-disallowed :option option :embed-type type))
+                     (setf (components:options component) options))
                    (commit _ component parser)
                    cursor)))
               (T
@@ -378,6 +381,15 @@
 (defmethod parse-embed-option-type ((type components:height-option) option)
   (multiple-value-bind (size unit) (parse-unit option :start (length "height "))
     (make-instance 'components:height-option :size size :unit unit)))
+
+(defmethod embed-option-allowed-p ((option components:embed-option) (embed components:embed)) NIL)
+(defmethod embed-option-allowed-p ((option components:width-option) (embed components:embed)) T)
+(defmethod embed-option-allowed-p ((option components:height-option) (embed components:embed)) T)
+(defmethod embed-option-allowed-p ((option components:float-option) (embed components:embed)) T)
+(defmethod embed-option-allowed-p ((option components:autoplay-option) (embed components:video)) T)
+(defmethod embed-option-allowed-p ((option components:autoplay-option) (embed components:audio)) T)
+(defmethod embed-option-allowed-p ((option components:loop-option) (embed components:video)) T)
+(defmethod embed-option-allowed-p ((option components:loop-option) (embed components:audio)) T)
 
 (defclass footnote (singular-line-directive)
   ())

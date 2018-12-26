@@ -253,7 +253,8 @@
 
 (defun pop-newline (stack)
   (let ((component (stack-entry-component (stack-top stack))))
-    (when (typep component 'components:parent-component)
+    (when (or (typep component 'components:inline-component)
+              (typep component 'components:paragraph))
       (let ((children (components:children component)))
         (when (and (< 0 (length children))
                    (string= #.(string #\Linefeed) (aref children (1- (length children)))))
@@ -305,7 +306,8 @@
           while (< cursor (length line)))
     (when (eq :show (line-break-mode parser))
       (let ((top (stack-entry-component (stack-top stack))))
-        (when (typep top 'components:parent-component)
+        (when (or (typep top 'components:inline-component)
+                  (typep top 'components:paragraph))
           (vector-push-extend #.(string #\Linefeed) (components:children top)))))))
 
 (defun read-block (parser line cursor)

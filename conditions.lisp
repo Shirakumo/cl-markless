@@ -52,6 +52,11 @@
   (:report (lambda (c s) (format s "The unit in ~s is missing or cannot be recognised."
                                  (option c)))))
 
+(define-condition option-disallowed (bad-option)
+  ((embed-type :initarg :embed-type :reader embed-type))
+  (:report (lambda (c s) (format s "The option ~s is not allowed for the embed type ~a."
+                                 (option c) (embed-type c)))))
+
 (define-condition bad-variable (parser-error)
   ((variable :initarg :variable :reader variable-name))
   (:report (lambda (c s) (format s "The variable ~s is not recognised."

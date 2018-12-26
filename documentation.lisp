@@ -20,15 +20,6 @@ See CL-MARKLESS-COMPONENTS:COLOR-OPTION"))
 
 ;; component.lisp
 (docs:define-docs
-  (variable components:*instructions*
-    "List of class names for available instructions.
-
-This list is used by the parser to determine valid instructions. If
-you add a new instruction class, you should push its class name onto
-this list.
-
-See INSTRUCTION")
-
   (type components:sized
     "Superclass for classes that represent a size in a particular unit.
 
@@ -75,6 +66,11 @@ See TEXT-COMPONENT")
 
   (type components:block-component
     "A component that encompasses a block of text.
+
+See COMPONENT")
+
+  (type components:inline-component
+    "A component that encompasses an inline section of text.
 
 See COMPONENT")
 
@@ -267,8 +263,7 @@ See COMPOUND")
   (type components:instruction
     "Superclass for all instructions.
 
-See BLOCK-COMPONENT
-See *INSTRUCTIONS*")
+See BLOCK-COMPONENT")
 
   (type components:message-instruction
     "Superclass for all instructions that carry a message.
@@ -666,6 +661,17 @@ See BAD-OPTION")
     "Error signalled if the size contains an unknown unit.
 
 See BAD-OPTION")
+
+  (type option-disallowed
+    "Error signalled if an option is attempted to be used for an embed that does not allow it.
+
+See EMBED-TYPE
+See BAD-OPTION")
+
+  (function embed-type
+    "Returns the embed-type that caused the error.
+
+See OPTION-DISALLOWED")
   
   (type bad-variable
     "Error signalled if a set instruction refers to an unknown variable.
@@ -973,8 +979,13 @@ See SINGULAR-LINE-DIRECTIVE")
     "The directive for an embed.
 
 The parsing of the embed options is handled by PARSE-EMBED-OPTION.
+Whether an option is permitted for a given embed type is determined
+by EMBED-OPTION-ALLOWED-P. If NIL is returned for any one option,
+an error of type OPTION-DISALLOWED is signalled.
 
 See PARSE-EMBED-OPTION
+See EMBED-OPTION-ALLOWED-P
+See OPTION-DISALLOWED
 See CL-MARKLESS-COMPONENTS:EMBED
 See SINGULAR-LINE-DIRECTIVE")
 
@@ -1005,6 +1016,16 @@ By default this function simply returns a fresh instance of the class
 with no initargs passed.
 
 See EMBED")
+
+  (function embed-option-allowed-p
+    "Returns T if the combination of option and embed type are allowed.
+
+The user should add appropriate methods to this function when new
+embed types or options are added. Such methods should simply return T,
+as the default method will always return NIL.
+
+See CL-MARKLESS-COMPONENTS:EMBED-OPTION
+See CL-MARKLESS-COMPONENTS:EMBED")
 
   (type footnote
     "The directive for a footnote.
@@ -1417,8 +1438,10 @@ See INLINE-DISPATCH-TABLE"))
   (function output
     "Outputs the given component to the appropriate stream in the requested format.
 
-The stream may be T, NIL, or a stream instance as common for FORMAT
-and other functions like it.
+If the target is T, it is substituted for *STANDARD-OUTPUT*. If the
+target is NIL, it is substituted for a STRING-OUTPUT-STREAM whose
+contents are returned in the end. Otherwise, the target is passed on
+to OUTPUT-COMPONENT directly
 
 By default the :MARKLESS and :DEBUG outputs are provided.
 
@@ -1428,7 +1451,8 @@ See OUTPUT-COMPONENT")
     "Defines a new output format.
 
 This is a shorthand macro that defines methods for
-OUTPUT-COMPONENT. Each entry in the body must follow this structure:
+OUTPUT-COMPONENT specialised on streams. Each entry in the body must
+follow this structure:
 
   CLASS QUALIFIERS . BODY
 
@@ -1444,11 +1468,14 @@ the following two convenience functions are automatically bound:
 See OUTPUT-COMPONENT")
 
   (function output-component
-    "This function is responsible for formatting the given component to the stream in the requested format.
+    "This function is responsible for formatting the given component to the target in the requested format.
 
 The user should add methods to this function as appropriate, but must
-always EQL-specialise on the FORMAT argument with a unique symbol to
+always EQL-specialise on the format argument with a unique symbol to
 distinguish their format from others.
+
+Note that the target must not necessarily be a stream unless the
+method specialises it to be one.
 
 See OUTPUT"))
 

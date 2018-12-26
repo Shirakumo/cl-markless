@@ -11,9 +11,6 @@
      (print-unreadable-object (c s :type T :identity T)
        (format s ,format ,@args))))
 
-(defvar *instructions*
-  '(set info warning error include disable enable))
-
 (defclass sized ()
   ((unit :initarg :unit :initform (cl:error "UNIT required") :accessor unit)
    (size :initarg :size :initform (cl:error "SIZE required") :accessor size)))
@@ -44,6 +41,9 @@
       (r component))))
 
 (defclass block-component (component)
+  ())
+
+(defclass inline-component (component)
   ())
 
 (defclass root-component (parent-component)
@@ -196,31 +196,31 @@
 (define-printer footnote
   "(~d)" (target c))
 
-(defclass bold (parent-component)
+(defclass bold (inline-component parent-component)
   ())
 
-(defclass italic (parent-component)
+(defclass italic (inline-component parent-component)
   ())
 
-(defclass underline (parent-component)
+(defclass underline (inline-component parent-component)
   ())
 
-(defclass strikethrough (parent-component)
+(defclass strikethrough (inline-component parent-component)
   ())
 
-(defclass code (parent-component)
+(defclass code (inline-component parent-component)
   ())
 
-(defclass subtext (parent-component)
+(defclass subtext (inline-component parent-component)
   ())
 
-(defclass supertext (parent-component)
+(defclass supertext (inline-component parent-component)
   ())
 
-(defclass url (unit-component)
+(defclass url (inline-component unit-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
-(defclass compound (parent-component)
+(defclass compound (inline-component parent-component)
   ((options :initarg :options :initform () :accessor options)))
 
 (defclass compound-option ()
@@ -265,7 +265,7 @@
 (defclass internal-link-option (link-option)
   ())
 
-(defclass footnote-reference (unit-component)
+(defclass footnote-reference (inline-component unit-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
 (define-printer footnote-reference
