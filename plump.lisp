@@ -52,8 +52,21 @@
     (setf (attribute "data-copyright") (components:copyright component)))
   (loop for child across (components:children component)
         do (output child))
-  ;; FIXME: footnotes in footer
-  )
+  (let ((footnotes (sort (loop for child across (components:children component)
+                               when (typep child 'components:footnote)
+                               collect child)
+                         #'< :key #'components:target)))
+    (when footnotes
+      (let ((section (plump-dom:make-element node "footer")))
+        (setf (attribute "class" section) "footnotes")
+        (plump-dom:make-element section "hr")
+        (loop with listing = (plump-dom:make-element section "ol")
+              for footnote in footnotes
+              for note = (plump-dom:make-element listing "li")
+              do (setf (attribute "value" note) (princ-to-string (components:target footnote)))
+                 (setf (attribute "id" note) (format NIL "footnote-~d" (components:target footnote)))
+                 (loop for child across (components:children footnote)
+                       do (output-component child note format)))))))
 
 (defmethod output-component ((component components:component) (target plump-dom:nesting-node) (format (eql :plump))))
 
