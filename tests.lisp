@@ -171,6 +171,12 @@
 (defclass ast-result (value-result)
   ((expected :initarg :expected :accessor expected)))
 
+(defmethod report-on ((result ast-result) (report plain))
+  (loop for char across (expression result)
+        do (case char
+             (#\Linefeed (format (output report) "~&        　     "))
+             (T (write-char char (output report))))))
+
 (defmethod format-result ((result ast-result) (type (eql :extensive)))
   (let ((*print-right-margin* 600))
     (format NIL "~a
