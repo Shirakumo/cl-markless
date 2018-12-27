@@ -13,9 +13,9 @@
 (defparameter *command-line-spec*
   '((("input" #\i) :type string :optional T :documentation "The input file. If left out, the input is taken from standard in.")
     (("output" #\o) :type string :optional T :documentation "The output file. If left out, output is printed to standard out.")
-    (("format" #\f) :type string :optional T :documentation "The format of the output document.")
+    (("format" #\f) :type string :optional T :documentation "The format of the output document. Defaults to \"plump\" (HTML).")
     (("directives" #\d) :type string :optional T :documentation "A comma-separated list of directives to use.")
-    (("line-break-mode" #\l) :type string :optional T :documentation "Which line break mode to use, show(default)) or hide.")
+    (("line-break-mode" #\l) :type string :optional T :documentation "Which line break mode to use, show (default) or hide.")
     (("extension" #\e) :type string :optional T :documentation "Load an extension.")
     (("help" #\h #\?) :type boolean :optional T :documentation "Show a brief help about the tool.")
     (("version" #\v) :type boolean :optional T :documentation "Print the version.")))
@@ -72,6 +72,7 @@
              (handler-bind ((warning (lambda (w)
                                        (format *error-output* "~&[WARN] ~a~%" w))))
                (cond (help
+                      (format *error-output* "cl-markless [[input] output] args...~%")
                       (command-line-arguments:show-option-help *command-line-spec* :stream *error-output*))
                      (version
                       (format *error-output* "cl-markless v~a~%" (asdf:system-version :cl-markless)))
