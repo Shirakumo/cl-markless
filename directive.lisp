@@ -350,7 +350,7 @@
                                       'option-disallowed :option option :embed-type type))
                      (setf (components:options component) options))
                    (commit _ component parser)
-                   cursor)))
+                   (length line))))
               (T
                (warn 'unknown-embed-type :embed-type typename)
                (let ((paragraph (make-instance 'components:paragraph))
