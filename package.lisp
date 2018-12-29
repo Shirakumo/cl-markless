@@ -182,7 +182,8 @@
    #:parse-compound-option-type
    #:footnote-reference
    #:dash
-   #:newline)
+   #:newline
+   #:url)
   ;; parser.lisp
   (:export
    #:*default-directives*
