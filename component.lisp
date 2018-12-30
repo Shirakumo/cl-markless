@@ -49,7 +49,8 @@
 (defclass root-component (parent-component)
   ((labels :initform (make-hash-table :test 'equalp) :accessor labels)
    (author :initform NIL :accessor author)
-   (copyright :initform NIL :accessor copyright)))
+   (copyright :initform NIL :accessor copyright)
+   (language :initform NIL :accessor language)))
 
 (define-printer root-component
   "~@[~a ~]~@[(c) ~a~]" (author c) (copyright c))
@@ -153,6 +154,9 @@
 
 (defclass enable (directives-instruction)
   ())
+
+(defclass label (instruction)
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
 (defclass comment (text-component block-component)
   ())

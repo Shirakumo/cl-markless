@@ -183,10 +183,13 @@
                   (error 'bad-value :variable (components:variable instruction)
                                     :value (components:value instruction)))))
           ((string-equal v "author")
-           (setf (components:author (stack-entry-component (aref (stack parser) 0)))
+           (setf (components:author (root parser))
                  (components:value instruction)))
           ((string-equal v "copyright")
-           (setf (components:copyright (stack-entry-component (aref (stack parser) 0)))
+           (setf (components:copyright (root parser))
+                 (components:value instruction)))
+          ((string-equal v "language")
+           (setf (components:language (root parser))
                  (components:value instruction)))
           (T
            (error 'bad-variable :variable (components:variable instruction))))))
@@ -218,6 +221,10 @@
     (let ((directive (directive directive parser)))
       (when directive
         (setf (enabled-p directive) T)))))
+
+(defmethod evaluate-instruction ((instruction components:label) (parser parser))
+  (setf (components:label (components:target instruction) (root parser))
+        (stack-entry-component (stack-top (stack parser)))))
 
 (defun read-full-line (stream)
   (declare (type stream stream))

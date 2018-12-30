@@ -24,6 +24,7 @@
    #:labels
    #:author
    #:copyright
+   #:language
    #:label
    #:paragraph
    #:indentation
@@ -58,6 +59,7 @@
    #:directives
    #:disable
    #:enable
+   #:label
    #:comment
    #:embed
    #:target

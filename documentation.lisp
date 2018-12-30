@@ -95,6 +95,7 @@ This component also stores cross references and document metadata.
 See PARENT-COMPONENT
 See LABELS
 See AUTHOR
+See LANGUAGE
 See COPYRIGHT")
 
   (function components:labels
@@ -241,10 +242,11 @@ See TEXT-COMPONENT
 See BLOCK-COMPONENT")
 
   (function components:language
-    "Accesses the language of the text in the code-block.
+    "Accesses the language.
 
 This can be NIL or a string identifying the language.
 
+See ROOT-COMPONENT
 See CODE-BLOCK")
 
   (function components:options
@@ -350,6 +352,12 @@ See DIRECTIVES-INSTRUCTION")
     "Represents an ENABLE instruction.
 
 See DIRECTIVES-INSTRUCTION")
+
+  (type components:label
+    "Represents a LABEL instruction
+
+See TARGET
+See INSTRUCTION")
 
   (type components:comment
     "Represents a comment.
