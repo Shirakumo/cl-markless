@@ -126,17 +126,32 @@
   (components:compound ()
     (format s "/~a ~{~a~}" (type-of c) (components:options c))))
 
-;; FIXME: stacks on lines
 (defvar *prefixes* ())
 (define-output markless (c s)
-  ;; FIXME: escape string writes
+  (vector ()
+    (when (< 0 (length c))
+      (output (aref c 0)))
+    (loop for i from 1 below (length c)
+          for child = (aref c i)
+          do (when (typep child 'components:block-component)
+               (format s "~%~{~a~}" (reverse *prefixes*)))
+             (output child)))
   
-  (components:block-component (:before)
-    ;; FIXME: only do this on new lines...
-    (format s "~{~a~}" (reverse *prefixes*)))
-  
-  (components:block-component (:after)
-    (fresh-line))
+  (string ()
+    (loop for char across c
+          do (case char
+               (#\\
+                (format s "\\\\"))
+               (#\Linefeed
+                (format s "~%~{~a~}" (reverse *prefixes*)))
+               (T
+                (write-char char s)))))
+
+  (components:unit-component ()
+    (format s "~%~{~a~}" (reverse *prefixes*)))
+
+  (components:parent-component ()
+    (output (components:children c)))
   
   (components:paragraph ()
     (output-children))
@@ -148,27 +163,27 @@
   (components:blockquote ()
     (format s "| ")
     (let ((*prefixes* (list* "| " *prefixes*)))
-      (output-children)))
+      (output (components:children c))))
 
   (components:ordered-list-item ()
     (format s "~d. " (components:number c))
-    (output-children))
+    (output (components:children c)))
 
   (components:unordered-list-item ()
     (format s "- ")
-    (output-children))
+    (output (components:children c)))
 
   (components:header ()
     (format s "~v@{#~} " (components:depth c) NIL)
-    (output-children))
+    (output (components:children c)))
 
   (components:horizontal-rule ()
     (format s "=="))
 
   (components:code-block ()
-    (format s "::~@[ ~a~{ ~a~}~]" (components:language c) (components:options c))
+    (format s "~v@{:~}~@[ ~a~{, ~a~}~]" (components:depth c) (components:language c) (components:options c))
     (write-string (components:text c) s)
-    (format s "~&::"))
+    (format s "~&~v@{:~}" (components:depth c) NIL))
   
   (components:instruction ()
     (format s "! ")
@@ -185,28 +200,40 @@
           do (format s ", ")
              (output option)))
 
+  (components:embed-option ()
+    (format s "~(~a~)" (type-of c)))
+
+  (components:width-option ()
+    (format s "width ~a~a" (components:size c) (components:unit c)))
+
+  (components:height-option ()
+    (format s "height ~a~a" (components:size c) (components:unit c)))
+
+  (components:float-option ()
+    (format s "float ~(~a~)" (components:direction c)))
+
   (components:footnote ()
     (format s "[~d] " (components:target c))
-    (output-children))
+    (output (components:children c)))
 
   (components:bold ()
     (format s "**")
-    (output-children)
+    (output (components:children c))
     (format s "**"))
 
   (components:italic ()
     (format s "//")
-    (output-children)
+    (output (components:children c))
     (format s "//"))
 
   (components:underline ()
     (format s "__")
-    (output-children)
+    (output (components:children c))
     (format s "__"))
 
   (components:strikethrough ()
     (format s "<-")
-    (output-children)
+    (output (components:children c))
     (format s "->"))
 
   (components:code ()
@@ -214,12 +241,12 @@
 
   (components:subtext ()
     (format s "v(")
-    (output-children)
+    (output (components:children c))
     (format s ")"))
 
   (components:supertext ()
     (format s "^(")
-    (output-children)
+    (output (components:children c))
     (format s ")"))
 
   (components:url ()
@@ -227,13 +254,50 @@
 
   (components:compound ()
     (format s "\"")
-    (output-children)
-    (format s "\"(in")
-    (dolist (option (components:options c))
-      (output option))
+    (output (components:children c))
+    (format s "\"(")
+    (when (components:options c)
+      (output (first (components:options c)))
+      (loop for option in (rest (components:options c))
+            do (format s ", ")
+               (output option)))
     (format s ")"))
 
-  ;; FIXME: compound options
+  (components:compound-option ()
+    (format s "~(~a~)" (type-of c)))
+
+  (components:font-option ()
+    (format s "font ~a" (components:font-family c)))
+
+  (components:color-option ()
+    (let ((r (components:red c))
+          (g (components:green c))
+          (b (components:blue c)))
+      (loop for name being the hash-keys of *color-table*
+            for option being the hash-values of *color-table*
+            do (when (and (= r (components:red option))
+                          (= g (components:green option))
+                          (= b (components:blue option)))
+                 (return (format s "~(~a~)" name)))
+            finally (format s "color ~a ~a ~a"  r g b))))
+  
+  (components:size-option ()
+    (let ((size (components:size c))
+          (unit (components:unit c)))
+      (loop for name being the hash-keys of *size-table*
+            for option being the hash-values of *size-table*
+            do (when (and (= size (components:size option))
+                          (eql unit (components:unit option)))
+                 (return (format s "~(~a~)" name)))
+            finally (format s "size ~a~(~a~)" size unit))))
+
+  (components:internal-link-option ()
+    (format s "#~a" (components:target c)))
+
+  (components:link-option ()
+    (if (/= 0 (read-url (components:target c) 0))
+        (format s "~a" (components:target c))
+        (format s "link ~a" (components:target c))))
 
   (components:footnote-reference ()
     (format s "[~d]" (components:target c))))
