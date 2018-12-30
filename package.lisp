@@ -106,6 +106,7 @@
   (:use #:cl)
   (:local-nicknames
    (#:components #:org.shirakumo.markless.components))
+  (:shadow #:debug)
   ;; color-table.lisp
   (:export
    #:*color-table*)
@@ -219,6 +220,10 @@
   ;; printer.lisp
   (:export
    #:output
+   #:output-format
+   #:list-output-formats
+   #:markless
+   #:debug
    #:define-output
    #:output-component)
   ;; size-table.lisp

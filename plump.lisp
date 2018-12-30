@@ -7,7 +7,10 @@
 (defpackage #:org.shirakumo.markless.plump
   (:use #:cl #:org.shirakumo.markless)
   (:local-nicknames
-   (#:components #:org.shirakumo.markless.components)))
+   (#:components #:org.shirakumo.markless.components))
+  (:shadowing-import-from #:org.shirakumo.markless #:debug)
+  (:export
+   #:plump))
 (in-package #:org.shirakumo.markless.plump)
 
 (defvar *root*)
@@ -18,7 +21,9 @@
                 (plump-dom:attribute element "style")
                 format args)))
 
-(defmethod output-component (component (target stream) (format (eql :plump)))
+(defclass plump (output-format) ())
+
+(defmethod output-component (component (target stream) (format plump))
   (let ((dom (output-component component (make-instance 'plump-dom:root) format)))
     (plump:serialize dom target)
     dom))
@@ -26,7 +31,7 @@
 (defmacro define-plump-output (component tag &body body)
   (let ((type (or (find-symbol (string component) '#:org.shirakumo.markless.components)
                   (error "No such component ~s" component))))
-    `(defmethod output-component ((component ,type) (target plump-dom:nesting-node) (format (eql :plump)))
+    `(defmethod output-component ((component ,type) (target plump-dom:nesting-node) (format plump))
        (let ((node (plump-dom:make-element target ,tag)))
          (flet ((output (component)
                   (output-component component node format))
@@ -36,12 +41,12 @@
            ,@body)
          node))))
 
-(defmethod output-component ((string string) (target plump-dom:nesting-node) (format (eql :plump)))
+(defmethod output-component ((string string) (target plump-dom:nesting-node) (format plump))
   (if (string= string #.(string #\Linefeed))
       (plump-dom:make-element target "br")
       (plump-dom:make-text-node target string)))
 
-(defmethod output-component :around ((component components:root-component) target (format (eql :plump)))
+(defmethod output-component :around ((component components:root-component) target (format plump))
   (let ((*root* component))
     (call-next-method)))
 
@@ -68,7 +73,7 @@
                  (loop for child across (components:children footnote)
                        do (output-component child note format)))))))
 
-(defmethod output-component ((component components:component) (target plump-dom:nesting-node) (format (eql :plump))))
+(defmethod output-component ((component components:component) (target plump-dom:nesting-node) (format plump)))
 
 (define-plump-output paragraph "p"
   ;; Not right yet since Markless paragraphs can contain other blocks.
@@ -115,7 +120,7 @@
   (let ((pre (plump-dom:make-element node "pre")))
     (plump-dom:make-text-node pre (components:text component))))
 
-(defmethod output-component ((component components:comment) (target plump-dom:nesting-node) (format (eql :plump)))
+(defmethod output-component ((component components:comment) (target plump-dom:nesting-node) (format plump))
   (plump-dom:make-comment target (components:text component)))
 
 (defun set-plump-embed-options (element options)
@@ -126,15 +131,13 @@
              (components:loop-option
               (setf (plump-dom:attribute element "loop") NIL))
              (components:width-option
-              (setf (plump-dom:attribute element "width")
-                    (format NIL "~d~(~a~)"
+              (append-style element "width:~d~(~a~)"
                             (components:size option)
-                            (components:unit option))))
+                            (components:unit option)))
              (components:height-option
-              (setf (plump-dom:attribute element "height")
-                    (format NIL "~d~(~a~)"
+              (append-style element "height:~d~(~a~)"
                             (components:size option)
-                            (components:unit option))))
+                            (components:unit option)))
              (components:float-option
               (append-style element "float:~(~a~)" (components:direction option))))))
 

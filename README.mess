@@ -14,6 +14,8 @@ This will return the generated AST. From there on you can manipulate, inspect, o
 (cl-markless:output * :format :debug)
 ::
 
+One thing in particular to note is that cl-markless requires LF (unix-style) line endings. CR (mac) or CRLF (windows) //have// to be converted ahead of time, or parse results will not be as expected.
+
 ## Writing Markless
 TODO: tutorial
 
@@ -84,7 +86,7 @@ Unlike embed options there's no verification step, as any combination of compoun
 Cl-markless includes a number of colour and size names for the compound option out of the box. If you would like to add or modify those, simply modify the ``*color-table*`` and ``*size-table*``.
 
 ### Output Translators
-Defining a new output translator is only a matter of adding the appropriate methods to ``output-component``. To make this a bit shorter for the default case of wanting to output to streams, ``define-output`` can be used. Since each format has very different constraints on what it should look like, nothing beyond these two functions is really offered.
+Defining a new output translator is only a matter of adding a subclass to ``output-translator`` and adding the appropriate methods to ``output-component``. To make this a bit shorter for the default case of wanting to output to streams, ``define-output`` can be used. Since each format has very different constraints on what it should look like, nothing beyond these two functions is really offered.
 
 # Parser Algorithm
 The parser operates via a set of ``directive``s and a ``stack``. Each entry in the stack holds a ``component`` and a ``directive``. At the beginning of a parse, the stack is emptied and a first stack item is filled composed out of fresh ``root-directive`` and ``root-component`` instances. The parser then operates as follows:

@@ -1468,7 +1468,7 @@ directly.
 If the component is not an instance of COMPONENT, it is replaced by
 the return value of calling PARSE on the passed component argument.
 
-By default the :MARKLESS and :DEBUG outputs are provided.
+By default the MARKLESS and DEBUG outputs are provided.
 
 See PARSE
 See OUTPUT-COMPONENT")
@@ -1492,6 +1492,35 @@ the following two convenience functions are automatically bound:
   component.
 
 See OUTPUT-COMPONENT")
+
+  (type output-format
+    "Superclass for all output formats.
+
+If you define a new format, you should define a new subclass to this
+and specialise on your new class in your OUTPUT-COMPONENT methods.
+
+See OUTPUT-COMPONENT")
+
+  (function list-output-formats
+    "Returns a list of all known output formats.
+
+The list is composed of class names for OUTPUT-FORMAT classes.
+
+See OUTPUT-FORMAT")
+
+  (type markless
+    "Output format that prints to valid Markless again.
+
+This should allow you to construct arbitrary component ASTs and
+generate valid Markless documents.
+
+See OUTPUT")
+
+  (type debug
+    "Output format for debugging and AST visualisation.
+
+This prints all AST contents in an easy to read form, useful for
+debugging.")
 
   (function output-component
     "This function is responsible for formatting the given component to the target in the requested format.
@@ -1534,7 +1563,7 @@ Returns the new cursor on success, and NIL on failure.")
 
 Returns the read token and the new cursor position as multiple values.
 
-This does NOT handle backslash escapes.")
+This does properly handle backslash escapes.")
 
   (function split-string
     "Splits the string by the given split character.

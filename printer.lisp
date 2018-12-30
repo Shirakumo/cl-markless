@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.markless)
 
-(defun output (component &key (target T) (format :markless))
+(defun output (component &key (target T) (format 'markless))
   (typecase component
     (components:component
      (typecase target
@@ -24,12 +24,38 @@
     (T
      (output (parse component T) :target target :format format))))
 
+(defclass output-format () ())
+
+(defun list-output-formats ()
+  (flet ((subclasses (class)
+           #+abcl      (mop:class-direct-subclasses class)
+           #+allegro   (mop:class-direct-subclasses class)
+           #+clisp     (clos:class-direct-subclasses class)
+           #+clozure   (ccl:class-direct-subclasses class)
+           #+cmu       (clos-mop:class-direct-subclasses class)
+           #+ecl       (clos:class-direct-subclasses class)
+           #+lispworks (clos:class-direct-subclasses class)
+           #+mcl       (ccl:class-direct-subclasses class)
+           #+sbcl      (sb-mop:class-direct-subclasses class)
+           #+scl       (clos:class-direct-subclasses class)))
+    (let ((formats ()))
+      (labels ((traverse (class)
+                 (dolist (subclass (subclasses class))
+                   (pushnew subclass formats)
+                   (traverse subclass))))
+        (traverse (find-class 'output-format))
+        (sort (mapcar #'class-name formats) #'string<)))))
+
 (defgeneric output-component (component target format))
+
+(defmethod output-component (component target (format symbol))
+  (output-component component target (make-instance format)))
 
 (defmacro define-output (format (component stream) &body methods)
   `(progn
+     (defclass ,format (output-format) ())
      ,@(loop for (class qualifiers . body) in methods
-             collect `(defmethod output-component ,@qualifiers ((,component ,class) (,stream stream) (_ (eql ,format)))
+             collect `(defmethod output-component ,@qualifiers ((,component ,class) (,stream stream) (_ ,format))
                         (labels ((output (,component)
                                    (output-component ,component ,stream _))
                                  (output-children ()
@@ -44,7 +70,7 @@
   (write-string string stream))
 
 (defvar *level* 0)
-(define-output :debug (c s)
+(define-output debug (c s)
   (T (:before)
     (format s "~&~v@{|  ~}" *level* NIL))
 
@@ -100,7 +126,7 @@
 
 ;; FIXME: stacks on lines
 (defvar *prefixes* ())
-(define-output :markless (c s)
+(define-output markless (c s)
   ;; FIXME: escape string writes
   
   (components:block-component (:before)

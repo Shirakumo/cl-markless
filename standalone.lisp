@@ -73,7 +73,9 @@
                                        (format *error-output* "~&[WARN] ~a~%" w))))
                (cond (help
                       (format *error-output* "cl-markless [[input] output] args...~%")
-                      (command-line-arguments:show-option-help *command-line-spec* :stream *error-output*))
+                      (command-line-arguments:show-option-help *command-line-spec* :stream *error-output*)
+                      (format *error-output* "~&~%Available output formats:~%  ~{~a~^, ~}"
+                              (mapcar (string-downcase (cl-markless:list-output-formats)))))
                      (version
                       (format *error-output* "cl-markless v~a~%" (asdf:system-version :cl-markless)))
                      (T

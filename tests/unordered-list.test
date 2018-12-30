@@ -52,3 +52,14 @@ b"))))
    b
 ~~
 (root (unordered-list (unordered-list-item (paragraph "a") (paragraph "b"))))
+
+- a
+
+- b
+~~
+(root (unordered-list (unordered-list-item (paragraph "a"))) (unordered-list (unordered-list-item (paragraph "b"))))
+
+-  - a
+   - b
+~~
+(root (unordered-list (unordered-list-item (paragraph (unordered-list (unordered-list-item (paragraph "a")) (unordered-list-item (paragraph "b")))))))
