@@ -80,6 +80,7 @@
         do (output-component child target format)))
 
 (defmethod output-component ((component components:footnote) (target plump-dom:nesting-node) (format plump)))
+(defmethod output-component ((component components:blockquote-header) (target plump-dom:nesting-node) (format plump)))
 
 (define-plump-output paragraph "p"
   ;; Not right yet since Markless paragraphs can contain other blocks.
