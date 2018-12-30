@@ -55,6 +55,8 @@
     (setf (attribute "data-author") (components:author component)))
   (when (components:copyright component)
     (setf (attribute "data-copyright") (components:copyright component)))
+  (when (components:language component)
+    (setf (attribute "lang") (components:language component)))
   (loop for child across (components:children component)
         do (output child))
   (let ((footnotes (sort (loop for child across (components:children component)
