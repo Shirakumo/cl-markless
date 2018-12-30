@@ -318,11 +318,9 @@
   (declare (type simple-string line))
   (declare (type (unsigned-byte 32) cursor))
   (declare (optimize speed))
-  (if (= cursor (length line))
-      cursor
-      (let* ((table (block-dispatch-table parser))
-             (directive (dispatch table line cursor)))
-        (begin directive parser line cursor))))
+  (let* ((table (block-dispatch-table parser))
+         (directive (dispatch table line cursor)))
+    (begin directive parser line cursor)))
 
 (defun read-url (line cursor)
   (declare (type simple-string line))
@@ -363,7 +361,7 @@
               for char of-type character = (aref line end)
               do (unless (or (alpha-p char)
                              (number-p char)
-                             (find char "$-_.+!*'()&,/:;=?@z%"))
+                             (find char "$-_.+!*'()&,/:;=?@z%#"))
                    (return))
                  (incf end))
         (unless (< start end)

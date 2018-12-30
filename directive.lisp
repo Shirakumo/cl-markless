@@ -78,6 +78,17 @@
           (T
            (call-next-method)))))
 
+(defclass noop (directive)
+  ())
+
+(defmethod consume-prefix ((_ noop) component parser line cursor)
+  NIL)
+
+(defmethod invoke ((_ noop) component parser line cursor)
+  cursor)
+
+(defmethod end ((_ noop) component parser))
+
 (defclass paragraph (block-directive)
   ())
 
@@ -88,12 +99,16 @@
   #())
 
 (defmethod begin ((_ paragraph) parser line cursor)
-  (let ((end cursor))
-    (loop while (and (< end (length line))
-                     (char= #\  (aref line end)))
-          do (incf end))
-    (commit _ (make-instance 'components:paragraph :indentation (- end cursor)) parser)
-    end))
+  (cond ((= cursor (length line))
+         (commit (make-instance 'noop) (make-instance 'components:unit-component) parser)
+         cursor)
+        (T
+         (let ((end cursor))
+           (loop while (and (< end (length line))
+                            (char= #\  (aref line end)))
+                 do (incf end))
+           (commit _ (make-instance 'components:paragraph :indentation (- end cursor)) parser)
+           end))))
 
 (defmethod consume-prefix ((_ paragraph) component parser line cursor)
   (let ((end cursor))
@@ -266,8 +281,8 @@
                      (char= #\: (aref line end)))
           do (incf end))
     (let ((depth (- end cursor)))
-      (multiple-value-bind (language cursor) (read-space-delimited line (+ end 1))
-        (let ((options (split-string line #\  cursor))
+      (multiple-value-bind (language cursor) (read-delimited line (+ end 1) #\,)
+        (let ((options (split-options line (1+ cursor) #\Nul))
               (language (when (string/= "" language) language)))
           (commit _ (make-instance 'components:code-block :language language
                                                           :options options
@@ -302,7 +317,7 @@
   #("!" " "))
 
 (defmethod begin ((_ instruction) parser line cursor)
-  (multiple-value-bind (typename cursor) (read-space-delimited line (+ cursor 2))
+  (multiple-value-bind (typename cursor) (read-delimited line (+ cursor 2) #\ )
     (let ((type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
                              '#:org.shirakumo.markless.components)))
       (unless (and type (subtypep type 'components:instruction))
@@ -311,7 +326,7 @@
     cursor))
 
 (defmethod parse-instruction ((proto components:set) line cursor)
-  (multiple-value-bind (variable cursor) (read-space-delimited line cursor)
+  (multiple-value-bind (variable cursor) (read-delimited line cursor #\ )
     (let ((value (subseq line (1+ cursor))))
       (make-instance (class-of proto) :variable variable :value value))))
 
@@ -347,10 +362,12 @@
   #("[" " "))
 
 (defmethod begin ((_ embed) parser line cursor)
-  (multiple-value-bind (typename cursor) (read-space-delimited line (+ cursor 2))
-    (multiple-value-bind (target cursor) (read-space-delimited line (+ cursor 1))
+  (multiple-value-bind (typename cursor) (read-delimited line (+ cursor 2) #\ )
+    (multiple-value-bind (target cursor) (read-delimited line (+ cursor 1) #\,)
       (let ((type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
-                               '#:org.shirakumo.markless.components)))
+                               '#:org.shirakumo.markless.components))
+            ;; KLUDGE: This is bad.
+            (target (string-right-trim " ]" target)))
         (cond ((and type (subtypep type 'components:embed))
                (let ((component (make-instance type :target target)))
                  (multiple-value-bind (options cursor) (split-options line cursor #\])
@@ -622,7 +639,10 @@
     (make-instance (class-of proto) :size size :unit unit)))
 
 (defmethod parse-compound-option-type ((proto components:link-option) option)
-  (make-instance (class-of proto) :target (subseq option (length "link "))))
+  (let ((target (subseq option (length "link "))))
+    (if (starts-with "#" target)
+        (make-instance 'components:internal-link-option :target (subseq target 1))
+        (make-instance (class-of proto) :target target))))
 
 (defclass footnote-reference (inline-directive)
   ())

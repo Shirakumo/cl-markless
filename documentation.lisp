@@ -1558,8 +1558,8 @@ Returns the RGB channels as a list.")
 
 Returns the new cursor on success, and NIL on failure.")
 
-  (function read-space-delimited
-    "Reads the next space-delimited token.
+  (function read-delimited
+    "Reads the next character delimited token.
 
 Returns the read token and the new cursor position as multiple values.
 

@@ -51,6 +51,11 @@
 (defmethod output-component (component target (format symbol))
   (output-component component target (make-instance format)))
 
+(defmethod output-component ((component components:unit-component) target format))
+
+(defmethod output-component ((string string) (stream stream) format)
+  (write-string string stream))
+
 (defmacro define-output (format (component stream) &body methods)
   `(progn
      (defclass ,format (output-format) ())
@@ -65,9 +70,6 @@
                           ,@body)))))
 
 (trivial-indent:define-indentation define-output (4 6 &rest (&whole 2 4 &body)))
-
-(defmethod output-component ((string string) (stream stream) format)
-  (write-string string stream))
 
 (defvar *level* 0)
 (define-output debug (c s)

@@ -75,6 +75,12 @@
 
 (defmethod output-component ((component components:component) (target plump-dom:nesting-node) (format plump)))
 
+(defmethod output-component ((component components:parent-component) (target plump-dom:nesting-node) (format plump))
+  (loop for child across (components:children component)
+        do (output-component child target format)))
+
+(defmethod output-component ((component components:footnote) (target plump-dom:nesting-node) (format plump)))
+
 (define-plump-output paragraph "p"
   ;; Not right yet since Markless paragraphs can contain other blocks.
   (loop for child across (components:children component)
@@ -84,7 +90,7 @@
   (loop for child across (components:children component)
         do (output child))
   (when (components:source component)
-    (let ((source (plump-dom:make-element node "source")))
+    (let ((source (plump-dom:make-element node "cite")))
       (loop for child across (components:children (components:source component))
             do (output-component child source format)))))
 
@@ -199,6 +205,12 @@
   (setf (attribute "href") (components:target component))
   (plump-dom:make-text-node node (components:target component)))
 
+(defmethod label ((component components:header))
+  (components:text component))
+
+(defmethod label ((component components:footnote))
+  (format NIL "footnote-~d" (components:target component)))
+
 (define-plump-output compound "span"
   (loop for option in (components:options component)
         do (typecase option
@@ -228,7 +240,7 @@
               (setf (attribute "class") "cross-reference")
               (let ((target (components:label (components:target option) *root*)))
                 (when target
-                  (setf (attribute "href") (format NIL "#~a" (components:text target))))))
+                  (setf (attribute "href") (format NIL "#~a" (label target))))))
              (components:link-option
               (setf (attribute "class") "external-link")
               (setf (plump-dom:tag-name node) "a")
@@ -239,6 +251,7 @@
 (define-plump-output footnote-reference "sup"
   (setf (attribute "class") "footnote-reference")
   (let ((link (plump-dom:make-element node "a")))
-    (setf (attribute "href" link)
-          (format NIL "#footnote-~d" (components:target component)))
+    (let ((target (components:label (princ-to-string (components:target component)) *root*)))
+      (when target
+        (setf (attribute "href" link) (format NIL "#~a" (label target)))))
     (plump-dom:make-text-node link (format NIL "[~d]" (components:target component)))))

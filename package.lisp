@@ -232,7 +232,7 @@
   ;; toolkit.lisp
   (:export
    #:match!
-   #:read-space-delimited
+   #:read-delimited
    #:split-string
    #:starts-with
    #:ends-with

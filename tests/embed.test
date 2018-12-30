@@ -6,15 +6,15 @@
 ~~
 (root (embed image "a"))
 
-[ image a width 1px ]
+[ image a, width 1px ]
 ~~
 (root (embed image "a" (width 1 px)))
 
-[ video a loop, float right ]
+[ video a, loop, float right ]
 ~~
 (root (embed video "a" (loop) (float right)))
 
-[ video a loop, autoplay, float left, width 10px, height 10% ]
+[ video a, loop, autoplay, float left, width 10px, height 10% ]
 ~~
 (root (embed video "a" (loop) (autoplay) (float left) (width 10 px) (height 10 %)))
 

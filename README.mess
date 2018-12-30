@@ -11,13 +11,13 @@ To parse a Markless document, simply call the function ``parse``:
 This will return the generated AST. From there on you can manipulate, inspect, or compile it further.
 
 :: common-lisp
-(cl-markless:output * :format :debug)
+(cl-markless:output * :format 'cl-markless:debug)
 ::
 
 One thing in particular to note is that cl-markless requires LF (unix-style) line endings. CR (mac) or CRLF (windows) //have// to be converted ahead of time, or parse results will not be as expected.
 
 ## Writing Markless
-TODO: tutorial
+You can find a lengthy tutorial on the "Markless website"(https://shirakumo.github.io/markless).
 
 ## Extending cl-markless
 The Markless standard permits extension in a few ways, all of which cl-markless supports. Furthermore, cl-markless allows the seamless addition of output compilers to allow integrating more target languages.

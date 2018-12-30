@@ -8,7 +8,7 @@
 ~~
 (root (code-block ("a") ""))
 
-:: a b c
+:: a, b, c
 ::
 ~~
 (root (code-block ("a" "b" "c") ""))
@@ -56,3 +56,9 @@ a\
 ::
 ~~
 (root (code-block () "::a"))
+
+:::
+::
+:::
+~~
+(root (code-block () "::"))
