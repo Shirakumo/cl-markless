@@ -12,9 +12,13 @@
   :description "A compiler for Markless to EPUB."
   :homepage "https://github.com/Shinmera/cl-markless"
   :serial T
-  :components ((:file "epub"))
+  :components ((:file "package")
+               (:file "stream")
+               (:file "epub"))
   :depends-on (:cl-markless-plump
                :babel
+               :uiop
                :trivial-gray-streams
                :trivial-indent
+               :trivial-mimes
                :zip))

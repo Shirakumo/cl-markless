@@ -4,72 +4,36 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(defpackage #:cl-markless-epub
-  (:nicknames #:org.shirakumo.markless.epub)
-  (:use #:cl #:org.shirakumo.markless)
-  (:local-nicknames
-   (#:components #:org.shirakumo.markless.components))
-  (:shadowing-import-from #:org.shirakumo.markless #:debug)
-  (:export
-   #:epub))
 (in-package #:org.shirakumo.markless.epub)
+
+(defvar *here* #.(or *compile-file-pathname* *load-pathname* (error "COMPILE-FILE or LOAD this.")))
+(defvar *path* NIL)
+
+(defun resource-file (name type)
+  (make-pathname :name name :type type :defaults *here*))
 
 (defclass epub (output-format) ())
 
-(defclass utf-8-input-stream (trivial-gray-streams:fundamental-binary-input-stream)
-  ((source :initarg :source :initform (error "SOURCE required.") :accessor source)
-   (buffer :initform (make-array 0 :element-type '(unsigned-byte 8)) :accessor buffer)
-   (index :initform 0 :accessor index)))
-
-(defun make-utf8-input-stream (streamish)
-  (make-instance 'utf-8-input-stream :source (etypecase streamish
-                                               (string (make-string-input-stream streamish))
-                                               (stream streamish))))
-
-(defun fresh-buffer (stream)
-  (let* ((charbuf (make-string 1024 :initial-element #\Nul))
-         (read (read-sequence charbuf (source stream)))
-         (octs (babel:string-to-octets charbuf :end read :encoding :utf-8)))
-    (setf (index stream) 0)
-    (setf (buffer stream) octs)))
-
-(defmethod trivial-gray-streams:stream-read-byte ((stream utf-8-input-stream))
-  (let ((buffer (buffer stream))
-        (index (index stream)))
-    (when (<= (length buffer) index)
-      (setf index 0)
-      (setf buffer (fresh-buffer stream)))
-    (cond ((= 0 (length buffer))
-           :eof)
-          (T
-           (setf (index stream) (1+ index))
-           (aref buffer index)))))
-
-(defmethod trivial-gray-streams:stream-read-sequence ((stream utf-8-input-stream) sequence start end &key)
-  (loop with i = start
-        do (let* ((buffer (buffer stream))
-                  (index (index stream)))
-             (when (<= (length buffer) index)
-               (setf index 0)
-               (setf buffer (fresh-buffer stream)))
-             (when (= 0 (length buffer))
-               (return i))
-             (let* ((bytes-available (- (length buffer) index))
-                    (bytes-to-write (min bytes-available (- end i))))
-               (replace sequence buffer :start1 i :end1 (+ i bytes-to-write)
-                                        :start2 index)
-               (incf (index stream) bytes-to-write)
-               (incf i bytes-to-write)
-               (when (<= end i) (return i))))))
+(defun output (markless target &rest args &key (if-exists :error))
+  (etypecase markless
+    (pathname
+     (let ((*path* markless))
+       (apply #'output (cl-markless:parse markless T) target args)))
+    (string
+     (apply #'output (cl-markless:parse markless T) target args))
+    (components:component
+     (create-epub target markless :if-exists if-exists))))
 
 (defmethod output-component ((component components:root-component) (target pathname) (format epub))
   (create-epub target component))
 
-(defun create-epub (path root)
-  (let ((date (get-universal-time)))
-    (zip:with-output-to-zipfile (zip path)
+(defun create-epub (path root &key (if-exists :error))
+  (let ((date (get-universal-time))
+        (meta (find-meta root))
+        (*path* (or *path* path)))
+    (zip:with-output-to-zipfile (zip path :if-exists if-exists)
       (flet ((file (name streamish)
-               (zip:write-zipentry zip name (make-utf8-input-stream streamish)
+               (zip:write-zipentry zip name (ensure-input-stream streamish)
                                    :file-mode #o640
                                    :file-write-date date))
              (dir (name)
@@ -80,10 +44,13 @@
         (dir "META-INF/")
         (file "META-INF/container.xml" (meta-inf/container))
         (dir "OEBPS/")
-        (file "OEBPS/document.opf" (oebps/opf root))
-        (file "OEBPS/document.xhtml" (oebps/html root))
-        (with-open-file (stream (asdf:system-relative-pathname :cl-markless-epub "stylesheet.css"))
-          (file "OEBPS/stylesheet.css" stream))))
+        (file "OEBPS/document.opf" (oebps/opf root meta))
+        (file "OEBPS/document.xhtml" (oebps/html root meta))
+        (file "OEBPS/stylesheet.css" (resource-file "stylesheet" "css"))
+        (dir "OEBPS/embed/")
+        (loop for (path target) in (getf meta :embeds)
+              do (file (format NIL "OEBPS/~a" target)
+                       (merge-pathnames path *path*)))))
     path))
 
 (defun make-element (parent tag attributes)
@@ -131,20 +98,35 @@
   (multiple-value-bind (s m h dd mm yy) (decode-universal-time universal-time 0)
     (format NIL "~4,'0d-~2,'0d-~2,'0d" yy mm dd)))
 
-(defun find-title (root)
-  (let ((best (cons most-positive-fixnum "untitled")))
+(defun find-meta (root)
+  (let ((title (cons most-positive-fixnum "untitled"))
+        (counter 0)
+        (embeds ()))
     (labels ((traverse (component)
-               (cond ((and (typep component 'components:header)
-                           (< (components:depth component) (car best)))
-                      (setf (car best) (components:depth component))
-                      (setf (cdr best) (components:text component)))
-                     ((typep component 'components:parent-component)
-                      (loop for child across (components:children component)
-                            do (traverse child))))))
+               (typecase component
+                 (components:header
+                  (when (< (components:depth component) (car title))
+                    (setf (car title) (components:depth component))
+                    (setf (cdr title) (components:text component))))
+                 (components:embed
+                  (let ((target (components:target component)))
+                    (cond ((cl-markless:starts-with "#" target))
+                          ((cl-markless:read-url target 0)
+                           (warn "Embeds to URLs will not work in epubs."))
+                          (T
+                           (let* ((path (uiop:parse-native-namestring target))
+                                  (target (format NIL "embed/~a-~a.~a"
+                                                  (pathname-name path) (incf counter) (pathname-type path))))
+                             (setf (components:target component) target)
+                             (push (list path target) embeds))))))
+                 (components:parent-component
+                  (loop for child across (components:children component)
+                        do (traverse child))))))
       (traverse root)
-      (cdr best))))
+      (list :title (cdr title)
+            :embeds embeds))))
 
-(defun oebps/opf (root)
+(defun oebps/opf (root meta)
   (with-xml
     ("package" (("version" "2.0")
                 ("xmlns" "http://www.idpf.org/2007/opf")
@@ -152,7 +134,7 @@
       ("metadata"
        (("xmlns:dc" "http://purl.org/dc/elements/1.1/")
         ("xmlns:opf" "http://www.idpf.org/2007/opf"))
-       ("dc:title" () (:text (find-title root)))
+       ("dc:title" () (:text (getf meta :title)))
        ("dc:language" () (:text (or (components:language root) "en")))
        ("dc:identifier" (("id" "bookid")) (:text "FIXME"))
        ("dc:creator" (("opf:role" "aut") ("id" "author"))
@@ -164,12 +146,17 @@
       ("manifest"
        ()
        ("item" (("id" "document") ("href" "document.xhtml") ("media-type" "application/xhtml+xml")))
-       ("item" (("id" "stylesheet") ("href" "stylesheet.css") ("media-type" "text/css"))))
+       ("item" (("id" "stylesheet") ("href" "stylesheet.css") ("media-type" "text/css")))
+       (:extra (xml)
+         (loop for (path target) in (getf meta :embeds)
+               do (make-element xml "item" `(("id" ,target)
+                                             ("href" ,target)
+                                             ("media-type" ,(trivial-mimes:mime-lookup path)))))))
       ("spine"
        ()
        ("itemref" (("idref" "document")))))))
 
-(defun oebps/html (root)
+(defun oebps/html (root meta)
   (with-xml
     (:extra (xml)
       (plump-dom:make-doctype xml "html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\""))
@@ -178,7 +165,7 @@
       ("head" ()
        ("meta" (("http-equiv" "Content-Type")
                 ("content" "application/xhtml+xml; charset=utf-8")))
-       ("title" () (:text (find-title root)))
+       ("title" () (:text (getf meta :title)))
        ("link" (("rel" "stylesheet")
                 ("type" "text/css")
                 ("href" "stylesheet.css"))))

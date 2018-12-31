@@ -21,7 +21,7 @@
          (T
           (output-component component target format))))
       (T
-       (output (parse component T) :target target :format format))))))
+       (output (parse component T) :target target :format format)))))
 
 (defclass output-format () ())
 

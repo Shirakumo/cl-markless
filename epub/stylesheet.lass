@@ -1,4 +1,20 @@
-(code :font-family "monospace")
 (pre :white-space pre-wrap
      :word-wrap break-word)
-
+(code
+ :padding 0 .2em
+ :background (hex F0F0F0)
+ :border 1px solid (hex E0E0E0)
+ (pre :margin 0))
+(code.code-block
+ :padding .2em)
+(blockquote
+ :border-left 3px solid (hex D0D0D0)
+ :margin 0
+ :padding-left 0.5em
+ (cite :display block :text-align right)
+ ((:and cite :before) :content "— "))
+((:or ul ol)
+ ((:and >li>p :first-child)
+  :margin 0)
+ ((:and >li>p)
+  :margin 1em 0 0 0))

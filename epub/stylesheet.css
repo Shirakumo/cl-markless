@@ -1,1 +1,1 @@
-code{font-family:monospace;}pre{white-space:pre-wrap;word-wrap:break-word;}
+pre{white-space:pre-wrap;word-wrap:break-word;}code{padding:0 .2em;background:#F0F0F0;border:1px solid #E0E0E0;}code pre{margin:0;}code.code-block{padding:.2em;}blockquote{border-left:3px solid #D0D0D0;margin:0;padding-left:0.5em;}blockquote cite{display:block;text-align:right;}blockquote cite:before{content:"— ";}ul >li>p:first-child,ol >li>p:first-child{margin:0;}ul >LI>P,ol >LI>P{margin:1em 0 0 0;}
