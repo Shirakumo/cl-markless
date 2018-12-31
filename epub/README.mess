@@ -1,0 +1,7 @@
+This system allows you to create EPUB files for e-readers from a Markless file.
+
+:: common-lisp
+(cl-markless-epub:output #p"test.mess" #p"test.epub")
+::
+
+It will automatically collate all the embeded files referenced in the Markless document as long as the files are local. Embedding external URLs will most likely not work on the target e-reader device. The epub will make use of the ``language``, ``author``, and ``copyright`` metadata variables, so make sure to set them in your document. It will also use the first level-one header to determine the title of the document.
