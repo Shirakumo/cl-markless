@@ -15,6 +15,7 @@
   :components ((:file "standalone"))
   :depends-on (:cl-markless
                :cl-markless-plump
+               :cl-markless-epub
                :command-line-arguments)
   :build-operation "program-op"
   :build-pathname "cl-markless"

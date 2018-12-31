@@ -136,7 +136,7 @@
         ("xmlns:opf" "http://www.idpf.org/2007/opf"))
        ("dc:title" () (:text (getf meta :title)))
        ("dc:language" () (:text (or (components:language root) "en")))
-       ("dc:identifier" (("id" "bookid")) (:text "FIXME"))
+       ("dc:identifier" (("id" "bookid")) (:text (format NIL "~a-~a" (format-date) (getf meta :title))))
        ("dc:creator" (("opf:role" "aut") ("id" "author"))
                      (:text (or (components:author root)
                                 (car (last (pathname-directory (user-homedir-pathname))))
