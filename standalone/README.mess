@@ -1,0 +1,22 @@
+This system allows you to produce a standalone executable of cl-markless to use from tho command line.
+
+:: common-lisp
+(asdf:make :cl-markless)
+::
+
+The produced executable should allow the following arguments:
+
+::
+cl-markless [[input] output] args...
+  --input -i                      string   The input file. If left out, the input is taken from
+                                           standard in.
+  --output -o                     string   The output file. If left out, output is printed to
+                                           standard out.
+  --format -f                     string   The format of the output document. Defaults to "plump"
+                                           (HTML).
+  --directives -d                 string   A comma-separated list of directives to use.
+  --line-break-mode -l            string   Which line break mode to use, show (default) or hide.
+  --extension -e                  string   Load an extension.
+  --help -h -?                    boolean  Show a brief help about the tool.
+  --version -v                    boolean  Print the version.
+::

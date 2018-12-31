@@ -1,0 +1,15 @@
+This system allows you to serialise a Markless AST to HTML or the Plump DOM.
+
+:: common-lisp
+(cl-markless:output "| a" :format 'cl-markless-plump:plump)
+;; => <article><blockquote><p>a</p></blockquote></article>
+::
+
+You can also output into an existing DOM by setting the target to that DOM node.
+
+:: common-lisp
+(let ((dom (plump:parse "<b>Test</b>")))
+  (cl-markless:output "| a" :target dom :format 'cl-markless-plump:plump)
+  (plump:serialize dom))
+;; => <b>Test</b><article><blockquote><p>a</p></blockquote></article>
+::

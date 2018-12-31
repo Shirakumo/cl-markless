@@ -24,4 +24,5 @@
                (:file "documentation"))
   :depends-on (:documentation-utils
                :trivial-indent)
-  :in-order-to ((asdf:test-op (asdf:test-op :cl-markless-test))))
+  :in-order-to ((asdf:test-op (asdf:test-op :cl-markless-test))
+                (asdf:build-op (asdf:build-op :cl-markless-standalone))))
