@@ -1,0 +1,4 @@
+(code :font-family "monospace")
+(pre :white-space pre-wrap
+     :word-wrap break-word)
+

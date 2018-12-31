@@ -120,6 +120,7 @@ To run the test suite on this implementation:
 Additional output formats are provided by external systems.
 
 - "cl-markless-plump"(link cl-markless-plump/index.html) HTML/DOM
+- "cl-markless-epub"(link cl-markless-epub/index.html) epub for e-readers
 
 ## Standalone Executable
 You can create a standalone executable of cl-markless with a command line interface. See "cl-markless-standalone"(link cl-markless-standalone/index.html).
