@@ -402,26 +402,26 @@ See EMBED")
 
 See EMBED")
 
-  (type embed-option
+  (type components:embed-option
     "Superclass for all options for an embed component.
 
 Every concrete subclass must have the suffix -OPTION.")
   
-  (type loop-option
+  (type components:loop-option
     "Represents a loop option.
 
 Causes the embed to loop its content.
 
 See EMBED-OPTION")
   
-  (type autoplay-option
+  (type components:autoplay-option
     "Represents an autoplay option.
 
 Causes the embed to automatically start playback.
 
 See EMBED-OPTION")
   
-  (type width-option
+  (type components:width-option
     "Represents a width option.
 
 Causes the embed to restrict its width to the given size.
@@ -429,13 +429,28 @@ Causes the embed to restrict its width to the given size.
 See EMBED-OPTION
 See SIZED")
   
-  (type height-option
+  (type components:height-option
     "Represents a height option.
 
 Causes the embed to restrict its height to the given size.
 
 See EMBED-OPTION
 See SIZED")
+
+  (type components:float-option
+    "Represents a float option.
+
+Causes the embed to float within the other blocks.
+
+See DIRECTION
+See EMBED-OPTION")
+
+  (function direction
+    "The direction in which the float occurs.
+
+Has to be either :LEFT or :RIGHT.
+
+See FLOAT-OPTION")
 
   (type components:footnote
     "Representation of a footnote definition.
