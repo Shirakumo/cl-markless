@@ -318,11 +318,10 @@
 
 (defmethod begin ((_ instruction) parser line cursor)
   (multiple-value-bind (typename cursor) (read-delimited line (+ cursor 2) #\ )
-    (let ((type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
-                             '#:org.shirakumo.markless.components)))
-      (unless (and type (subtypep type 'components:instruction))
+    (let ((class (find-subclass typename (find-class 'components:instruction))))
+      (unless class
         (error 'unknown-instruction :instruction typename))
-      (commit _ (parse-instruction (class-prototype type) line (1+ cursor)) parser))
+      (commit _ (parse-instruction (class-prototype class) line (1+ cursor)) parser))
     cursor))
 
 (defmethod parse-instruction ((proto components:set) line cursor)
@@ -364,17 +363,16 @@
 (defmethod begin ((_ embed) parser line cursor)
   (multiple-value-bind (typename cursor) (read-delimited line (+ cursor 2) #\ )
     (multiple-value-bind (target cursor) (read-delimited line (+ cursor 1) #\,)
-      (let ((type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
-                               '#:org.shirakumo.markless.components))
+      (let ((class (find-subclass typename (find-class 'components:embed)))
             ;; KLUDGE: This is bad.
             (target (string-right-trim " ]" target)))
-        (cond ((and type (subtypep type 'components:embed))
-               (let ((component (make-instance type :target target)))
+        (cond (class
+               (let ((component (make-instance class :target target)))
                  (multiple-value-bind (options cursor) (split-options line cursor #\])
                    (let ((options (mapcar #'parse-embed-option options)))
                      (loop for option in options
                            do (assert (embed-option-allowed-p option component) ()
-                                      'option-disallowed :option option :embed-type type))
+                                      'option-disallowed :option option :embed-type (class-name class)))
                      (setf (components:options component) options))
                    (commit _ component parser)
                    (length line))))
@@ -390,10 +388,9 @@
   (let* ((typename (format NIL "~a-option"
                            (subseq option 0 (or (position #\  option)
                                                 (length option)))))
-         (type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
-                            '#:org.shirakumo.markless.components)))
-    (if (and type (subtypep type 'components:embed-option))
-        (parse-embed-option-type (class-prototype type) option)
+         (class (find-subclass typename (find-class 'components:embed-option))))
+    (if class
+        (parse-embed-option-type (class-prototype class) option)
         (error 'bad-option :option option))))
 
 (defmethod parse-embed-option-type ((type components:embed-option) option)
@@ -613,10 +610,9 @@
              (let* ((typename (format NIL "~a-option"
                                       (subseq option 0 (or (position #\  option)
                                                            (length option)))))
-                    (type (find-symbol (to-readtable-case typename #.(readtable-case *readtable*))
-                                       '#:org.shirakumo.markless.components)))
-               (if (and type (subtypep type 'components:compound-option))
-                   (parse-compound-option-type (class-prototype type) option)
+                    (class (find-subclass typename (find-class 'components:compound-option))))
+               (if class
+                   (parse-compound-option-type (class-prototype class) option)
                    (error 'bad-option :option option)))))))
 
 (defmethod parse-compound-option-type ((proto components:compound-option) option)

@@ -57,27 +57,27 @@ If your directive has a constant prefix that is also the same as its ending suff
 #### Instructions
 Adding a new instruction type requires the following steps:
 
-1. Add a new component that is a subclass of ``instruction`` and whose name is from the ``cl-markless-components`` package.
+1. Add a new component that is a subclass of ``instruction``.
 2. Add a method to ``parse-instruction`` that specialises on this new component class, and use it to parse the line into the appropriate instance of your instruction component.
 3. Add a method to ``evaluate-instruction`` that specialises on your component class and performs whatever task that your instruction should allow.
 
 #### Embed Types
 A new embed type requires only two steps:
 
-1. Add a new component that is a subclass of ``embed`` and whose name is from the ``cl-markless-components`` package.
+1. Add a new component that is a subclass of ``embed``.
 2. Add methods to ``embed-option-allowed-p`` specialised on your component and each permitted option that simply return ``T``.
 
 #### Embed Options
 Adding new embed options requires a couple more steps:
 
-1. Add a new component that is a subclass of ``embed-option``, and whose name is from the ``cl-markless-components`` package and ends with ``-option``.
+1. Add a new component that is a subclass of ``embed-option``.
 2. Add a method to ``parse-embed-option-type`` specialised on your new option class, which parses the given option string into a new instance of your class.
 3. Define methods on ``embed-option-allowed-p`` that just return ``T`` for all embed types that your new option would be appropriate for.
 
 #### Compound Options
 New compound options requires a similar procedure as for embed options.
 
-1. Add a new component that is a subclass of ``compound-option``, and whose name is from the ``cl-markless-components`` package and ends with ``-option``.
+1. Add a new component that is a subclass of ``compound-option``.
 2. Add a method to ``parse-compound-option-type`` specialised on your new option class, which parses the given option string into a new instance of your class.
 
 Unlike embed options there's no verification step, as any combination of compound options is allowed.
