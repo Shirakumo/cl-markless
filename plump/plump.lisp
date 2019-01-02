@@ -252,6 +252,9 @@
   (loop for child across (components:children component)
         do (output child)))
 
+(define-plump-output label "a"
+  (setf (attribute "id") (components:target component)))
+
 (define-plump-output footnote-reference "sup"
   (setf (attribute "class") "footnote-reference")
   (let ((link (plump-dom:make-element node "a")))
