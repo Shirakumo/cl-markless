@@ -12,8 +12,8 @@
   (:shadow #:parse)
   (:shadowing-import-from #:org.shirakumo.markless #:debug)
   (:export
-   #:markdown
    #:parse
+   #:convert
    #:html-tag))
 (in-package #:org.shirakumo.markless.markdown)
 
@@ -43,6 +43,12 @@
          (input (3bmd::expand-tabs string :add-newlines t))
          (ast (3bmd-grammar::parse-doc input)))
     (translate :root ast)))
+
+(defun convert (markdown &key (output (make-pathname :type "mess" :defaults markdown))
+                              (if-exists :error))
+  (with-open-file (stream output :direction :output
+                                 :if-exists if-exists)
+    (output (parse markdown) :target stream)))
 
 (defgeneric translate (type body))
 

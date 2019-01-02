@@ -6,3 +6,10 @@ This system allows you to convert from Markdown to Markless.
 ::
 
 Some features do not translate well between the two markups however. Markdown's references are translated to footnotes as well as possible, and HTML tags are entered as ``html-tag`` components, which are by default ignored on any output. Everything else should be translated as expected.
+
+You can also directly convert Markdown files to Markless files.
+
+:: common-lisp
+(cl-markless-markdown:convert "README.md")
+;; => #p"README.mess"
+::
