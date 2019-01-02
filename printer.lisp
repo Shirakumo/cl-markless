@@ -123,12 +123,15 @@
 (define-output markless (c s)
   (vector ()
     (when (< 0 (length c))
-      (output (aref c 0)))
-    (loop for i from 1 below (length c)
-          for child = (aref c i)
-          do (when (typep child 'components:block-component)
-               (format s "~%~{~a~}" (reverse *prefixes*)))
-             (output child)))
+      (output (aref c 0))
+      (loop for i from 1 below (length c)
+            for child = (aref c i)
+            do (when (typep child 'components:block-component)
+                 (format s "~%~{~a~}" (reverse *prefixes*))
+                 (when (and (not (typep child 'components:list-item))
+                            (not (typep (aref c (1- i)) 'components:header)))
+                   (format s "~%~{~a~}" (reverse *prefixes*))))
+               (output child))))
   
   (string ()
     (loop for char across c
@@ -147,7 +150,10 @@
     (output (components:children c)))
   
   (components:paragraph ()
-    (output-children))
+    (let* ((prefix (make-string (components:indentation c) :initial-element #\ ))
+           (*prefixes* (list* prefix *prefixes*)))
+      (write-string prefix s)
+      (output (components:children c))))
 
   (components:blockquote-header ()
     (format s "~~ ")
@@ -174,9 +180,9 @@
     (format s "=="))
 
   (components:code-block ()
-    (format s "~v@{:~}~@[ ~a~{, ~a~}~]" (components:depth c) (components:language c) (components:options c))
-    (write-string (components:text c) s)
-    (format s "~&~v@{:~}" (components:depth c) NIL))
+    (format s "~v@{:~}~@[ ~a~{, ~a~}~]" (+ 2 (components:depth c)) (components:language c) (components:options c))
+    (format s "~&~a" (components:text c))
+    (format s "~&~v@{:~}" (+ 2 (components:depth c)) NIL))
 
   (components:instruction ()
     (format s "! ~(~a~)" (type-of c)))
@@ -204,7 +210,8 @@
             (type-of c) (components:target c))
     (loop for option in (components:options c)
           do (format s ", ")
-             (output option)))
+             (output option))
+    (format s " ]"))
 
   (components:embed-option ()
     (format s "~(~a~)" (type-of c)))
@@ -256,7 +263,7 @@
     (format s ")"))
 
   (components:url ()
-    (write-string (components:text c) s))
+    (write-string (components:target c) s))
 
   (components:compound ()
     (format s "\"")
@@ -301,7 +308,7 @@
     (format s "#~a" (components:target c)))
 
   (components:link-option ()
-    (if (/= 0 (read-url (components:target c) 0))
+    (if (read-url (components:target c) 0)
         (format s "~a" (components:target c))
         (format s "link ~a" (components:target c))))
 
