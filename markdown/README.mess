@@ -1,0 +1,8 @@
+This system allows you to convert from Markdown to Markless.
+
+:: common-lisp
+(cl-markless:output (cl-markless-markdown:parse "> [*woah*](http://example.com)"))
+;; => | "//woah//"(http://example.com)
+::
+
+Some features do not translate well between the two markups however. Markdown's references are translated to footnotes as well as possible, and HTML tags are entered as ``html-tag`` components, which are by default ignored on any output. Everything else should be translated as expected.
