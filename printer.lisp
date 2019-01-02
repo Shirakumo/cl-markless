@@ -188,11 +188,24 @@
     (format s "~v@{:~}~@[ ~a~{, ~a~}~]" (components:depth c) (components:language c) (components:options c))
     (write-string (components:text c) s)
     (format s "~&~v@{:~}" (components:depth c) NIL))
-  
+
   (components:instruction ()
-    (format s "! ")
-    ;; FIXME: decode instructions
-    )
+    (format s "! ~(~a~)" (type-of c)))
+  
+  (components:message-instruction ()
+    (format s "! ~(~a~) ~a" (type-of c) (components:message c)))
+
+  (components:directives-instruction ()
+    (format s "! ~(~a~)~{ ~a~}" (type-of c) (components:directives c)))
+
+  (components:set ()
+    (format s "! ~(~a~) ~a ~a" (type-of c) (components:variable c) (components:value c)))
+
+  (components:include ()
+    (format s "! ~(~a~) ~a" (type-of c) (components:file c)))
+
+  (components:label ()
+    (format s "! ~(~a~) ~a" (type-of c) (components:target c)))
 
   (components:comment ()
     (format s "; ~a" (components:text c)))
