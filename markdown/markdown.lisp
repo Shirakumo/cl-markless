@@ -100,7 +100,7 @@
     (insert-children compound label)))
 
 (define-translation :image (link)
-  (destructuring-bind (&key label source title) link
+  (destructuring-bind (&key label source title) (cdr link)
     (declare (ignore label title))
     (make-instance 'components:image :target source)))
 
@@ -172,6 +172,9 @@
       (vector-push-extend (format NIL " ~a" title)
                           (components:children footnote)))
     footnote))
+
+(define-translation :line-break ()
+  (string #\Linefeed))
 
 (defclass html-tag (components:unit-component)
   ((tag :initarg :tag :initform (error "TAG required") :accessor tag)))
