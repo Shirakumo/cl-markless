@@ -5,8 +5,7 @@
 **a//
 b//c**
 ~~
-(root (paragraph (bold "a" (italic "
-b") "c")))
+(root (paragraph (bold "a" (italic (newline) "b") "c")))
 
 | # **a**
 ~~

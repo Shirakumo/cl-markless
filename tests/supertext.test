@@ -13,8 +13,7 @@
 ^(a
 b)
 ~~
-(root (paragraph (supertext "a
-b")))
+(root (paragraph (supertext "a" (newline) "b")))
 
 ^(a
 ~~

@@ -22,15 +22,13 @@
 - a
   b
 ~~
-(root (unordered-list (unordered-list-item (paragraph "a
-b"))))
+(root (unordered-list (unordered-list-item (paragraph "a" (newline) "b"))))
 
 - a
   b
 - c
 ~~
-(root (unordered-list (unordered-list-item (paragraph "a
-b")) (unordered-list-item (paragraph "c"))))
+(root (unordered-list (unordered-list-item (paragraph "a" (newline) "b")) (unordered-list-item (paragraph "c"))))
 
 - - 
 ~~
@@ -39,14 +37,12 @@ b")) (unordered-list-item (paragraph "c"))))
 - - a
     b
 ~~
-(root (unordered-list (unordered-list-item (unordered-list (unordered-list-item (paragraph "a
-b"))))))
+(root (unordered-list (unordered-list-item (unordered-list (unordered-list-item (paragraph "a" (newline) "b"))))))
 
 -  a
    b
 ~~
-(root (unordered-list (unordered-list-item (paragraph "a
-b"))))
+(root (unordered-list (unordered-list-item (paragraph "a" (newline) "b"))))
 
 - a
    b

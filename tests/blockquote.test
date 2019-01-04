@@ -9,8 +9,7 @@
 | a
 | b
 ~~
-(root (blockquote (paragraph "a
-b")))
+(root (blockquote (paragraph "a" (newline) "b")))
 
 | | 
 ~~
@@ -19,8 +18,7 @@ b")))
 | | a
 | | b
 ~~
-(root (blockquote (blockquote (paragraph "a
-b"))))
+(root (blockquote (blockquote (paragraph "a" (newline) "b"))))
 
 | a
 | | b

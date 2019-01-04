@@ -269,7 +269,7 @@
               (typep component 'components:paragraph))
       (let ((children (components:children component)))
         (when (and (< 0 (length children))
-                   (string= #.(string #\Linefeed) (aref children (1- (length children)))))
+                   (typep (aref children (1- (length children))) 'components:newline))
           (vector-pop children))))))
 
 (defmethod parse ((stream stream) (parser parser))
@@ -319,7 +319,7 @@
       (let ((top (stack-entry-component (stack-top stack))))
         (when (or (typep top 'components:inline-component)
                   (typep top 'components:paragraph))
-          (vector-push-extend #.(string #\Linefeed) (components:children top)))))))
+          (vector-push-extend (make-instance 'components:newline) (components:children top)))))))
 
 (defun read-block (parser line cursor)
   (declare (type simple-string line))

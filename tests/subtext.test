@@ -13,8 +13,7 @@ v(\-)
 v(a
 b)
 ~~
-(root (paragraph (subtext "a
-b")))
+(root (paragraph (subtext "a" (newline) "b")))
 
 v(a
 ~~

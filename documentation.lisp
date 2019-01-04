@@ -600,6 +600,21 @@ See LINK-OPTION")
     "Representation of a reference to a footnote.
 
 See TARGET
+See UNIT-COMPONENT")
+
+  (type components:en-dash
+    "Representation of an en-dash.
+
+See UNIT-COMPONENT")
+
+  (type components:em-dash
+    "Representation of an em-dash.
+
+See UNIT-COMPONENT")
+
+  (type components:newline
+    "Representation of a line break.
+
 See UNIT-COMPONENT"))
 
 ;; conditions.lisp

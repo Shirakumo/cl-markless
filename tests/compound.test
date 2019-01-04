@@ -57,8 +57,7 @@ a"b"()c
 "a
 b"()
 ~~
-(root (paragraph (compound () "a
-b")))
+(root (paragraph (compound () "a" (newline) "b")))
 
 "a"b"(bold)c"(italic)
 ~~

@@ -13,8 +13,7 @@
 **a
 b**
 ~~
-(root (paragraph (bold "a
-b")))
+(root (paragraph (bold "a" (newline) "b")))
 
 a**b**c
 ~~

@@ -13,8 +13,7 @@
 <-a
 b->
 ~~
-(root (paragraph (strikethrough "a
-b")))
+(root (paragraph (strikethrough "a" (newline) "b")))
 
 a<-b->c
 ~~

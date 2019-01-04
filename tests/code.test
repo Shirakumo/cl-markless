@@ -13,8 +13,7 @@
 ``a
 b``
 ~~
-(root (paragraph (code "a
-b")))
+(root (paragraph (code "a" (newline) "b")))
 
 ``a
 ~~

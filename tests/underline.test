@@ -13,8 +13,7 @@ __\___
 __a
 b__
 ~~
-(root (paragraph (underline "a
-b")))
+(root (paragraph (underline "a" (newline) "b")))
 
 a__b__c
 ~~

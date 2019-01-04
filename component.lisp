@@ -275,3 +275,7 @@
 
 (define-printer footnote-reference
   "(~d)" (target c))
+
+(defclass en-dash (unit-component) ())
+(defclass em-dash (unit-component) ())
+(defclass newline (unit-component) ())

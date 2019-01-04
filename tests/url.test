@@ -41,8 +41,7 @@ http://~
 http://
 example.com
 ~~
-(root (paragraph "http://
-example.com"))
+(root (paragraph "http://" (newline) "example.com"))
 
 http://\
 example.com

@@ -685,8 +685,14 @@
 (defmethod begin ((_ dash) parser line cursor)
   (let* ((stack (stack parser))
          (children (components:children (stack-entry-component (stack-top stack)))))
-    (vector-push-extend #.(string (code-char #x2014)) children)
-    (+ 2 cursor)))
+    (incf cursor 2)
+    (cond ((and (< cursor (length line))
+                (char= #\- (aref line cursor)))
+           (vector-push-extend (make-instance 'components:em-dash) children)
+           (1+ cursor))
+          (T
+           (vector-push-extend (make-instance 'components:en-dash) children)
+           cursor))))
 
 (defclass newline (inline-directive)
   ())
@@ -697,5 +703,5 @@
 (defmethod begin ((_ newline) parser line cursor)
   (let* ((stack (stack parser))
          (children (components:children (stack-entry-component (stack-top stack)))))
-    (vector-push-extend #.(string #\Linefeed) children)
+    (vector-push-extend (make-instance 'components:newline) children)
     (+ 3 cursor)))

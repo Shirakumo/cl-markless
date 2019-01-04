@@ -101,7 +101,10 @@
    #:link-option
    #:target
    #:footnote-reference
-   #:target))
+   #:target
+   #:en-dash
+   #:em-dash
+   #:newline))
 
 (defpackage #:cl-markless
   (:nicknames #:org.shirakumo.markless)
@@ -227,7 +230,9 @@
    #:markless
    #:debug
    #:define-output
-   #:output-component)
+   #:output-component
+   #:output
+   #:output-children)
   ;; size-table.lisp
   (:export
    #:*size-table*)

@@ -5,14 +5,12 @@ a
 a
 b
 ~~
-(root (paragraph "a
-b"))
+(root (paragraph "a" (newline) "b"))
 
  a
  b
 ~~
-(root (paragraph "a
-b"))
+(root (paragraph "a" (newline) "b"))
 
 a
 

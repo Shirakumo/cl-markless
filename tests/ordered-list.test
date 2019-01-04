@@ -21,14 +21,12 @@
 1.a
   b
 ~~
-(root (ordered-list (ordered-list-item (1) (paragraph "a
-b"))))
+(root (ordered-list (ordered-list-item (1) (paragraph "a" (newline) "b"))))
 
 1. a
    b
 ~~
-(root (ordered-list (ordered-list-item (1) (paragraph "a
-b"))))
+(root (ordered-list (ordered-list-item (1) (paragraph "a" (newline) "b"))))
 
 1. a
     b
@@ -38,8 +36,7 @@ b"))))
 10.a
    b
 ~~
-(root (ordered-list (ordered-list-item (10) (paragraph "a
-b"))))
+(root (ordered-list (ordered-list-item (10) (paragraph "a" (newline) "b"))))
 
 1.
 2.
@@ -55,8 +52,7 @@ b"))))
   b
 2.c
 ~~
-(root (ordered-list (ordered-list-item (1) (paragraph "a
-b")) (ordered-list-item (2) (paragraph "c"))))
+(root (ordered-list (ordered-list-item (1) (paragraph "a" (newline) "b")) (ordered-list-item (2) (paragraph "c"))))
 
 1
 ~~

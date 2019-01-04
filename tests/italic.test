@@ -13,8 +13,7 @@
 //a
 b//
 ~~
-(root (paragraph (italic "a
-b")))
+(root (paragraph (italic "a" (newline) "b")))
 
 a//b//c
 ~~
