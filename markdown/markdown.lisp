@@ -174,7 +174,7 @@
     footnote))
 
 (define-translation :line-break ()
-  (string #\Linefeed))
+  (make-instance 'components:newline))
 
 (defclass html-tag (components:unit-component)
   ((tag :initarg :tag :initform (error "TAG required") :accessor tag)))

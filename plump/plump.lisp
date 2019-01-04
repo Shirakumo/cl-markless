@@ -43,9 +43,7 @@
          node))))
 
 (defmethod output-component ((string string) (target plump-dom:nesting-node) (format plump))
-  (if (string= string #.(string #\Linefeed))
-      (plump-dom:make-element target "br")
-      (plump-dom:make-text-node target string)))
+  (plump-dom:make-text-node target string))
 
 (defmethod output-component :around ((component components:root-component) target (format plump))
   (let ((*root* component))
@@ -262,3 +260,11 @@
       (when target
         (setf (attribute "href" link) (format NIL "#~a" (label target)))))
     (plump-dom:make-text-node link (format NIL "[~d]" (components:target component)))))
+
+(define-plump-output newline "br")
+
+(defmethod output-component ((dash components:en-dash) (target plump-dom:nesting-node) (format plump))
+  (plump-dom:make-text-node target #.(string (code-char #x2013))))
+
+(defmethod output-component ((dash components:em-dash) (target plump-dom:nesting-node) (format plump))
+  (plump-dom:make-text-node target #.(string (code-char #x2014))))
