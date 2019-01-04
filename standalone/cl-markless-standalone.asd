@@ -16,6 +16,7 @@
   :depends-on (:cl-markless
                :cl-markless-plump
                :cl-markless-epub
+               :cl-markless-markdown
                :command-line-arguments)
   :build-operation "program-op"
   :build-pathname "cl-markless"

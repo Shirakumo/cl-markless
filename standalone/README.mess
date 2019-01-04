@@ -7,16 +7,29 @@ This system allows you to produce a standalone executable of cl-markless to use 
 The produced executable should allow the following arguments:
 
 ::
-cl-markless [[input] output] args...
+cl-markless args...
   --input -i                      string   The input file. If left out, the input is taken from
                                            standard in.
   --output -o                     string   The output file. If left out, output is printed to
                                            standard out.
   --format -f                     string   The format of the output document. Defaults to "plump"
                                            (HTML).
+  --input-format                  string   The format of the input document. Defaults to "markless".
   --directives -d                 string   A comma-separated list of directives to use.
   --line-break-mode -l            string   Which line break mode to use, show (default) or hide.
   --extension -e                  string   Load an extension.
   --help -h -?                    boolean  Show a brief help about the tool.
   --version -v                    boolean  Print the version.
+
+Available output formats:
+  debug, epub, markdown, markless, plump
+
+Available input formats:
+  markless, markdown
+::
+
+You can easily convert Markdown files to Markless like this:
+
+::
+cl-markless -i README.md -o README.mess --input-format markdown --format markless
 ::
