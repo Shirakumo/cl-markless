@@ -25,3 +25,15 @@
 [
 ~~
 (root (paragraph "["))
+
+[ image a, unknown ]
+~~
+(root (embed image "a"))
+
+[ image a, unknown, width 1px ]
+~~
+(root (embed image "a" (width 1 px)))
+
+[ image a, width 1xx ]
+~~
+(root (embed image "a"))

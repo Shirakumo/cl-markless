@@ -180,8 +180,9 @@
                  ((string= (components:value instruction) "hide")
                   (setf (line-break-mode parser) :hide))
                  (T
-                  (error 'bad-value :variable (components:variable instruction)
-                                    :value (components:value instruction)))))
+                  (error 'bad-value
+                         :variable (components:variable instruction)
+                         :value (components:value instruction)))))
           ((string-equal v "author")
            (setf (components:author (root parser))
                  (components:value instruction)))
@@ -192,7 +193,8 @@
            (setf (components:language (root parser))
                  (components:value instruction)))
           (T
-           (error 'bad-variable :variable (components:variable instruction))))))
+           (error 'bad-variable
+                  :variable (components:variable instruction))))))
 
 (defmethod evaluate-instruction ((instruction components:info) (parser parser))
   (format *error-output* "~&[INFO ] ~a~%" (components:message instruction)))
@@ -203,7 +205,7 @@
 
 (defmethod evaluate-instruction ((instruction components:error) (parser parser))
   (format *error-output* "~&[ERROR] ~a~%" (components:message instruction))
-  (error 'user-error :message (components:message instruction)))
+  (error 'user-error parser :message (components:message instruction)))
 
 (defmethod evaluate-instruction ((instruction components:include) (parser parser))
   (setf (input parser) (make-concatenated-stream
@@ -274,12 +276,14 @@
 
 (defmethod parse ((stream stream) (parser parser))
   (let* ((root (make-instance 'components:root-component))
-         (stack (stack parser)))
+         (stack (stack parser))
+         (*current-line-number* 0))
     (setf (input parser) stream)
     (stack-push (make-instance 'root-directive) root stack)
     (loop while (peek-char NIL (input parser) NIL)
           for line = (read-full-line (input parser))
-          do (process-stack parser stack line))
+          do (process-stack parser stack line)
+             (incf *current-line-number*))
     (when (eq :show (line-break-mode parser))
       (pop-newline stack))
     (stack-unwind stack parser 0)

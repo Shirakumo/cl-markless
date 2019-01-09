@@ -82,3 +82,15 @@ b"()
 "a"\()
 ~~
 (root (paragraph "\"a\"()"))
+
+"a"(unknown)
+~~
+(root (paragraph (compound () "a")))
+
+"a"(bold, unknown, italic)
+~~
+(root (paragraph (compound ((bold) (italic)) "a")))
+
+"a"(size 1xx)
+~~
+(root (paragraph (compound () "a")))

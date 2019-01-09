@@ -320,7 +320,7 @@
   (multiple-value-bind (typename cursor) (read-delimited line (+ cursor 2) #\ )
     (let ((class (find-subclass typename (find-class 'components:instruction))))
       (unless class
-        (error 'unknown-instruction :instruction typename))
+        (error 'unknown-instruction :cursor cursor :instruction typename))
       (commit _ (parse-instruction (class-prototype class) line (1+ cursor)) parser))
     cursor))
 
@@ -360,38 +360,51 @@
 (defmethod prefix ((_ embed))
   #("[" " "))
 
-(defmethod begin ((_ embed) parser line cursor)
-  (multiple-value-bind (typename cursor) (read-delimited line (+ cursor 2) #\ )
+(defmethod begin ((_ embed) parser line start-cursor)
+  (multiple-value-bind (typename cursor) (read-delimited line (+ start-cursor 2) #\ )
     (multiple-value-bind (target cursor) (read-delimited line (+ cursor 1) #\,)
       (let ((class (find-subclass typename (find-class 'components:embed)))
             ;; KLUDGE: This is bad.
             (target (string-right-trim " ]" target)))
         (cond (class
+               (incf cursor)
                (let ((component (make-instance class :target target)))
-                 (multiple-value-bind (options cursor) (split-options line cursor #\])
-                   (let ((options (mapcar #'parse-embed-option options)))
-                     (loop for option in options
-                           do (assert (embed-option-allowed-p option component) ()
-                                      'option-disallowed :option option :embed-type (class-name class)))
-                     (setf (components:options component) options))
-                   (commit _ component parser)
-                   (length line))))
+                 (commit _ component parser)
+                 (setf (components:options component)
+                       (loop for (string next continue) = (next-option line cursor #\])
+                             for option = (when string (parse-embed-option cursor string component))
+                             when option collect option
+                             do (setf cursor next)
+                             while continue))
+                 (length line)))
               (T
-               (warn 'unknown-embed-type :embed-type typename)
+               (warn 'unknown-embed-type
+                     :cursor (+ start-cursor 2)
+                     :embed-type typename)
                (let ((paragraph (make-instance 'components:paragraph))
                      (url (make-instance 'components:url :target target)))
                  (vector-push-extend url (components:children paragraph))
                  (commit (directive 'paragraph parser) paragraph parser)
                  (length line))))))))
 
-(defun parse-embed-option (option)
+(defun parse-embed-option (cursor option component)
   (let* ((typename (format NIL "~a-option"
                            (subseq option 0 (or (position #\  option)
                                                 (length option)))))
          (class (find-subclass typename (find-class 'components:embed-option))))
     (if class
-        (parse-embed-option-type (class-prototype class) option)
-        (error 'bad-option :option option))))
+        (handler-case
+            (let ((option (parse-embed-option-type (class-prototype class) option)))
+              (if (embed-option-allowed-p option component)
+                  option
+                  (warn 'option-disallowed
+                        :cursor cursor
+                        :option option
+                        :embed-type (class-name class))))
+          (error (_)
+            (declare (ignore _))
+            (warn 'bad-option :cursor cursor :option option)))
+        (warn 'bad-option :cursor cursor :option option))))
 
 (defmethod parse-embed-option-type ((type components:embed-option) option)
   (make-instance (class-of type)))
@@ -400,15 +413,17 @@
   (make-instance (class-of type)
                  :direction (cond ((string-equal "float left" option) :left)
                                   ((string-equal "float right" option) :right)
-                                  (T (error 'bad-option :option option)))))
+                                  (T (error "FLOAT must be LEFT or RIGHT.")))))
 
 (defmethod parse-embed-option-type ((type components:width-option) option)
   (multiple-value-bind (size unit) (parse-unit option :start (length "width "))
-    (make-instance 'components:width-option :size size :unit unit)))
+    (when unit
+      (make-instance 'components:width-option :size size :unit unit))))
 
 (defmethod parse-embed-option-type ((type components:height-option) option)
   (multiple-value-bind (size unit) (parse-unit option :start (length "height "))
-    (make-instance 'components:height-option :size size :unit unit)))
+    (when unit
+      (make-instance 'components:height-option :size size :unit unit))))
 
 (defmethod embed-option-allowed-p ((option components:embed-option) (embed components:embed)) NIL)
 (defmethod embed-option-allowed-p ((option components:width-option) (embed components:embed)) T)
@@ -591,15 +606,18 @@
   (when (and (< (+ 2 cursor) (length line))
              (char= #\( (aref line (+ 1 cursor))))
     (incf cursor 2)
-    (multiple-value-bind (options cursor) (split-options line cursor #\))
-      (setf (components:options component)
-            (mapcar #'parse-compound-option options))
-      cursor)))
+    (setf (components:options component)
+          (loop for (string next continue) = (next-option line cursor #\))
+                for option = (when string (parse-compound-option cursor string))
+                when option collect option
+                do (setf cursor next)
+                while continue))
+    cursor))
 
 (defmethod end :after ((_ compound) component parser)
   (vector-push-front "\"" (components:children component)))
 
-(defun parse-compound-option (option)
+(defun parse-compound-option (cursor option)
   (or (gethash option *color-table*)
       (gethash option *size-table*)
       (cond ((starts-with "#" option)
@@ -612,8 +630,11 @@
                                                            (length option)))))
                     (class (find-subclass typename (find-class 'components:compound-option))))
                (if class
-                   (parse-compound-option-type (class-prototype class) option)
-                   (error 'bad-option :option option)))))))
+                   (handler-case (parse-compound-option-type (class-prototype class) option)
+                     (error (e)
+                       (declare (ignore e))
+                       (warn 'bad-option :cursor cursor :option option)))
+                   (warn 'bad-option :cursor cursor :option option)))))))
 
 (defmethod parse-compound-option-type ((proto components:compound-option) option)
   (make-instance (class-of proto)))
@@ -632,7 +653,8 @@
 
 (defmethod parse-compound-option-type ((proto components:size-option) option)
   (multiple-value-bind (size unit) (parse-unit option :start (length "size "))
-    (make-instance (class-of proto) :size size :unit unit)))
+    (when unit
+      (make-instance (class-of proto) :size size :unit unit))))
 
 (defmethod parse-compound-option-type ((proto components:link-option) option)
   (let ((target (subseq option (length "link "))))

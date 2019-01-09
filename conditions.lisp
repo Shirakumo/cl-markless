@@ -6,6 +6,8 @@
 
 (in-package #:org.shirakumo.markless)
 
+(defvar *current-line-number*)
+
 (define-condition markless-condition (condition)
   ())
 
@@ -21,16 +23,22 @@
   (:report (lambda (c s) (format s "The instruction ~s does not have an evaluation defined."
                                  (instruction c)))))
 
-(define-condition parser-error (markless-condition error)
-  ())
-
-(define-condition parser-warning (markless-condition warning)
-  ())
-
 (define-condition deactivation-disallowed (markless-condition error)
   ((directive :initarg :directive :reader directive-instance))
   (:report (lambda (c s) (format s "Deactivating the ~s directive is not allowed."
                                  (type-of (directive-instance c))))))
+
+(define-condition parser-condition (markless-condition)
+  ((line :initarg :line :reader line)
+   (cursor :initarg :cursor :reader cursor))
+  (:default-initargs :line *current-line-number*
+                     :cursor 0))
+
+(define-condition parser-error (parser-condition error)
+  ())
+
+(define-condition parser-warning (parser-condition warning)
+  ())
 
 (define-condition unknown-instruction (parser-error)
   ((instruction :initarg :instruction :reader instruction))
@@ -42,7 +50,7 @@
   (:report (lambda (c s) (format s "The embed type ~s is not known."
                                  (embed-type c)))))
 
-(define-condition bad-option (parser-error)
+(define-condition bad-option (parser-warning)
   ((option :initarg :option :reader option))
   (:report (lambda (c s) (format s "The option ~s is malformed or unrecognised."
                                  (option c)))))

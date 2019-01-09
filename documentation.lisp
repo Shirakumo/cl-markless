@@ -645,16 +645,37 @@ See IMPLEMENTATION-CONDITION")
 
 See INSTRUCTION-EVALUATION-UNDEFINED
 See UNKNOWN-INSTRUCTION")
+
+  (type parser-condition
+    "Superclass for all conditions that relate to the parsing process.
+
+See LINE
+See CURSOR
+See MARKLESS-CONDITION")
+
+  (function line
+    "Returns the line number on which the condition occurred.
+
+The lines are counted from 0.
+
+See PARSER-CONDITION")
+
+  (function cursor
+    "Returns the cursor position after which the condition occurred.
+
+The cursor indexes into the line character by character starting from 0.
+
+See PARSER-CONDITION")
   
   (type parser-error
     "Superclass for all conditions that relate to fatal parser errors.
 
-See MARKLESS-CONDITION")
+See PARSER-CONDITION")
   
   (type parser-warning
     "Superclass for all conditions that relate to recoverable parser errors.
 
-See MARKLESS-CONDITION")
+See PARSER-CONDITION")
   
   (type deactivation-disallowed
     "Error signalled if an attempt is made to deactivate a directive that cannot be deactivated.
@@ -685,7 +706,7 @@ See PARSER-WARNING")
 See UNKNOWN-EMBED-TYPE")
   
   (type bad-option
-    "Error signalled if an option is malformed or unknown.
+    "Warning signalled if an option is malformed or unknown.
 
 See OPTION
 See PARSER-ERROR")
@@ -696,12 +717,12 @@ See PARSER-ERROR")
 See BAD-OPTION")
   
   (type bad-unit
-    "Error signalled if the size contains an unknown unit.
+    "Warning signalled if the size contains an unknown unit.
 
 See BAD-OPTION")
 
   (type option-disallowed
-    "Error signalled if an option is attempted to be used for an embed that does not allow it.
+    "Warning signalled if an option is attempted to be used for an embed that does not allow it.
 
 See EMBED-TYPE
 See BAD-OPTION")
@@ -1635,8 +1656,8 @@ The following unit types are supported:
 - pt
 - px
 - %
-Any other unit, or a missing unit, will signal an error of type
-BAD-UNIT.
+Any other unit, or a missing unit, will signal a warning of type
+BAD-UNIT and returns NIL as the unit.
 
 Returns the size and its unit as multiple values.")
 

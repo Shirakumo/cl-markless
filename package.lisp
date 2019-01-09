@@ -122,8 +122,12 @@
    #:stack-exhausted
    #:instruction-evaluation-undefined
    #:instruction
+   #:parser-condition
+   #:line
+   #:cursor
    #:parser-error
    #:parser-warning
+   #:parser-warn
    #:deactivation-disallowed
    #:directive-instance
    #:unknown-instruction
