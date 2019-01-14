@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.markless)
 
 (defun output (component &rest initargs &key (target T) (format 'markless) &allow-other-keys)
-  (let* ((true-initargs (remf* initargs target format))
+  (let* ((initargs (remf* initargs :target :format))
          (format (etypecase format
                    (output-format
                     (apply #'reinitialize-instance format initargs))
