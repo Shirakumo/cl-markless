@@ -13,4 +13,11 @@
   (:shadowing-import-from #:org.shirakumo.markless #:debug)
   (:export
    #:output
-   #:epub))
+   #:epub
+   #:id
+   #:date
+   #:title
+   #:cover
+   #:stylesheet
+   #:embeds
+   #:if-exists))
