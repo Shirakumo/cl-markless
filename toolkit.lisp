@@ -196,3 +196,9 @@
                  (return-from find-subclass subclass))
                (traverse subclass))))
     (traverse class)))
+
+(defun remf* (plist &rest excluded-keys)
+  (loop for (k v) on plist by #'cddr
+        for include-p = (not (find k excluded-keys))
+        when include-p collect k
+        when include-p collect v))

@@ -6,10 +6,13 @@
 
 (in-package #:org.shirakumo.markless)
 
-(defun output (component &key (target T) (format 'markless))
-  (let ((format (etypecase format
-                  (output-format format)
-                  (symbol (make-instance format)))))
+(defun output (component &rest initargs &key (target T) (format 'markless) &allow-other-keys)
+  (let* ((true-initargs (remf* initargs target format))
+         (format (etypecase format
+                   (output-format
+                    (apply #'reinitialize-instance format initargs))
+                   (symbol
+                    (apply #'make-instance format initargs)))))
     (typecase component
       (components:component
        (typecase target

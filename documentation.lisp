@@ -1522,14 +1522,22 @@ target is NIL, it is substituted for a STRING-OUTPUT-STREAM whose
 contents are returned in the end. If the target is a PATHNAME, the
 denoted file is opened and the target is substituted for a stream to
 that file. Otherwise, the target is passed on to OUTPUT-COMPONENT
-directly.
+directly and the return value is format dependent.
 
 If the component is not an instance of COMPONENT, it is replaced by
 the return value of calling PARSE on the passed component argument.
 
+Extra keyword arguments are passed as initargs to the FORMAT. If the
+FORMAT is an instance of OUTPUT-FORMAT, REINITIALIZE-INSTANCE is
+called. If the FORMAT is a SYMBOL, MAKE-INSTANCE is called. Otherwise
+an error is signalled. Note that the keyword arguments :FORMAT and
+:TARGET are excluded from the initarg list.
+
 By default the MARKLESS and DEBUG outputs are provided.
 
 See PARSE
+See MARKLESS
+See DEBUG
 See OUTPUT-COMPONENT")
 
   (function define-output
