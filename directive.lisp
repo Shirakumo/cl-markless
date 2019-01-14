@@ -398,13 +398,13 @@
               (if (embed-option-allowed-p option component)
                   option
                   (warn 'option-disallowed
-                        :cursor cursor
+                        :cursor (+ 2 cursor)
                         :option option
                         :embed-type (class-name class))))
           (error (_)
             (declare (ignore _))
-            (warn 'bad-option :cursor cursor :option option)))
-        (warn 'bad-option :cursor cursor :option option))))
+            (warn 'bad-option :cursor (+ 2 cursor) :option option)))
+        (warn 'bad-option :cursor (+ 2 cursor) :option option))))
 
 (defmethod parse-embed-option-type ((type components:embed-option) option)
   (make-instance (class-of type)))
@@ -633,8 +633,8 @@
                    (handler-case (parse-compound-option-type (class-prototype class) option)
                      (error (e)
                        (declare (ignore e))
-                       (warn 'bad-option :cursor cursor :option option)))
-                   (warn 'bad-option :cursor cursor :option option)))))))
+                       (warn 'bad-option :cursor (+ 2 cursor) :option option)))
+                   (warn 'bad-option :cursor (+ 2 cursor) :option option)))))))
 
 (defmethod parse-compound-option-type ((proto components:compound-option) option)
   (make-instance (class-of proto)))
