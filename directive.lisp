@@ -369,13 +369,25 @@
         (cond (class
                (incf cursor)
                (let ((component (make-instance class :target target)))
-                 (commit _ component parser)
                  (setf (components:options component)
                        (loop for (string next continue) = (next-option line cursor #\])
                              for option = (when string (parse-embed-option cursor string component))
                              when option collect option
-                             do (setf cursor next)
+                             ;; KLUDGE: Since we can't invoke the parser inside PARSE-EMBED-OPTION
+                             ;;         we do things here.
+                             do (typecase option
+                                  (components:caption-option
+                                   (stack-push (directive 'paragraph parser) option (stack parser))
+                                   (loop for cursor = (length "caption ")
+                                         then (read-inline parser string cursor #\Nul)
+                                         while (< cursor (length string)))
+                                   (stack-pop (stack parser)))
+                                  (components:label-option
+                                   (setf (components:label (components:target option) (root parser))
+                                         component)))
+                                (setf cursor next)
                              while continue))
+                 (commit _ component parser)
                  (length line)))
               (T
                (warn 'unknown-embed-type
@@ -415,6 +427,12 @@
                                   ((string-equal "float right" option) :right)
                                   (T (error "FLOAT must be LEFT or RIGHT.")))))
 
+(defmethod parse-embed-option-type ((type components:label-option) option)
+  (make-instance (class-of type) :target (subseq option (length "label "))))
+
+(defmethod parse-embed-option-type ((type components:caption-option) option)
+  (make-instance (class-of type)))
+
 (defmethod parse-embed-option-type ((type components:width-option) option)
   (multiple-value-bind (size unit) (parse-unit option :start (length "width "))
     (when unit
@@ -429,6 +447,8 @@
 (defmethod embed-option-allowed-p ((option components:width-option) (embed components:embed)) T)
 (defmethod embed-option-allowed-p ((option components:height-option) (embed components:embed)) T)
 (defmethod embed-option-allowed-p ((option components:float-option) (embed components:embed)) T)
+(defmethod embed-option-allowed-p ((option components:label-option) (embed components:embed)) T)
+(defmethod embed-option-allowed-p ((option components:caption-option) (embed components:embed)) T)
 (defmethod embed-option-allowed-p ((option components:autoplay-option) (embed components:video)) T)
 (defmethod embed-option-allowed-p ((option components:autoplay-option) (embed components:audio)) T)
 (defmethod embed-option-allowed-p ((option components:loop-option) (embed components:video)) T)

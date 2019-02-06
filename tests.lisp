@@ -92,6 +92,13 @@
   (list 'float
         (reloc-symbol (components:direction _))))
 
+(defmethod to-ast ((_ components:label-option))
+  (list 'label (components:target _)))
+
+(defmethod to-ast ((_ components:caption-option))
+  (list* 'caption (loop for child across (cl-markless::condense-children (components:children _))
+                        collect (to-ast child))))
+
 (defmethod to-ast ((_ components:footnote))
   (list* (reloc-symbol (type-of _))
          (list (components:target _))

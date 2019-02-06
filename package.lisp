@@ -72,6 +72,8 @@
    #:width-option
    #:height-option
    #:float-option
+   #:label-option
+   #:caption-option
    #:direction
    #:footnote
    #:bold

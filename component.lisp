@@ -195,6 +195,12 @@
 (defclass float-option (embed-option)
   ((direction :initarg :direction :initform (cl:error "DIRECTION required") :accessor direction)))
 
+(defclass label-option (embed-option)
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+
+(defclass caption-option (embed-option parent-component)
+  ())
+
 (defclass footnote (parent-component block-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 

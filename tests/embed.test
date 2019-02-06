@@ -14,9 +14,21 @@
 ~~
 (root (embed video "a" (loop) (float right)))
 
-[ video a, loop, autoplay, float left, width 10px, height 10% ]
+[ video a, caption a ]
 ~~
-(root (embed video "a" (loop) (autoplay) (float left) (width 10 px) (height 10 %)))
+(root (embed video "a" (caption "a")))
+
+[ video a, caption **a** ]
+~~
+(root (embed video "a" (caption (bold "a"))))
+
+[ video a, caption a**b** ]
+~~
+(root (embed video "a" (caption "a" (bold "b"))))
+
+[ video a, loop, autoplay, float left, width 10px, height 10%, label foo ]
+~~
+(root (embed video "a" (loop) (autoplay) (float left) (width 10 px) (height 10 %) (label "foo")))
 
 [ unknown a ]
 ~~
