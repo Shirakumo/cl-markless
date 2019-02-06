@@ -228,6 +228,13 @@
   (components:float-option ()
     (format s "float ~(~a~)" (components:direction c)))
 
+  (components:label-option ()
+    (format s "label ~a" (components:target c)))
+
+  (components:caption-option ()
+    (format s "caption ")
+    (output (components:children c)))
+
   (components:footnote ()
     (format s "[~d] " (components:target c))
     (output (components:children c)))
