@@ -131,7 +131,7 @@
 (defmethod output-component ((component components:comment) (target plump-dom:nesting-node) (format plump))
   (plump-dom:make-comment target (components:text component)))
 
-(defun set-plump-embed-options (element options)
+(defun set-plump-embed-options (element options format)
   (loop for option in options
         do (typecase option
              (components:autoplay-option
@@ -147,18 +147,28 @@
                             (components:size option)
                             (components:unit option)))
              (components:float-option
-              (append-style element "float:~(~a~)" (components:direction option))))))
+              (append-style element "float:~(~a~)" (components:direction option)))
+             (components:label-option
+              (setf (plump-dom:attribute (plump-dom:parent element) "id")
+                    (components:target option)))
+             (components:caption-option
+              (let ((caption (plump-dom:make-element (plump-dom:parent element) "figcaption")))
+                (output-component option caption format))))))
+
+(defmethod output-component :around ((component components:embed) (target plump-dom:nesting-node) (format plump))
+  (let ((figure (plump-dom:make-element target "figure")))
+    (call-next-method component figure format)))
 
 (define-plump-output image "img"
   (setf (attribute "alt") (components:target component))
   (setf (attribute "src") (components:target component))
   (append-style node "display:block")
-  (set-plump-embed-options node (components:options component)))
+  (set-plump-embed-options node (components:options component) format))
 
 (define-plump-output video "video"
   (setf (attribute "src") (components:target component))
   (setf (attribute "controls") NIL)
-  (set-plump-embed-options node (components:options component))
+  (set-plump-embed-options node (components:options component) format)
   (let ((par (plump-dom:make-element node "p")))
     (plump-dom:make-text-node par "HTML5 video is not supported. The video source is here: ")
     (let ((link (plump-dom:make-element par "a")))
@@ -168,7 +178,7 @@
 (define-plump-output audio "audio"
   (setf (attribute "src") (components:target component))
   (setf (attribute "controls") NIL)
-  (set-plump-embed-options node (components:options component))
+  (set-plump-embed-options node (components:options component) format)
   (let ((par (plump-dom:make-element node "p")))
     (plump-dom:make-text-node par "HTML5 audio is not supported. The audio source is here: ")
     (let ((link (plump-dom:make-element par "a")))
