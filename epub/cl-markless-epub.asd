@@ -6,7 +6,7 @@
 
 (asdf:defsystem cl-markless-epub
   :version "1.0.0"
-  :license "Artistic"
+  :license "zlib"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :description "A compiler for Markless to EPUB."

@@ -6,7 +6,7 @@
 
 (asdf:defsystem cl-markless-test
   :version "1.0.0"
-  :license "Artistic"
+  :license "zlib"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :description "A parser implementation for Markless"
