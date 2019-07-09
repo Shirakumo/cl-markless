@@ -175,7 +175,7 @@
    #:horizontal-rule
    #:code-block
    #:instruction
-   #:parse-insruction
+   #:parse-instruction
    #:comment
    #:embed
    #:parse-embed-option

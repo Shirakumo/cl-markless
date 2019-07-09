@@ -136,7 +136,7 @@
 (defmethod begin ((_ blockquote-header) parser line cursor)
   (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
          (predecessor (when (< 0 (length children))
-                      (aref children (1- (length children)))))
+                        (aref children (1- (length children)))))
          (component (make-instance 'components:blockquote-header)))
     (when (and (typep predecessor 'components:blockquote)
                (null (components:source predecessor)))
