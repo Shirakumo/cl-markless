@@ -202,3 +202,8 @@
         for include-p = (not (find k excluded-keys))
         when include-p collect k
         when include-p collect v))
+
+(defun last-aref (array)
+  (if (< 0 (length array))
+      (values (aref array (1- (length array))) T)
+      (values NIL NIL)))

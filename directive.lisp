@@ -122,10 +122,12 @@
       end)))
 
 (defmethod invoke ((_ paragraph) component parser line cursor)
-  (let ((inner (dispatch (block-dispatch-table parser) line cursor)))
-    (if (eq inner _)
-        (read-inline parser line cursor #\Nul)
-        (begin inner parser line cursor))))
+  (if (typep (last-aref (components:children component)) '(or string components:inline-component))
+      (read-inline parser line cursor #\nul)
+      (let ((inner (dispatch (block-dispatch-table parser) line cursor)))
+        (if (eq inner _)
+            (read-inline parser line cursor #\Nul)
+            (begin inner parser line cursor)))))
 
 (defclass blockquote-header (singular-line-directive)
   ())
