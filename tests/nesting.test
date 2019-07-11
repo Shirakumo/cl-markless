@@ -33,3 +33,15 @@ b//c**
 | b
 ~~
 (root (blockquote (paragraph "a") (paragraph "b")))
+
+--# a
+~~
+(root (paragraph (en-dash) "# a"))
+
+**a**| a
+~~
+(root (paragraph (bold "a") "| a"))
+
+| --| a
+~~
+(root (blockquote (paragraph (en-dash) "| a")))
