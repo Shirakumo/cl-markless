@@ -340,6 +340,9 @@
 (defmethod parse-instruction ((proto components:directives-instruction) line cursor)
   (make-instance (class-of proto) :directives (split-string line #\  cursor)))
 
+(defmethod parse-instruction ((proto components:label) line cursor)
+  (make-instance (class-of proto) :target (subseq line cursor)))
+
 (defmethod invoke ((_ instruction) component parser line cursor)
   (evaluate-instruction component parser)
   (length line))
