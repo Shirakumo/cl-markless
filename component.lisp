@@ -177,6 +177,9 @@
 (defclass audio (embed)
   ())
 
+(defclass source (embed)
+  ())
+
 (defclass embed-option ()
   ())
 
@@ -200,6 +203,22 @@
 
 (defclass caption-option (embed-option parent-component)
   ())
+
+(defclass options-option (embed-option)
+  ((options :initarg :options :initform () :accessor options)))
+
+(defclass language-option (embed-option)
+  ((language :initarg :language :initform NIL :accessor language)))
+
+(defclass start-option (embed-option)
+  ((start :initarg :start :initform (cl:error "START required") :accessor start)))
+
+(defclass end-option (embed-option)
+  ((end :initarg :end :initform (cl:error "END required") :accessor end)
+   (offset-p :initarg :offset-p :initform NIL :accessor offset-p)))
+
+(defclass encoding-option (embed-option)
+  ((encoding :initarg :encoding :initform (cl:error "ENCODING required") :accessor encoding)))
 
 (defclass footnote (parent-component block-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))

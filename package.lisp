@@ -66,6 +66,7 @@
    #:image
    #:video
    #:audio
+   #:source
    #:embed-option
    #:loop-option
    #:autoplay-option
@@ -74,6 +75,17 @@
    #:float-option
    #:label-option
    #:caption-option
+   #:language-option
+   #:language
+   #:options-option
+   #:options
+   #:start-option
+   #:start
+   #:end-option
+   #:end
+   #:offset-p
+   #:encoding-option
+   #:encoding
    #:direction
    #:footnote
    #:bold

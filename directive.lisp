@@ -408,6 +408,7 @@
   (let* ((typename (format NIL "~a-option"
                            (subseq option 0 (or (position #\  option)
                                                 (length option)))))
+         ;; FIXME: This makes embed types global and means they can't be locally extended!
          (class (find-subclass typename (find-class 'components:embed-option))))
     (if class
         (handler-case
@@ -448,6 +449,23 @@
     (when unit
       (make-instance 'components:height-option :size size :unit unit))))
 
+(defmethod parse-embed-option-type ((type components:options-option) option)
+  (make-instance (class-of type) :options (split-options option (length "options ") #\Nul)))
+
+(defmethod parse-embed-option-type ((type components:language-option) option)
+  (make-instance (class-of type) :language (subseq option (length "language "))))
+
+(defmethod parse-embed-option-type ((type components:start-option) option)
+  (make-instance (class-of type) :start (parse-integer option :start (length "start "))))
+
+(defmethod parse-embed-option-type ((type components:end-option) option)
+  (if (char= #\+ (aref option (length "end ")))
+      (make-instance (class-of type) :end (parse-integer option :start (length "end +")) :offset-p T)
+      (make-instance (class-of type) :end (parse-integer option :start (length "end ")))))
+
+(defmethod parse-embed-option-type ((type components:encoding-option) option)
+  (make-instance (class-of type) :encoding (subseq option (length "encoding "))))
+
 (defmethod embed-option-allowed-p ((option components:embed-option) (embed components:embed)) NIL)
 (defmethod embed-option-allowed-p ((option components:width-option) (embed components:embed)) T)
 (defmethod embed-option-allowed-p ((option components:height-option) (embed components:embed)) T)
@@ -458,6 +476,11 @@
 (defmethod embed-option-allowed-p ((option components:autoplay-option) (embed components:audio)) T)
 (defmethod embed-option-allowed-p ((option components:loop-option) (embed components:video)) T)
 (defmethod embed-option-allowed-p ((option components:loop-option) (embed components:audio)) T)
+(defmethod embed-option-allowed-p ((option components:options-option) (embed components:source)) T)
+(defmethod embed-option-allowed-p ((option components:language-option) (embed components:source)) T)
+(defmethod embed-option-allowed-p ((option components:start-option) (embed components:source)) T)
+(defmethod embed-option-allowed-p ((option components:end-option) (embed components:source)) T)
+(defmethod embed-option-allowed-p ((option components:encoding-option) (embed components:source)) T)
 
 (defclass footnote (singular-line-directive)
   ())
