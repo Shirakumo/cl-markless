@@ -124,7 +124,9 @@
 (define-plump-output code-block "code"
   (append-style node "display:block")
   (setf (attribute "class") "code-block")
-  (setf (attribute "data-language") (components:language component))
+  (when (and (components:language component)
+             (string/= "" (components:language component)))
+    (setf (attribute "data-language") (components:language component)))
   (let ((pre (plump-dom:make-element node "pre")))
     (plump-dom:make-text-node pre (components:text component))))
 
@@ -255,8 +257,8 @@
                   (setf (attribute "href") (format NIL "#~a" (label target))))))
              (components:link-option
               (setf (attribute "class") "external-link")
-              (setf (plump-dom:tag-name node) "a")
-              (setf (attribute "href") (components:target option)))))
+              (setf (attribute "href") (components:target option))
+              (setf (plump-dom:tag-name node) "a"))))
   (loop for child across (components:children component)
         do (output child)))
 
