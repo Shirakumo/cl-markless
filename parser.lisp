@@ -205,7 +205,7 @@
 
 (defmethod evaluate-instruction ((instruction components:error) (parser parser))
   (format *error-output* "~&[ERROR] ~a~%" (components:message instruction))
-  (error 'user-error parser :message (components:message instruction)))
+  (error 'user-error :message (components:message instruction)))
 
 (defmethod evaluate-instruction ((instruction components:include) (parser parser))
   (setf (input parser) (make-concatenated-stream
