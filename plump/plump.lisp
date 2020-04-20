@@ -225,40 +225,48 @@
 (defmethod label ((component components:footnote))
   (format NIL "footnote-~d" (components:target component)))
 
+(defmethod output-component ((option components:bold-option) (target plump-dom:nesting-node) (format plump))
+  (append-style target "font-weight:bold"))
+
+(defmethod output-component ((option components:italic-option) (target plump-dom:nesting-node) (format plump))
+  (append-style target "font-weight:italic"))
+
+(defmethod output-component ((option components:underline-option) (target plump-dom:nesting-node) (format plump))
+  (append-style target "text-decoration:underline"))
+
+(defmethod output-component ((option components:strikethrough-option) (target plump-dom:nesting-node) (format plump))
+  (append-style target "text-decoration:line-through"))
+
+(defmethod output-component ((option components:spoiler-option) (target plump-dom:nesting-node) (format plump))
+  (append-style target "background:black;color:black"))
+
+(defmethod output-component ((option components:font-option) (target plump-dom:nesting-node) (format plump))
+  (append-style target "font-family:~a" (components:font-family option)))
+
+(defmethod output-component ((option components:color-option) (target plump-dom:nesting-node) (format plump))
+  (append-style target "color:rgb(~d,~d,~d)"
+                (components:red option)
+                (components:green option)
+                (components:blue option)))
+
+(defmethod output-component ((option components:size-option) (target plump-dom:nesting-node) (format plump))
+  (append-style target "font-size:~d~(~a~)" (components:size option) (components:unit option)))
+
+(defmethod output-component ((option components:internal-link-option) (target plump-dom:nesting-node) (format plump))
+  (setf (plump-dom:tag-name target) "a")
+  (setf (plump-dom:attribute target "class") "cross-reference")
+  (let ((target (components:label (components:target option) *root*)))
+    (when target
+      (setf (plump-dom:attribute target "href") (format NIL "#~a" (label target))))))
+
+(defmethod output-component ((option components:link-option) (target plump-dom:nesting-node) (format plump))
+  (setf (plump-dom:tag-name target) "a")
+  (setf (plump-dom:attribute target "class") "external-link")
+  (setf (plump-dom:attribute target "href") (components:target option)))
+
 (define-plump-output compound "span"
   (loop for option in (components:options component)
-        do (typecase option
-             (components:bold-option
-              (append-style node "font-weight:bold"))
-             (components:italic-option
-              (append-style node "font-style:italic"))
-             (components:underline-option
-              (append-style node "text-decoration:underline"))
-             (components:strikethrough-option
-              (append-style node "text-decoration:line-through"))
-             (components:spoiler-option
-              (append-style node "background:black;color:black"))
-             (components:font-option
-              (append-style node "font-family:~a"
-                            (components:font-family option)))
-             (components:color-option
-              (append-style node "color:rgb(~d,~d,~d)"
-                            (components:red option)
-                            (components:green option)
-                            (components:blue option)))
-             (components:size-option
-              (append-style node "font-size:~d~(~a~)"
-                            (components:size option) (components:unit option)))
-             (components:internal-link-option
-              (setf (plump-dom:tag-name node) "a")
-              (setf (attribute "class") "cross-reference")
-              (let ((target (components:label (components:target option) *root*)))
-                (when target
-                  (setf (attribute "href") (format NIL "#~a" (label target))))))
-             (components:link-option
-              (setf (attribute "class") "external-link")
-              (setf (attribute "href") (components:target option))
-              (setf (plump-dom:tag-name node) "a"))))
+        do (output-component option node format))
   (loop for child across (components:children component)
         do (output child)))
 
