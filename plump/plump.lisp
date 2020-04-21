@@ -121,14 +121,27 @@
 
 (define-plump-output horizontal-rule "hr")
 
-(define-plump-output code-block "code"
-  (append-style node "display:block")
-  (setf (attribute "class") "code-block")
-  (when (and (components:language component)
-             (string/= "" (components:language component)))
-    (setf (attribute "data-language") (components:language component)))
-  (let ((pre (plump-dom:make-element node "pre")))
-    (plump-dom:make-text-node pre (components:text component))))
+(defmethod output-component ((component components:code-block) (target plump-dom:nesting-node) (format plump))
+  (cond ((and (find (components:language component) '("html" "xhtml")  :test #'string-equal)
+              (find "inline" (components:options component) :test #'string-equal))
+         (let ((plump:*tag-dispatchers*
+                 (if (string-equal "xhtml" (components:language component))
+                     plump:*xml-tags*
+                     plump:*html-tags*)))
+           (loop for child across (plump-dom:children (plump:parse (components:text component)))
+                 do (plump-dom:append-child target child))))
+        (T
+         (let ((node (plump-dom:make-element target "code")))
+           (flet (((setf attribute) (value name &optional target)
+                    (setf (plump-dom:attribute (or target node) name) value)))
+             (append-style node "display:block")
+             (setf (attribute "class") "code-block")
+             (when (and (components:language component)
+                        (string/= "" (components:language component)))
+               (setf (attribute "data-language") (components:language component)))
+             (let ((pre (plump-dom:make-element node "pre")))
+               (plump-dom:make-text-node pre (components:text component))))
+           node))))
 
 (defmethod output-component ((component components:comment) (target plump-dom:nesting-node) (format plump))
   (plump-dom:make-comment target (components:text component)))
