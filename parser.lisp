@@ -39,6 +39,48 @@
     url
     newline))
 
+(defparameter *default-instruction-types*
+  '(components:set
+    components:info
+    components:warning
+    components:error
+    components:include
+    components:disable
+    components:enable
+    components:label))
+
+(defparameter *default-compound-options*
+  '(components:bold-option
+    components:italic-option
+    components:underline-option
+    components:strikethrough-option
+    components:spoiler-option
+    components:font-option
+    components:color-option
+    components:size-option
+    components:link-option
+    components:internal-link-option))
+
+(defparameter *default-embed-types*
+  '(components:image
+    components:video
+    components:audio
+    components:source))
+
+(defparameter *default-embed-options*
+  '(components:loop-option
+    components:autoplay-option
+    components:width-option
+    components:height-option
+    components:float-option
+    components:label-option
+    components:caption-option
+    components:options-option
+    components:language-option
+    components:start-option
+    components:end-option
+    components:encoding-option))
+
 (defun compile-dispatch-table  (directives)
   (labels ((max-char (candidates i)
              (loop for candidate in candidates
@@ -95,15 +137,27 @@
 (defclass parser ()
   ((line-break-mode :initarg :line-break-mode :initform :show :accessor line-break-mode)
    (directives :initform () :accessor directives)
+   (embed-types :initform () :accessor embed-types)
+   (embed-options :initform () :accessor embed-options)
+   (compound-options :initform () :accessor compound-options)
+   (instruction-types :initform () :accessor instruction-types)
    (block-dispatch-table :accessor block-dispatch-table)
    (inline-dispatch-table :accessor inline-dispatch-table)
    (input :accessor input)
    (stack :accessor stack)))
 
 (defmethod initialize-instance :after ((parser parser) &key (directives *default-directives*)
+                                                            (compound-options *default-compound-options*)
+                                                            (embed-types *default-embed-types*)
+                                                            (embed-options *default-embed-options*)
+                                                            (instruction-types *default-instruction-types*)
                                                             disabled-directives
                                                             (stack-size-limit 64))
   (setf (directives parser) (mapcar #'ensure-directive directives))
+  (setf (compound-options parser) (mapcar #'ensure-compound-option compound-options))
+  (setf (embed-types parser) (mapcar #'ensure-embed-type embed-types))
+  (setf (embed-options parser) (mapcar #'ensure-embed-option embed-options))
+  (setf (instruction-types parser) (mapcar #'ensure-instruction-type instruction-types))
   (setf (stack parser) (make-array stack-size-limit :fill-pointer 0 :element-type 'stack-entry))
   (loop for i from 0 below stack-size-limit
         do (setf (aref (stack parser) i) (make-stack-entry)))

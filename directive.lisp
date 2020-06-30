@@ -19,6 +19,34 @@
     (directive directive-ish)
     (symbol (ensure-directive (make-instance directive-ish)))))
 
+(defun ensure-compound-option (option-ish)
+  (etypecase option-ish
+    (class (if (c2mop:subclassp option-ish (find-class 'components:compound-option))
+               option-ish
+               (error "~a is not a COMPOUND-OPTION." option-ish)))
+    (symbol (ensure-compound-option (find-class option-ish)))))
+
+(defun ensure-embed-type (type-ish)
+  (etypecase type-ish
+    (class (if (c2mop:subclassp type-ish (find-class 'components:embed))
+               type-ish
+               (error "~a is not an EMBED type." type-ish)))
+    (symbol (ensure-embed-type (find-class type-ish)))))
+
+(defun ensure-embed-option (option-ish)
+  (etypecase option-ish
+    (class (if (c2mop:subclassp option-ish (find-class 'components:embed-option))
+               option-ish
+               (error "~a is not an EMBED-OPTION." option-ish)))
+    (symbol (ensure-embed-option (find-class option-ish)))))
+
+(defun ensure-instruction-type (type-ish)
+  (etypecase type-ish
+    (class (if (c2mop:subclassp type-ish (find-class 'components:instruction))
+               type-ish
+               (error "~a is not an INSTRUCTION type." type-ish)))
+    (symbol (ensure-instruction-type (find-class type-ish)))))
+
 (defgeneric prefix (directive))
 (defgeneric begin (directive parser line cursor))
 (defgeneric invoke (directive component parser line cursor))
@@ -320,11 +348,16 @@
 
 (defmethod begin ((_ instruction) parser line cursor)
   (multiple-value-bind (typename cursor) (read-delimited line (+ cursor 2) #\ )
-    (let ((class (find-subclass typename (find-class 'components:instruction))))
+    (let ((class (find-instruction-type parser typename)))
       (unless class
         (error 'unknown-instruction :cursor cursor :instruction typename))
       (commit _ (parse-instruction (class-prototype class) line (1+ cursor)) parser))
     cursor))
+
+(defmethod find-instruction-type ((parser parser) (type string))
+  (loop for class in (instruction-types parser)
+        do (when (string-equal type (class-name class))
+             (return class))))
 
 (defmethod parse-instruction ((proto components:set) line cursor)
   (multiple-value-bind (variable cursor) (read-delimited line cursor #\ )
@@ -368,7 +401,7 @@
 (defmethod begin ((_ embed) parser line start-cursor)
   (multiple-value-bind (typename cursor) (read-delimited line (+ start-cursor 2) #\ )
     (multiple-value-bind (target cursor) (read-delimited line (+ cursor 1) #\,)
-      (let ((class (find-subclass typename (find-class 'components:embed)))
+      (let ((class (find-embed-type parser typename))
             ;; KLUDGE: This is bad.
             (target (string-right-trim " ]" target)))
         (cond (class
@@ -404,6 +437,11 @@
                  (commit (directive 'paragraph parser) paragraph parser)
                  (length line))))))))
 
+(defmethod find-embed-type ((parser parser) (type string))
+  (loop for class in (embed-types parser)
+        do (when (string-equal type (class-name class))
+             (return class))))
+
 (defun parse-embed-option (parser cursor option component)
   (let ((class (find-embed-option-type parser option)))
     (if class
@@ -424,7 +462,9 @@
   (let ((typename (format NIL "~a-option"
                           (subseq option 0 (or (position #\  option)
                                                (length option))))))
-    (find-subclass typename (find-class 'components:embed-option))))
+    (loop for option in (embed-options parser)
+          do (when (string-equal typename (class-name option))
+               (return option)))))
 
 (defmethod parse-embed-option-type ((type components:embed-option) option)
   (make-instance (class-of type)))
@@ -658,7 +698,7 @@
     (incf cursor 2)
     (setf (components:options component)
           (loop for (string next continue) = (next-option line cursor #\))
-                for option = (when string (parse-compound-option cursor string))
+                for option = (when string (parse-compound-option parser cursor string))
                 when option collect option
                 do (setf cursor next)
                 while continue))
@@ -667,7 +707,7 @@
 (defmethod end :after ((_ compound) component parser)
   (vector-push-front "\"" (components:children component)))
 
-(defun parse-compound-option (cursor option)
+(defun parse-compound-option (parser cursor option)
   (or (gethash option *color-table*)
       (gethash option *size-table*)
       (cond ((starts-with "#" option)
@@ -675,16 +715,21 @@
             ((eql (read-url option 0) (length option))
              (make-instance 'components:link-option :target option))
             (T
-             (let* ((typename (format NIL "~a-option"
-                                      (subseq option 0 (or (position #\  option)
-                                                           (length option)))))
-                    (class (find-subclass typename (find-class 'components:compound-option))))
+             (let ((class (find-compound-option-type parser option)))
                (if class
                    (handler-case (parse-compound-option-type (class-prototype class) option)
                      (error (e)
                        (declare (ignore e))
                        (warn 'bad-option :cursor (+ 2 cursor) :option option)))
                    (warn 'bad-option :cursor (+ 2 cursor) :option option)))))))
+
+(defmethod find-compound-option-type ((parser parser) option)
+  (let ((typename (format NIL "~a-option"
+                          (subseq option 0 (or (position #\  option)
+                                               (length option))))))
+    (loop for option in (compound-options parser)
+          do (when (string-equal typename (class-name option))
+               (return option)))))
 
 (defmethod parse-compound-option-type ((proto components:compound-option) option)
   (make-instance (class-of proto)))

@@ -173,6 +173,10 @@
    #:directive
    #:enabled-p
    #:ensure-directive
+   #:ensure-embed-type
+   #:ensure-embed-option
+   #:ensure-compound-option
+   #:ensure-instruction-type
    #:root-directive
    #:block-directive
    #:singular-line-directive
@@ -187,9 +191,12 @@
    #:horizontal-rule
    #:code-block
    #:instruction
+   #:find-instruction-type
    #:parse-instruction
    #:comment
    #:embed
+   #:find-embed-type
+   #:find-embed-option
    #:parse-embed-option
    #:find-embed-option-type
    #:parse-embed-option-type
@@ -203,6 +210,7 @@
    #:supertext
    #:subtext
    #:compound
+   #:find-compound-option
    #:parse-compound-option
    #:parse-compound-option-type
    #:footnote-reference
@@ -212,6 +220,10 @@
   ;; parser.lisp
   (:export
    #:*default-directives*
+   #:*default-compound-options*
+   #:*default-embed-types*
+   #:*default-embed-options*
+   #:*default-instruction-types*
    #:compile-dispatch-table
    #:dispatch
    #:stack-entry
@@ -220,6 +232,10 @@
    #:parser
    #:line-break-mode
    #:directives
+   #:embed-types
+   #:embed-options
+   #:compound-options
+   #:instruction-types
    #:block-dispatch-table
    #:inline-dispatch-table
    #:input

@@ -1017,6 +1017,15 @@ See EVALUATE-INSTRUCTION
 See CL-MARKLESS-COMPONENTS:INSTRUCTION
 See SINGULAR-LINE-DIRECTIVE")
 
+  (function find-embed-type
+    "Finds a class that can parse the instruction type of the given name.
+
+For a default parser this will compare the given instruction name
+against the class names of the classes mentioned in the parser's
+INSTRUCTION-TYPES list. The names are compared case-insensitively.
+
+See INSTRUCTION")
+
   (function parse-instruction
     "Parses an instruction line to the proper instruction instance.
 
@@ -1048,6 +1057,15 @@ See OPTION-DISALLOWED
 See CL-MARKLESS-COMPONENTS:EMBED
 See SINGULAR-LINE-DIRECTIVE")
 
+  (function find-embed-type
+    "Finds a class that can parse the embed type of the given name.
+
+For a default parser this will compare the given option name
+against the class names of the classes mentioned in the parser's
+EMBED-OPTIONS list. The names are compared case-insensitively.
+
+See EMBED")
+
   (function parse-embed-option
     "Parses the given option string into an option if possible.
 
@@ -1063,16 +1081,11 @@ See CL-MARKLESS-COMPONENTS:EMBED-OPTION")
   (function find-embed-option-type
     "Finds a class that can parse the option of the given type name.
 
-For a default parser this proceeds as follows:
-Takes the first space-delimited token of the string and appends
-\"-option\" to it to form the potential name of the option type. It
-then searches for a symbol (in the proper case) of that name in the
-CL-MARKLESS-COMPONENTS package. If found, and if the symbol names a
-subtype of EMBED-OPTION, the class named by this symbol is returned.
-
-Users may provide additional methods on this function to extend the
-parsing of option types in a safe manner that does not leak out to
-general parsers.
+For a default parser this will compare the given option name
+against the class names of the classes mentioned in the parser's
+EMBED-OPTIONS list. If the given name with \"-option\" added to
+its end matches any of the class names case-insensitively, that
+class is returned.
 
 See PARSE-EMBED-OPTION")
 
@@ -1167,18 +1180,25 @@ The following tests are performed:
 - If the option matches the URL directive, a LINK-OPTION is returned.
 - Otherwise the function proceeds as follows:
 
-Takes the first space-delimited token of the string and appends
-\"-option\" to it to form the potential name of the option type. It
-then searches for a symbol (in the proper case) of that name in the
-CL-MARKLESS-COMPONENTS package. If found, and if the symbol names a
-subtype of COMPOUND-OPTION, PARSE-COMPOUND-OPTION-TYPE is called with
-a class prototype of the name. Otherwise an error of type BAD-OPTION
-is signalled.
+Call FIND-COMPOUND-OPTION-TYPE. If a class is returned,
+PARSE-COMPOUND-OPTION-TYPE is called with a class prototype.
+Otherwise an error of type BAD-OPTION is signalled.
 
 See *COLOR-TABLE*
 See *SIZE-TABLE*
 See PARSE-COMPOUND-OPTION-TYPE
 See CL-MARKLESS-COMPONENTS:COMPOUND-OPTION")
+
+  (function find-compound-option-type
+    "Finds a class that can parse the option of the given type name.
+
+For a default parser this will compare the given option name
+against the class names of the classes mentioned in the parser's
+COMPOUND-OPTIONS list. If the given name with \"-option\" added to
+its end matches any of the class names case-insensitively, that
+class is returned.
+
+See PARSE-COMPOND-OPTION")
 
   (function parse-compound-option-type
     "Parses a compound option to the proper option instance.
@@ -1234,6 +1254,38 @@ See INLINE-DIRECTIVE"))
 
 This list should only ever contain names of directives, not directive
 instances.
+
+See PARSER")
+
+  (variable *default-compound-options*
+    "This variable contains the list of by-default available compound options.
+
+This list should only ever contain names of compound-options or their
+classes.
+
+See PARSER")
+
+  (variable *default-embed-types*
+    "This variable contains the list of by-default available embed types.
+
+This list should only ever contain names of embed types or their 
+classes.
+
+See PARSER")
+
+  (variable *default-embed-options*
+    "This variable contains the list of by-default available embed options.
+
+This list should only ever contain names of embed-options or their 
+classes.
+
+See PARSER")
+
+  (variable *default-instruction-types*
+    "This variable contains the list of by-default available instruction types.
+
+This list should only ever contain names of instruction types or their 
+classes.
 
 See PARSER")
 
@@ -1300,6 +1352,9 @@ maximal nesting permitted when parsing. If directives are nested more
 deeply than this, parsing of the document will fail. The default is
 set to 64.
 
+You may also pass a list of accepted compound options, embed types,
+embed options, and instruction types using the respective initargs.
+
 Note that even though subsequent re-use of the parser is permitted,
 changes carried out by an INSTRUCTION during a parse will not be reset
 on a subsequent parse, so instructions can poison subsequent
@@ -1308,6 +1363,10 @@ should be clean however.
 
 See LINE-BREAK-MODE
 See DIRECTIVES
+See EMBED-TYPES
+See EMBED-OPTIONS
+See COMPOUND-OPTIONS
+See INSTRUCTION-TYPES
 See DIRECTIVE
 See ENABLE
 See DISABLE
@@ -1335,6 +1394,30 @@ constructed.
 
 See PARSER
 See DIRECTIVE")
+
+  (function embed-types
+    "Accesses the list of embed types the parser supports.
+
+See PARSER
+See EMBED")
+
+  (function instruction-types
+    "Accesses the list of instruction types the parser supports.
+
+See PARSER
+See INSTRUCTION")
+
+  (function embed-options
+    "Accesses the list of embed options the parser supports.
+
+See PARSER
+See EMBED-OPTION")
+
+  (function embed-types
+    "Accesses the list of compound options the parser supports.
+
+See PARSER
+See COMPOUND-OPTION")
 
   (function block-dispatch-table
     "Accesses the dispatch table for block directives.
