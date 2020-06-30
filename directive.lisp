@@ -376,7 +376,7 @@
                (let ((component (make-instance class :target target)))
                  (setf (components:options component)
                        (loop for (string next continue) = (next-option line cursor #\])
-                             for option = (when string (parse-embed-option cursor string component))
+                             for option = (when string (parse-embed-option parser cursor string component))
                              when option collect option
                              ;; KLUDGE: Since we can't invoke the parser inside PARSE-EMBED-OPTION
                              ;;         we do things here.
@@ -404,12 +404,8 @@
                  (commit (directive 'paragraph parser) paragraph parser)
                  (length line))))))))
 
-(defun parse-embed-option (cursor option component)
-  (let* ((typename (format NIL "~a-option"
-                           (subseq option 0 (or (position #\  option)
-                                                (length option)))))
-         ;; FIXME: This makes embed types global and means they can't be locally extended!
-         (class (find-subclass typename (find-class 'components:embed-option))))
+(defun parse-embed-option (parser cursor option component)
+  (let ((class (find-embed-option-type parser option)))
     (if class
         (handler-case
             (let ((option (parse-embed-option-type (class-prototype class) option)))
@@ -423,6 +419,12 @@
             (declare (ignore _))
             (warn 'bad-option :cursor (+ 2 cursor) :option option)))
         (warn 'bad-option :cursor (+ 2 cursor) :option option))))
+
+(defmethod find-embed-option-type ((parser parser) (option string))
+  (let ((typename (format NIL "~a-option"
+                          (subseq option 0 (or (position #\  option)
+                                               (length option))))))
+    (find-subclass typename (find-class 'components:embed-option))))
 
 (defmethod parse-embed-option-type ((type components:embed-option) option)
   (make-instance (class-of type)))

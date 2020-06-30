@@ -1051,16 +1051,30 @@ See SINGULAR-LINE-DIRECTIVE")
   (function parse-embed-option
     "Parses the given option string into an option if possible.
 
+Uses FIND-EMBED-OPTION-TYPE to find a suitable class for the given
+option. If found, PARSE-EMBED-OPTION-TYPE is called with a class
+prototype of the name. Otherwise an error of type BAD-OPTION is
+signalled.
+
+See FIND-EMBED-OPTION
+See PARSE-EMBED-OPTION-TYPE
+See CL-MARKLESS-COMPONENTS:EMBED-OPTION")
+
+  (function find-embed-option-type
+    "Finds a class that can parse the option of the given type name.
+
+For a default parser this proceeds as follows:
 Takes the first space-delimited token of the string and appends
 \"-option\" to it to form the potential name of the option type. It
 then searches for a symbol (in the proper case) of that name in the
 CL-MARKLESS-COMPONENTS package. If found, and if the symbol names a
-subtype of EMBED-OPTION, PARSE-EMBED-OPTION-TYPE is called with a
-class prototype of the name. Otherwise an error of type BAD-OPTION is
-signalled.
+subtype of EMBED-OPTION, the class named by this symbol is returned.
 
-See PARSE-EMBED-OPTION-TYPE
-See CL-MARKLESS-COMPONENTS:EMBED-OPTION")
+Users may provide additional methods on this function to extend the
+parsing of option types in a safe manner that does not leak out to
+general parsers.
+
+See PARSE-EMBED-OPTION")
 
   (function parse-embed-option-type
     "Parses an embed option to the proper option instance.

@@ -191,6 +191,7 @@
    #:comment
    #:embed
    #:parse-embed-option
+   #:find-embed-option-type
    #:parse-embed-option-type
    #:embed-option-allowed-p
    #:footnote
