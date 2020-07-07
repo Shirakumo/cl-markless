@@ -21,28 +21,28 @@
 
 (defun ensure-compound-option (option-ish)
   (etypecase option-ish
-    (class (if (c2mop:subclassp option-ish (find-class 'components:compound-option))
+    (class (if (subtypep (class-name option-ish) 'components:compound-option)
                option-ish
                (error "~a is not a COMPOUND-OPTION." option-ish)))
     (symbol (ensure-compound-option (find-class option-ish)))))
 
 (defun ensure-embed-type (type-ish)
   (etypecase type-ish
-    (class (if (c2mop:subclassp type-ish (find-class 'components:embed))
+    (class (if (subtypep (class-name type-ish) 'components:embed)
                type-ish
                (error "~a is not an EMBED type." type-ish)))
     (symbol (ensure-embed-type (find-class type-ish)))))
 
 (defun ensure-embed-option (option-ish)
   (etypecase option-ish
-    (class (if (c2mop:subclassp option-ish (find-class 'components:embed-option))
+    (class (if (subtypep (class-name option-ish) 'components:embed-option)
                option-ish
                (error "~a is not an EMBED-OPTION." option-ish)))
     (symbol (ensure-embed-option (find-class option-ish)))))
 
 (defun ensure-instruction-type (type-ish)
   (etypecase type-ish
-    (class (if (c2mop:subclassp type-ish (find-class 'components:instruction))
+    (class (if (subtypep (class-name type-ish) 'components:instruction)
                type-ish
                (error "~a is not an INSTRUCTION type." type-ish)))
     (symbol (ensure-instruction-type (find-class type-ish)))))
