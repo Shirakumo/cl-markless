@@ -57,11 +57,11 @@
      (defclass ,format (output-format) ())
      ,@(loop for (class qualifiers . body) in methods
              collect `(defmethod output-component ,@qualifiers ((,component ,class) (,stream stream) (_ ,format))
-                        (labels ((output (,component)
+                        (labels ((output (,component &optional (,stream ,stream))
                                    (output-component ,component ,stream _))
-                                 (output-children ()
+                                 (output-children (&optional (,stream ,stream))
                                    (loop for child across (components:children ,component)
-                                         do (output child))))
+                                         do (output child ,stream))))
                           (declare (ignorable #'output #'output-children))
                           ,@body)))))
 
@@ -121,6 +121,156 @@
 
   (components:compound ()
     (format s "/~a ~{~a~}" (type-of c) (components:options c))))
+
+(define-output bbcode (c s)
+  (vector ()
+    (when (< 0 (length c))
+      (output (aref c 0))
+      (loop for i from 1 below (length c)
+            for child = (aref c i)
+            do (when (typep child 'components:block-component)
+                 (format s "~%")
+                 (when (and (not (typep child 'components:list-item))
+                            (not (typep (aref c (1- i)) 'components:header)))
+                   (format s "~%")))
+               (output child))))
+  
+  (string ()
+    (write-string c s))
+  
+  (components:parent-component ()
+    (output (components:children c)))
+
+  (components:blockquote-header ())
+  
+  (components:blockquote ()
+    (if (components:source c)
+        (format s "[quote=~s]~%"
+                (with-output-to-string (o)
+                  (output (components:source c) o)))
+        (format s "[quote]~%"))
+    (output (components:children c))
+    (format s "[/quote]~%"))
+
+  (components:ordered-list ()
+    (format s "[list=1]~%")
+    (output (components:children c))
+    (format s "~&[/list]~%"))
+
+  (components:unordered-list ()
+    (format s "[list]~%")
+    (output (components:children c))
+    (format s "~%[/list]~%"))
+
+  (components:list-item ()
+    (format s "[*] ")
+    (output (components:children c)))
+
+  (components:header ()
+    (format s "[b]")
+    (output (components:children c))
+    (format s "[/b]"))
+
+  (components:horizontal-rule ()
+    (format s "================="))
+
+  (components:code-block ()
+    (format s "[code]~%~a~%[/code]~%" (components:text c)))
+
+  (components:instruction ())
+  (components:comment ())
+  (components:embed ())
+
+  (components:image ()
+    (format s "[img]~a[/img]" (components:target c)))
+
+  (components:video ()
+    (format s "[video]~a[/video]" (components:target c)))
+
+  (components:footnote ()
+    (format s "[~d] " (components:target c))
+    (output (components:children c)))
+
+  (components:bold ()
+    (format s "[b]")
+    (output (components:children c))
+    (format s "[/b]"))
+
+  (components:italic ()
+    (format s "[i]")
+    (output (components:children c))
+    (format s "[/i]"))
+
+  (components:underline ()
+    (format s "[u]")
+    (output (components:children c))
+    (format s "[/u]"))
+
+  (components:strikethrough ()
+    (format s "[s]")
+    (output (components:children c))
+    (format s "[/s]"))
+
+  (components:code ()
+    (format s "[fixed]~a[/fixed]" (components:text c)))
+
+  (components:subtext ()
+    (format s "[sub]")
+    (output (components:children c))
+    (format s "[sub]"))
+
+  (components:supertext ()
+    (format s "[super]")
+    (output (components:children c))
+    (format s "[/super]"))
+
+  (components:url ()
+    (format s "[url]~a[/url]" (components:target c)))
+
+  (components:compound ()
+    (loop for o in (components:options c)
+          do (typecase o
+               (components:link-option
+                (format s "[url=~a]"
+                        (components:target o)))
+               (components:size-option
+                (format s "[size=\"~a~a\"]"
+                        (components:size o) (components:unit o)))
+               (components:color-option
+                (format s "[color=\"~2,'0x~2,'0x~2,'0x\"]"
+                        (components:red o) (components:green o) (components:blue o)))
+               (components:spoiler-option
+                (format s "[spoiler]"))
+               (components:bold-option
+                (format s "[b]"))
+               (components:italic-option
+                (format s "[i]"))
+               (components:underline-option
+                (format s "[u]"))
+               (components:strikethrough-option
+                (format s "[s]"))))
+    (output (components:children c))
+    (loop for o in (reverse (components:options c))
+          do (typecase o
+               (components:link-option
+                (format s "[/url]"))
+               (components:size-option
+                (format s "[/size]"))
+               (components:color-option
+                (format s "[/color]"))
+               (components:spoiler-option
+                (format s "[/spoiler]"))
+               (components:bold-option
+                (format s "[/b]"))
+               (components:italic-option
+                (format s "[/i]"))
+               (components:underline-option
+                (format s "[/u]"))
+               (components:strikethrough-option
+                (format s "[/s]")))))
+
+  (components:footnote-reference ()
+    (format s "[~d]" (components:target c))))
 
 (defvar *prefixes* ())
 (define-output markless (c s)

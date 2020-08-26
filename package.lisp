@@ -264,6 +264,7 @@
    #:list-output-formats
    #:markless
    #:debug
+   #:bbcode
    #:define-output
    #:output-component
    #:output
