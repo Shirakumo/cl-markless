@@ -273,7 +273,7 @@
   (setf (plump-dom:attribute target "class") "cross-reference")
   (let ((label-component (components:label (components:target option) *root*)))
     (when label-component
-      (setf (plump-dom:attribute target "href") (format NIL "#~a" (label label-component))))))
+      (setf (plump-dom:attribute target "href") (format NIL "#~a" (components:target option))))))
 
 (defmethod output-component ((option components:link-option) (target plump-dom:nesting-node) (format plump))
   (setf (plump-dom:tag-name target) "a")
