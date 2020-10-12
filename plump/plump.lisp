@@ -118,7 +118,7 @@
 
 (define-plump-output header "h"
   (setf (plump:tag-name node) (format NIL "h~d" (min 6 (components:depth component))))
-  (setf (attribute "id") (components:text component))
+  (setf (attribute "id") (string-downcase (components:text component)))
   (loop for child across (components:children component)
         do (output child)))
 
@@ -168,7 +168,7 @@
               (append-style element "float:~(~a~)" (components:direction option)))
              (components:label-option
               (setf (plump-dom:attribute (plump-dom:parent element) "id")
-                    (components:target option)))
+                    (string-downcase (components:target option))))
              (components:caption-option
               (let ((caption (plump-dom:make-element (plump-dom:parent element) "figcaption")))
                 (output-component option caption format))))))
@@ -273,12 +273,12 @@
   (setf (plump-dom:attribute target "class") "cross-reference")
   (let ((label-component (components:label (components:target option) *root*)))
     (when label-component
-      (setf (plump-dom:attribute target "href") (format NIL "#~a" (components:target option))))))
+      (setf (plump-dom:attribute target "href") (format NIL "#~a" (string-downcase (components:target option)))))))
 
 (defmethod output-component ((option components:link-option) (target plump-dom:nesting-node) (format plump))
   (setf (plump-dom:tag-name target) "a")
   (setf (plump-dom:attribute target "class") "external-link")
-  (setf (plump-dom:attribute target "href") (components:target option)))
+  (setf (plump-dom:attribute target "href") (string-downcase (components:target option))))
 
 (define-plump-output compound "span"
   (loop for option in (components:options component)
@@ -287,7 +287,7 @@
         do (output child)))
 
 (define-plump-output label "a"
-  (setf (attribute "id") (components:target component)))
+  (setf (attribute "id") (string-downcase (components:target component))))
 
 (define-plump-output footnote-reference "sup"
   (setf (attribute "class") "footnote-reference")
