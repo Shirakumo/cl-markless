@@ -278,7 +278,7 @@
 (defmethod output-component ((option components:link-option) (target plump-dom:nesting-node) (format plump))
   (setf (plump-dom:tag-name target) "a")
   (setf (plump-dom:attribute target "class") "external-link")
-  (setf (plump-dom:attribute target "href") (string-downcase (components:target option))))
+  (setf (plump-dom:attribute target "href") (components:target option)))
 
 (define-plump-output compound "span"
   (loop for option in (components:options component)
