@@ -53,17 +53,18 @@
   (write-string string stream))
 
 (defmacro define-output (format (component stream) &body methods)
-  `(progn
-     (defclass ,format (output-format) ())
-     ,@(loop for (class qualifiers . body) in methods
-             collect `(defmethod output-component ,@qualifiers ((,component ,class) (,stream stream) (_ ,format))
-                        (labels ((output (,component &optional (,stream ,stream))
-                                   (output-component ,component ,stream _))
-                                 (output-children (&optional (,stream ,stream))
-                                   (loop for child across (components:children ,component)
-                                         do (output child ,stream))))
-                          (declare (ignorable #'output #'output-children))
-                          ,@body)))))
+  (destructuring-bind (format slots) (if (listp format) format (list format ()))
+    `(progn
+       (defclass ,format (output-format) ,slots)
+       ,@(loop for (class qualifiers . body) in methods
+               collect `(defmethod output-component ,@qualifiers ((,component ,class) (,stream stream) (_ ,format))
+                          (labels ((output (,component &optional (,stream ,stream))
+                                     (output-component ,component ,stream _))
+                                   (output-children (&optional (,stream ,stream))
+                                     (loop for child across (components:children ,component)
+                                           do (output child ,stream))))
+                            (declare (ignorable #'output #'output-children))
+                            ,@body))))))
 
 (trivial-indent:define-indentation define-output (4 6 &rest (&whole 2 4 &body)))
 
@@ -122,7 +123,7 @@
   (components:compound ()
     (format s "/~a ~{~a~}" (type-of c) (components:options c))))
 
-(define-output bbcode (c s)
+(define-output (bbcode ((supported-tags :initform '(:quote :list :h :hr :code :img :video :b :i :u :s :fixed :sub :super :url :size :color :spoiler) :initarg :supported-tags :accessor supported-tags))) (c s)
   (vector ()
     (when (< 0 (length c))
       (output (aref c 0))
@@ -144,130 +145,228 @@
   (components:blockquote-header ())
   
   (components:blockquote ()
-    (if (components:source c)
-        (format s "[quote=~s]~%"
-                (with-output-to-string (o)
-                  (output (components:source c) o)))
-        (format s "[quote]~%"))
-    (output (components:children c))
-    (format s "[/quote]~%"))
+    (cond ((find :quote (supported-tags _))
+           (if (components:source c)
+               (format s "[quote=~s]~%"
+                       (with-output-to-string (o)
+                         (output (components:source c) o)))
+               (format s "[quote]~%"))
+           (output (components:children c))
+           (format s "[/quote]~%"))
+          (T
+           (when (components:source c)
+             (format s "~a said:~%"
+                     (with-output-to-string (o)
+                       (output (components:source c) o))))
+           (output (components:children c))
+           (format s "~%"))))
 
   (components:ordered-list ()
-    (format s "[list=1]~%")
-    (output (components:children c))
-    (format s "~&[/list]~%"))
+    (cond ((find :list (supported-tags _))
+           (format s "[list=1]~%")
+           (output (components:children c))
+           (format s "~&[/list]~%"))
+          (T
+           (output (components:children c)))))
 
   (components:unordered-list ()
-    (format s "[list]~%")
-    (output (components:children c))
-    (format s "~%[/list]~%"))
+    (cond ((find :list (supported-tags _))
+           (format s "[list]~%")
+           (output (components:children c))
+           (format s "~%[/list]~%"))
+          (T
+           (output (components:children c)))))
 
   (components:list-item ()
-    (format s "[*] ")
-    (output (components:children c)))
+    (cond ((find :list (supported-tags _))
+           (format s "[*] ")
+           (output (components:children c)))
+          (T
+           (format s "- ")
+           (output (components:children c)))))
 
   (components:header ()
-    (format s "[b]")
-    (output (components:children c))
-    (format s "[/b]"))
+    (cond ((find :h (supported-tags _))
+           (format s "[h~d]" (components:depth c))
+           (output (components:children c))
+           (format s "[/h~d]" (components:depth c)))
+          ((find :b (supported-tags _))
+           (format s "[b]")
+           (output (components:children c))
+           (format s "[/b]"))
+          (T
+           (format s "~v@{#~} " (components:depth c) NIL)
+           (output (components:children c)))))
 
   (components:horizontal-rule ()
-    (format s "================="))
+    (if (find :hr (supported-tags _))
+        (format s "[hr]~%")
+        (format s "=================~%")))
 
   (components:code-block ()
-    (format s "[code]~%~a~%[/code]~%" (components:text c)))
+    (if (find :code (supported-tags _))
+        (format s "[code]~%~a~%[/code]~%" (components:text c))
+        (format s "```~%~a~%```~%" (components:text c))))
 
   (components:instruction ())
   (components:comment ())
   (components:embed ())
 
   (components:image ()
-    (format s "[img]~a[/img]" (components:target c)))
+    (cond ((find :img (supported-tags _))
+           (format s "[img]~a[/img]" (components:target c)))
+          ((find :url (supported-tags _))
+           (format s "[url]~a[/url]" (components:target c)))
+          (T
+           (format s "image: ~a" (components:target c)))))
 
   (components:video ()
-    (format s "[video]~a[/video]" (components:target c)))
+    (cond ((find :img (supported-tags _))
+           (format s "[video]~a[/video]" (components:target c)))
+          ((find :url (supported-tags _))
+           (format s "[url]~a[/url]" (components:target c)))
+          (T
+           (format s "video: ~a" (components:target c)))))
 
   (components:footnote ()
     (format s "[~d] " (components:target c))
     (output (components:children c)))
 
   (components:bold ()
-    (format s "[b]")
-    (output (components:children c))
-    (format s "[/b]"))
+    (cond ((find :b (supported-tags _))
+           (format s "[b]")
+           (output (components:children c))
+           (format s "[/b]"))
+          (T
+           (format s "*")
+           (output (components:children c))
+           (format s "*"))))
 
   (components:italic ()
-    (format s "[i]")
-    (output (components:children c))
-    (format s "[/i]"))
+    (cond ((find :i (supported-tags _))
+           (format s "[i]")
+           (output (components:children c))
+           (format s "[/i]"))
+          (T
+           (format s "/")
+           (output (components:children c))
+           (format s "/"))))
 
   (components:underline ()
-    (format s "[u]")
-    (output (components:children c))
-    (format s "[/u]"))
+    (cond ((find :u (supported-tags _))
+           (format s "[u]")
+           (output (components:children c))
+           (format s "[/u]"))
+          (T
+           (format s "_")
+           (output (components:children c))
+           (format s "_"))))
 
   (components:strikethrough ()
-    (format s "[s]")
-    (output (components:children c))
-    (format s "[/s]"))
+    (cond ((find :s (supported-tags _))
+           (format s "[s]")
+           (output (components:children c))
+           (format s "[/s]"))
+          (T
+           (format s "<-")
+           (output (components:children c))
+           (format s "->"))))
 
   (components:code ()
-    (format s "[fixed]~a[/fixed]" (components:text c)))
+    (cond ((find :fixed (supported-tags _))
+           (format s "[fixed]~a[/fixed]" (components:text c)))
+          ((find :code (supported-tags _))
+           (format s "[code]~a[/code]" (components:text c)))
+          (T
+           (format s "~a" (components:text c)))))
 
   (components:subtext ()
-    (format s "[sub]")
-    (output (components:children c))
-    (format s "[sub]"))
+    (cond ((find :sub (supported-tags _))
+           (format s "[sub]")
+           (output (components:children c))
+           (format s "[sub]"))
+          (T
+           (output (components:children c)))))
 
   (components:supertext ()
-    (format s "[super]")
-    (output (components:children c))
-    (format s "[/super]"))
+    (cond ((find :super (supported-tags _))
+           (format s "[super]")
+           (output (components:children c))
+           (format s "[super]"))
+          (T
+           (output (components:children c)))))
 
   (components:url ()
-    (format s "[url]~a[/url]" (components:target c)))
+    (if (find :url (supported-tags _))
+        (format s "[url]~a[/url]" (components:target c))
+        (format s "~a" (components:target c))))
 
   (components:compound ()
     (loop for o in (components:options c)
           do (typecase o
                (components:link-option
-                (format s "[url=~a]"
-                        (components:target o)))
+                (when (find :url (supported-tags _))
+                  (format s "[url=~a]"
+                          (components:target o))))
                (components:size-option
-                (format s "[size=\"~a~a\"]"
-                        (components:size o) (components:unit o)))
+                (when (find :size (supported-tags _))
+                  (format s "[size=\"~a~a\"]"
+                          (components:size o) (components:unit o))))
                (components:color-option
-                (format s "[color=\"~2,'0x~2,'0x~2,'0x\"]"
-                        (components:red o) (components:green o) (components:blue o)))
+                (when (find :color (supported-tags _))
+                  (format s "[color=\"~2,'0x~2,'0x~2,'0x\"]"
+                          (components:red o) (components:green o) (components:blue o))))
                (components:spoiler-option
-                (format s "[spoiler]"))
+                (when (find :spoiler (supported-tags _))
+                  (format s "[spoiler]")))
                (components:bold-option
-                (format s "[b]"))
+                (if (find :b (supported-tags _))
+                    (format s "[b]")
+                    (format s "*")))
                (components:italic-option
-                (format s "[i]"))
+                (if (find :i (supported-tags _))
+                    (format s "[i]")
+                    (format s "/")))
                (components:underline-option
-                (format s "[u]"))
+                (if (find :u (supported-tags _))
+                    (format s "[u]")
+                    (format s "_")))
                (components:strikethrough-option
-                (format s "[s]"))))
+                (if (find :s (supported-tags _))
+                    (format s "[s]")
+                    (format s "<-")))))
     (output (components:children c))
     (loop for o in (reverse (components:options c))
           do (typecase o
                (components:link-option
-                (format s "[/url]"))
+                (if (find :url (supported-tags _))
+                    (format s "[/url]")
+                    (format s "<~a>" (components:target o))))
                (components:size-option
-                (format s "[/size]"))
+                (when (find :size (supported-tags _))
+                  (format s "[/size]")))
                (components:color-option
-                (format s "[/color]"))
+                (when (find :color (supported-tags _))
+                  (format s "[/color]")))
                (components:spoiler-option
-                (format s "[/spoiler]"))
+                (when (find :spoiler (supported-tags _))
+                  (format s "[/spoiler]")))
                (components:bold-option
-                (format s "[/b]"))
+                (if (find :b (supported-tags _))
+                    (format s "[/b]")
+                    (format s "*")))
                (components:italic-option
-                (format s "[/i]"))
+                (if (find :i (supported-tags _))
+                    (format s "[/i]")
+                    (format s "/")))
                (components:underline-option
-                (format s "[/u]"))
+                (if (find :u (supported-tags _))
+                    (format s "[/u]")
+                    (format s "_")))
                (components:strikethrough-option
-                (format s "[/s]")))))
+                (if (find :s (supported-tags _))
+                    (format s "[/s]")
+                    (format s "->"))))))
 
   (components:footnote-reference ()
     (format s "[~d]" (components:target c))))
