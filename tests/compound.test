@@ -94,3 +94,15 @@ b"()
 "a"(size 1xx)
 ~~
 (root (paragraph (compound () "a")))
+
+//"a"//
+~~
+(root (paragraph (italic "\"a\"")))
+
+//a"b//c//d"()e//
+~~
+(root (paragraph (italic "a" (compound () "b" (italic "c") "d") "e")))
+
+//a"b//c//d"e//
+~~
+(root (paragraph (italic "a\"b" (italic "c") "d\"e")))
