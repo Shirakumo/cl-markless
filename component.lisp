@@ -36,6 +36,7 @@
                   (loop for child across (children component)
                         do (typecase child
                              (string (write-string child out))
+                             (newline (write-char #\Linefeed out))
                              (text-component (write-string (text child) out))
                              (parent-component (r child))))))
       (r component))))
