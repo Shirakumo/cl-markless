@@ -42,6 +42,7 @@
    #:depth
    #:horizontal-rule
    #:code-block
+   #:inset
    #:language
    #:options
    #:instruction

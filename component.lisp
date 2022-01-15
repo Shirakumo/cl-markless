@@ -108,7 +108,8 @@
 (defclass code-block (text-component block-component)
   ((language :initarg :language :initform NIL :accessor language)
    (options :initarg :options :initform () :accessor options)
-   (depth :initarg :depth :initform 0 :accessor depth)))
+   (depth :initarg :depth :initform 0 :accessor depth)
+   (inset :initarg :inset :initform 0 :accessor inset)))
 
 (define-printer code-block
   "~@[~a~]~{ ~a~}" (language c) (options c))

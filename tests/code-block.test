@@ -62,3 +62,9 @@ a\
 :::
 ~~
 (root (code-block () "::"))
+
+- ::
+  x
+  ::
+~~
+(root (unordered-list (unordered-list-item (code-block () "x"))))

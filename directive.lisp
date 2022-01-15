@@ -310,7 +310,8 @@
   #(":" ":"))
 
 (defmethod begin ((_ code-block) parser line cursor)
-  (let ((end cursor))
+  (let ((start cursor)
+        (end cursor))
     (loop while (and (< end (length line))
                      (char= #\: (aref line end)))
           do (incf end))
@@ -321,7 +322,8 @@
           (commit _ (make-instance 'components:code-block :language language
                                                           :options options
                                                           :text ""
-                                                          :depth depth)
+                                                          :depth depth
+                                                          :inset start)
                   parser)
           0)))))
 
@@ -331,12 +333,12 @@
 (defmethod invoke ((_ code-block) component parser line cursor)
   (let ((input (input parser))
         (end (length line))
-        (suffix (make-string (components:depth component) :initial-element #\:)))
+        (suffix (format NIL "~v{ ~}~v{:~}" (components:inset component) 1 (components:depth component) 1)))
     (setf line (read-line input))
     (when (string/= line suffix)
       (setf (components:text component)
             (with-output-to-string (output)
-              (loop (write-string line output)
+              (loop (write-string line output :start (components:inset component))
                     (setf line (read-line input))
                     (if (string= suffix line)
                         (return)
