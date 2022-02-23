@@ -465,11 +465,12 @@
         (warn 'bad-option :cursor (+ 2 cursor) :option option))))
 
 (defmethod find-embed-option-type ((parser parser) (option string))
-  (let ((typename (format NIL "~a-option"
+  (let ((typename (format NIL "embed-~a-option"
                           (subseq option 0 (or (position #\  option)
                                                (length option))))))
     (loop for option in (embed-options parser)
-          do (when (string-equal typename (class-name option))
+          do (when (or (string-equal typename (class-name option) :start1 (length "embed-"))
+                       (string-equal typename (class-name option)))
                (return option)))))
 
 (defmethod parse-embed-option-type ((type components:embed-option) option)
@@ -514,6 +515,9 @@
 (defmethod parse-embed-option-type ((type components:encoding-option) option)
   (make-instance (class-of type) :encoding (subseq option (length "encoding "))))
 
+(defmethod parse-embed-option-type ((type components:embed-link-option) option)
+  (make-instance (class-of type) :target (subseq option (length "link "))))
+
 (defmethod embed-option-allowed-p ((option components:embed-option) (embed components:embed)) NIL)
 (defmethod embed-option-allowed-p ((option components:width-option) (embed components:embed)) T)
 (defmethod embed-option-allowed-p ((option components:height-option) (embed components:embed)) T)
@@ -529,6 +533,7 @@
 (defmethod embed-option-allowed-p ((option components:start-option) (embed components:source)) T)
 (defmethod embed-option-allowed-p ((option components:end-option) (embed components:source)) T)
 (defmethod embed-option-allowed-p ((option components:encoding-option) (embed components:source)) T)
+(defmethod embed-option-allowed-p ((option components:embed-link-option) (embed components:image)) T)
 
 (defclass footnote (singular-line-directive)
   ())

@@ -87,6 +87,8 @@
    #:offset-p
    #:encoding-option
    #:encoding
+   #:embed-link-option
+   #:target
    #:direction
    #:footnote
    #:bold

@@ -79,7 +79,8 @@
     components:language-option
     components:start-option
     components:end-option
-    components:encoding-option))
+    components:encoding-option
+    components:embed-link-option))
 
 (defun compile-dispatch-table  (directives)
   (labels ((max-char (candidates i)

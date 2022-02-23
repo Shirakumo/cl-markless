@@ -181,7 +181,14 @@
   (setf (attribute "alt") (components:target component))
   (setf (attribute "src") (components:target component))
   (append-style node "display:block")
-  (set-plump-embed-options node (components:options component) format))
+  (set-plump-embed-options node (components:options component) format)
+  (let ((link (find 'components:embed-link-option (components:options component) :key #'type-of)))
+    (when link
+      (let ((el (plump-dom:make-element target "a")))
+        (setf (plump-dom:attribute el "href") (components:target link))
+        (setf (plump-dom:attribute el "target") "_blank")
+        (plump-dom:remove-child node)
+        (plump-dom:append-child el node)))))
 
 (define-plump-output video "video"
   (setf (attribute "src") (components:target component))

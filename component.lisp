@@ -222,6 +222,9 @@
 (defclass encoding-option (embed-option)
   ((encoding :initarg :encoding :initform (cl:error "ENCODING required") :accessor encoding)))
 
+(defclass embed-link-option (embed-option)
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+
 (defclass footnote (parent-component block-component)
   ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
 
