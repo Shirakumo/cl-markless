@@ -15,6 +15,9 @@
   ((unit :initarg :unit :initform (cl:error "UNIT required") :accessor unit)
    (size :initarg :size :initform (cl:error "SIZE required") :accessor size)))
 
+(defclass targeted ()
+  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+
 (define-printer sized
   "~f~(~a~)" (size c) (unit c))
 
@@ -157,15 +160,14 @@
 (defclass enable (directives-instruction)
   ())
 
-(defclass label (instruction)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass label (instruction targeted)
+  ())
 
 (defclass comment (text-component block-component)
   ())
 
-(defclass embed (unit-component block-component)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)
-   (options :initarg :options :initform () :accessor options)))
+(defclass embed (unit-component block-component targeted)
+  ((options :initarg :options :initform () :accessor options)))
 
 (define-printer embed
   "~s" (target c))
@@ -200,8 +202,8 @@
 (defclass float-option (embed-option)
   ((direction :initarg :direction :initform (cl:error "DIRECTION required") :accessor direction)))
 
-(defclass label-option (embed-option)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass label-option (embed-option targeted)
+  ())
 
 (defclass caption-option (embed-option parent-component)
   ())
@@ -222,11 +224,11 @@
 (defclass encoding-option (embed-option)
   ((encoding :initarg :encoding :initform (cl:error "ENCODING required") :accessor encoding)))
 
-(defclass embed-link-option (embed-option)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass embed-link-option (embed-option targeted)
+  ())
 
-(defclass footnote (parent-component block-component)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass footnote (parent-component block-component targeted)
+  ())
 
 (define-printer footnote
   "(~d)" (target c))
@@ -252,8 +254,8 @@
 (defclass supertext (inline-component parent-component)
   ())
 
-(defclass url (inline-component unit-component)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass url (inline-component unit-component targeted)
+  ())
 
 (defclass compound (inline-component parent-component)
   ((options :initarg :options :initform () :accessor options)))
@@ -291,8 +293,8 @@
 (define-printer size-option
   "~f~(~a~)" (size c) (unit c))
 
-(defclass link-option (compound-option)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass link-option (compound-option targeted)
+  ())
 
 (define-printer link-option
   "~s" (target c))
@@ -300,8 +302,8 @@
 (defclass internal-link-option (link-option)
   ())
 
-(defclass footnote-reference (inline-component unit-component)
-  ((target :initarg :target :initform (cl:error "TARGET required") :accessor target)))
+(defclass footnote-reference (inline-component unit-component targeted)
+  ())
 
 (define-printer footnote-reference
   "(~d)" (target c))

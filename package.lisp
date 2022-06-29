@@ -12,6 +12,8 @@
    #:sized
    #:unit
    #:size
+   #:targeted
+   #:target
    #:component
    #:unit-component
    #:text-component
