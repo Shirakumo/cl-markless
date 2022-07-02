@@ -379,10 +379,7 @@
       (loop for i from 1 below (length c)
             for child = (aref c i)
             do (when (typep child 'components:block-component)
-                 (format s "~%~{~a~}" (reverse *prefixes*))
-                 (when (and (not (typep child 'components:list-item))
-                            (not (typep (aref c (1- i)) 'components:header)))
-                   (format s "~%~{~a~}" (reverse *prefixes*))))
+                 (format s "~&~{~a~}" (reverse *prefixes*)))
                (output child))))
   
   (string ()
@@ -417,12 +414,15 @@
       (output (components:children c))))
 
   (components:ordered-list-item ()
-    (format s "~d. " (components:number c))
-    (output (components:children c)))
+    (let ((prefix (format NIL "~d. " (components:number c))))
+      (format s "~a" prefix)
+      (let ((*prefixes* (list* (make-string (length prefix) :initial-element #\Space) *prefixes*)))
+        (output (components:children c)))))
 
   (components:unordered-list-item ()
     (format s "- ")
-    (output (components:children c)))
+    (let ((*prefixes* (list* "  " *prefixes*)))
+      (output (components:children c))))
 
   (components:header ()
     (format s "~v@{#~} " (components:depth c) NIL)
@@ -480,6 +480,12 @@
   (components:label-option ()
     (format s "label ~a" (components:target c)))
 
+  (components:bold-option () (format s "bold"))
+  (components:italic-option () (format s "italic"))
+  (components:underline-option () (format s "underline"))
+  (components:strikethrough-option () (format s "strikethrough"))
+  (components:spoiler-option () (format s "spoiler"))
+  
   (components:caption-option ()
     (format s "caption ")
     (output (components:children c)))
