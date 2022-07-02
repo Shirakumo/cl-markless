@@ -53,9 +53,9 @@
   (write-string string stream))
 
 (defmacro define-output (format (component stream) &body methods)
-  (destructuring-bind (format slots) (if (listp format) format (list format ()))
+  (destructuring-bind (format &optional superclasses slots) (if (listp format) format (list format ()))
     `(progn
-       (defclass ,format (output-format) ,slots)
+       (defclass ,format (,@superclasses output-format) ,slots)
        ,@(loop for (class qualifiers . body) in methods
                collect `(defmethod output-component ,@qualifiers ((,component ,class) (,stream stream) (_ ,format))
                           (labels ((output (,component &optional (,stream ,stream))
@@ -123,7 +123,7 @@
   (components:compound ()
     (format s "/~a ~{~a~}" (type-of c) (components:options c))))
 
-(define-output (bbcode ((supported-tags :initform '(:quote :list :h :hr :code :img :video :b :i :u :s :fixed :sub :super :url :size :color :spoiler) :initarg :supported-tags :accessor supported-tags))) (c s)
+(define-output (bbcode () ((supported-tags :initform '(:quote :list :h :hr :code :img :video :b :i :u :s :fixed :sub :super :url :size :color :spoiler) :initarg :supported-tags :accessor supported-tags))) (c s)
   (vector ()
     (when (< 0 (length c))
       (output (aref c 0))
