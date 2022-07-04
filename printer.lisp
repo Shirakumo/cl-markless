@@ -372,6 +372,10 @@
     (format s "[~d]" (components:target c))))
 
 (defvar *prefixes* ())
+
+(defmacro %op (s thing &rest args)
+  `(output-operator (format NIL ,thing ,@args) ,s _))
+
 (define-output markless (c s)
   (vector ()
     (when (< 0 (length c))
@@ -379,7 +383,9 @@
       (loop for i from 1 below (length c)
             for child = (aref c i)
             do (when (typep child 'components:block-component)
-                 (format s "~&~{~a~}" (reverse *prefixes*)))
+                 (fresh-line s)
+                 (loop for prefix in (reverse *prefixes*)
+                       do (%op s "~a" prefix)))
                (output child))))
   
   (string ()
@@ -388,12 +394,16 @@
                (#\\
                 (format s "\\\\"))
                (#\Linefeed
-                (format s "~%~{~a~}" (reverse *prefixes*)))
+                (fresh-line s)
+                (loop for prefix in (reverse *prefixes*)
+                      do (%op s "~a" prefix)))
                (T
                 (write-char char s)))))
 
   (components:unit-component ()
-    (format s "~%~{~a~}" (reverse *prefixes*)))
+    (fresh-line s)
+    (loop for prefix in (reverse *prefixes*)
+          do (%op s "~a" prefix)))
 
   (components:parent-component ()
     (output (components:children c)))
@@ -401,151 +411,157 @@
   (components:paragraph ()
     (let* ((prefix (make-string (components:indentation c) :initial-element #\ ))
            (*prefixes* (list* prefix *prefixes*)))
-      (write-string prefix s)
+      (%op s "~a" prefix)
       (output (components:children c))))
 
   (components:blockquote-header ()
-    (format s "~~ ")
+    (%op s "~~ ")
     (output-children))
   
   (components:blockquote ()
-    (format s "| ")
+    (%op s "| ")
     (let ((*prefixes* (list* "| " *prefixes*)))
       (output (components:children c))))
 
   (components:ordered-list-item ()
     (let ((prefix (format NIL "~d. " (components:number c))))
-      (format s "~a" prefix)
+      (%op s "~a" prefix)
       (let ((*prefixes* (list* (make-string (length prefix) :initial-element #\Space) *prefixes*)))
         (output (components:children c)))))
 
   (components:unordered-list-item ()
-    (format s "- ")
+    (%op s "- ")
     (let ((*prefixes* (list* "  " *prefixes*)))
       (output (components:children c))))
 
   (components:header ()
-    (format s "~v@{#~} " (components:depth c) NIL)
+    (%op s "~v@{#~} " (components:depth c) NIL)
     (output (components:children c)))
 
   (components:horizontal-rule ()
-    (format s "=="))
+    (%op s "=="))
 
   (components:code-block ()
-    (format s "~v@{:~}~@[ ~a~{, ~a~}~]" (+ 2 (components:depth c)) (components:language c) (components:options c))
+    (%op s "~v@{:~}" (+ 2 (components:depth c)) NIL)
+    (format s "~@[ ~a~{, ~a~}~]"  (components:language c) (components:options c))
     (format s "~&~a" (components:text c))
-    (format s "~&~v@{:~}" (+ 2 (components:depth c)) NIL))
+    (%op s "~&~v@{:~}" (+ 2 (components:depth c)) NIL))
 
+  (components:instruction (:before)
+    (%op s "! "))
+  
   (components:instruction ()
-    (format s "! ~(~a~)" (type-of c)))
+    (format s "~(~a~)" (type-of c)))
   
   (components:message-instruction ()
-    (format s "! ~(~a~) ~a" (type-of c) (components:message c)))
+    (format s "~(~a~) ~a" (type-of c) (components:message c)))
 
   (components:directives-instruction ()
-    (format s "! ~(~a~)~{ ~a~}" (type-of c) (components:directives c)))
+    (format s "~(~a~)~{ ~a~}" (type-of c) (components:directives c)))
 
   (components:set ()
-    (format s "! ~(~a~) ~a ~a" (type-of c) (components:variable c) (components:value c)))
+    (format s "~(~a~) ~a ~a" (type-of c) (components:variable c) (components:value c)))
 
   (components:include ()
-    (format s "! ~(~a~) ~a" (type-of c) (components:file c)))
+    (format s "~(~a~) ~a" (type-of c) (components:file c)))
 
   (components:label ()
-    (format s "! ~(~a~) ~a" (type-of c) (components:target c)))
+    (format s "~(~a~) ~a" (type-of c) (components:target c)))
 
   (components:comment ()
-    (format s "; ~a" (components:text c)))
+    (%op s "; ")
+    (format s "~a" (components:text c)))
 
   (components:embed ()
-    (format s "[ ~(~a~) ~a"
+    (%op s "[ ")
+    (format s "~(~a~) ~a"
             (type-of c) (components:target c))
     (loop for option in (components:options c)
           do (format s ", ")
              (output option))
-    (format s " ]"))
+    (%op s " ]"))
 
   (components:embed-option ()
     (format s "~(~a~)" (type-of c)))
 
   (components:width-option ()
-    (format s "width ~a~a" (components:size c) (components:unit c)))
+    (%op s "width ~a~a" (components:size c) (components:unit c)))
 
   (components:height-option ()
-    (format s "height ~a~a" (components:size c) (components:unit c)))
+    (%op s "height ~a~a" (components:size c) (components:unit c)))
 
   (components:float-option ()
-    (format s "float ~(~a~)" (components:direction c)))
+    (%op s "float ~(~a~)" (components:direction c)))
 
   (components:label-option ()
-    (format s "label ~a" (components:target c)))
+    (%op s "label ~a" (components:target c)))
 
-  (components:bold-option () (format s "bold"))
-  (components:italic-option () (format s "italic"))
-  (components:underline-option () (format s "underline"))
-  (components:strikethrough-option () (format s "strikethrough"))
-  (components:spoiler-option () (format s "spoiler"))
+  (components:bold-option () (%op s "bold"))
+  (components:italic-option () (%op s "italic"))
+  (components:underline-option () (%op s "underline"))
+  (components:strikethrough-option () (%op s "strikethrough"))
+  (components:spoiler-option () (%op s "spoiler"))
   
   (components:caption-option ()
-    (format s "caption ")
+    (%op s "caption ")
     (output (components:children c)))
 
   (components:footnote ()
-    (format s "[~d] " (components:target c))
+    (%op s "[~d] " (components:target c))
     (output (components:children c)))
 
   (components:bold ()
-    (format s "**")
+    (%op s "**")
     (output (components:children c))
-    (format s "**"))
+    (%op s "**"))
 
   (components:italic ()
-    (format s "//")
+    (%op s "//")
     (output (components:children c))
-    (format s "//"))
+    (%op s "//"))
 
   (components:underline ()
-    (format s "__")
+    (%op s "__")
     (output (components:children c))
-    (format s "__"))
+    (%op s "__"))
 
   (components:strikethrough ()
-    (format s "<-")
+    (%op s "<-")
     (output (components:children c))
-    (format s "->"))
+    (%op s "->"))
 
   (components:code ()
     (format s "``~a``" (components:text c)))
 
   (components:subtext ()
-    (format s "v(")
+    (%op s "v(")
     (output (components:children c))
-    (format s ")"))
+    (%op s ")"))
 
   (components:supertext ()
-    (format s "^(")
+    (%op s "^(")
     (output (components:children c))
-    (format s ")"))
+    (%op s ")"))
 
   (components:url ()
     (write-string (components:target c) s))
 
   (components:compound ()
-    (format s "\"")
+    (%op s "\"")
     (output (components:children c))
-    (format s "\"(")
+    (%op s "\"(")
     (when (components:options c)
       (output (first (components:options c)))
       (loop for option in (rest (components:options c))
-            do (format s ", ")
+            do (%op s ", ")
                (output option)))
-    (format s ")"))
+    (%op s ")"))
 
   (components:compound-option ()
-    (format s "~(~a~)" (type-of c)))
+    (%op s "~(~a~)" (type-of c)))
 
   (components:font-option ()
-    (format s "font ~a" (components:font-family c)))
+    (%op s "font ~a" (components:font-family c)))
 
   (components:color-option ()
     (let ((r (components:red c))
@@ -556,8 +572,8 @@
             do (when (and (= r (components:red option))
                           (= g (components:green option))
                           (= b (components:blue option)))
-                 (return (format s "~(~a~)" name)))
-            finally (format s "color ~a ~a ~a"  r g b))))
+                 (return (%op s "~(~a~)" name)))
+            finally (%op s "color ~a ~a ~a"  r g b))))
   
   (components:size-option ()
     (let ((size (components:size c))
@@ -566,16 +582,51 @@
             for option being the hash-values of *size-table*
             do (when (and (= size (components:size option))
                           (eql unit (components:unit option)))
-                 (return (format s "~(~a~)" name)))
-            finally (format s "size ~a~(~a~)" size unit))))
+                 (return (%op s "~(~a~)" name)))
+            finally (%op s "size ~a~(~a~)" size unit))))
 
   (components:internal-link-option ()
-    (format s "#~a" (components:target c)))
+    (%op s "#~a" (components:target c)))
 
   (components:link-option ()
     (if (read-url (components:target c) 0)
-        (format s "~a" (components:target c))
-        (format s "link ~a" (components:target c))))
+        (%op s "~a" (components:target c))
+        (%op s "link ~a" (components:target c))))
 
   (components:footnote-reference ()
-    (format s "[~d]" (components:target c))))
+    (%op s "[~d]" (components:target c))))
+
+(defmethod output-operator (string target (markless markless))
+  (write-string string target))
+
+(define-output (highlighted (markless)) (c s)
+  (components:component (:around)
+    (format s "<span class=\"~(~a~)\">" (type-of c))
+    (call-next-method)
+    (format s "</span>"))
+
+  (components:root-component (:around)
+    (format s "<pre class=\"markless-source\">")
+    (call-next-method)
+    (format s "</pre>"))
+
+  (string ()
+    (loop for char across c
+          do (case char
+               (#\\
+                (format s "\\\\"))
+               (#\<
+                (format s "&lt;"))
+               (#\>
+                (format s "&gt;"))
+               (#\&
+                (format s "&amp;"))
+               (#\Linefeed
+                (fresh-line s)
+                (loop for prefix in (reverse *prefixes*)
+                      do (%op s "~a" prefix)))
+               (T
+                (write-char char s))))))
+
+(defmethod output-operator (string target (thing highlighted))
+  (format target "<span class=\"operator\">~a</span>" string))

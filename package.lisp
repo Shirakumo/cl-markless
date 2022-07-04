@@ -268,6 +268,7 @@
    #:output-format
    #:list-output-formats
    #:markless
+   #:highlighted
    #:debug
    #:bbcode
    #:define-output
