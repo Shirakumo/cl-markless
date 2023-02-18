@@ -177,18 +177,17 @@
   (let ((figure (plump-dom:make-element target "figure")))
     (call-next-method component figure format)))
 
-(define-plump-output image "img"
-  (setf (attribute "alt") (components:target component))
-  (setf (attribute "src") (components:target component))
-  (append-style node "display:block")
-  (set-plump-embed-options node (components:options component) format)
+(define-plump-output image "a"
+  (let ((img (plump-dom:make-element node "img")))
+    (setf (plump-dom:attribute img "alt") (components:target component))
+    (setf (plump-dom:attribute img "src") (components:target component))
+    (append-style img "display:block"))
   (let ((link (find 'components:embed-link-option (components:options component) :key #'type-of)))
-    (when link
-      (let ((el (plump-dom:make-element target "a")))
-        (setf (plump-dom:attribute el "href") (components:target link))
-        (setf (plump-dom:attribute el "target") "_blank")
-        (plump-dom:remove-child node)
-        (plump-dom:append-child el node)))))
+    (setf (attribute "href") (if link
+                                 (components:target link)
+                                 (components:target component)))
+    (setf (attribute "target") "_blank"))
+  (set-plump-embed-options node (components:options component) format))
 
 (define-plump-output video "video"
   (setf (attribute "src") (components:target component))
