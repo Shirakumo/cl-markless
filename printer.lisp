@@ -138,6 +138,9 @@
   
   (string ()
     (write-string c s))
+
+  (components:newline ()
+    (write-char #\Linefeed s))
   
   (components:parent-component ()
     (output (components:children c)))
@@ -273,10 +276,10 @@
            (format s "->"))))
 
   (components:code ()
-    (cond ((find :fixed (supported-tags _))
-           (format s "[fixed]~a[/fixed]" (components:text c)))
-          ((find :code (supported-tags _))
+    (cond ((find :code (supported-tags _))
            (format s "[code]~a[/code]" (components:text c)))
+          ((find :fixed (supported-tags _))
+           (format s "[fixed]~a[/fixed]" (components:text c)))
           (T
            (format s "~a" (components:text c)))))
 
