@@ -21,6 +21,7 @@
                (:file "printer")
                (:file "parser")
                (:file "directive")
+               (:file "misc")
                (:file "documentation"))
   :depends-on (:documentation-utils
                :trivial-indent)

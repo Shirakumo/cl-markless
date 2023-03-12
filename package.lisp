@@ -222,6 +222,10 @@
    #:dash
    #:newline
    #:url)
+  ;; misc.lisp
+  (:export
+   #:count-words
+   #:count-words-by)
   ;; parser.lisp
   (:export
    #:*default-directives*
