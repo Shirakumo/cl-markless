@@ -28,10 +28,10 @@
 (defmethod count-words-by + (method (component components:text-component))
   (count-words-by method (components:text component)))
 
-(defmethod count-words-by + (method (component components:instruction))
+(defmethod count-words-by :around (method (component components:instruction))
   0)
 
-(defmethod count-words-by + (method (component components:comment))
+(defmethod count-words-by :around (method (component components:comment))
   0)
 
 (defmethod count-words-by + ((method (eql :whitespace)) (string string))
