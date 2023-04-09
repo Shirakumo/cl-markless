@@ -121,7 +121,10 @@
     (format s " ~a (~d)" (type-of c) (components:target c)))
 
   (components:compound ()
-    (format s "/~a ~{~a~}" (type-of c) (components:options c))))
+    (format s "/~a ~{~a~}" (type-of c) (components:options c)))
+
+  (components:unit-component ()
+    (format s " ~a" (type-of c))))
 
 (define-output (bbcode () ((supported-tags :initform '(:quote :list :h :hr :code :img :video :b :i :u :s :fixed :sub :super :url :size :color :spoiler) :initarg :supported-tags :accessor supported-tags))) (c s)
   (vector ()
@@ -372,7 +375,16 @@
                     (format s "->"))))))
 
   (components:footnote-reference ()
-    (format s "[~d]" (components:target c))))
+    (format s "[~d]" (components:target c)))
+
+  (components:en-dash ()
+    (format s "–"))
+
+  (components:em-dash ()
+    (format s "—"))
+
+  (components:newline ()
+    (format s "~%")))
 
 (defvar *prefixes* ())
 
@@ -597,7 +609,16 @@
         (%op s "link ~a" (components:target c))))
 
   (components:footnote-reference ()
-    (%op s "[~d]" (components:target c))))
+    (%op s "[~d]" (components:target c)))
+
+  (components:en-dash ()
+    (format s "--"))
+
+  (components:em-dash ()
+    (format s "---"))
+
+  (components:newline ()
+    (format s "-/-")))
 
 (defmethod output-operator (string target (markless markless))
   (write-string string target))
