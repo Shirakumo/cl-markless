@@ -179,6 +179,7 @@
 
 (define-plump-output image "a"
   (let ((img (plump-dom:make-element node "img")))
+    (set-plump-embed-options img (components:options component) format)
     (setf (plump-dom:attribute img "alt") (components:target component))
     (setf (plump-dom:attribute img "src") (components:target component))
     (append-style img "display:block"))
