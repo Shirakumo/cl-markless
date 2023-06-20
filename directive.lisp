@@ -338,7 +338,7 @@
     (when (string/= line suffix)
       (setf (components:text component)
             (with-output-to-string (output)
-              (loop (write-string line output :start (components:inset component))
+              (loop (write-string line output :start (min (length line) (components:inset component)))
                     (setf line (read-line input))
                     (if (string= suffix line)
                         (return)
