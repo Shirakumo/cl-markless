@@ -1,9 +1,3 @@
-#|
- This file is a part of cl-markless
- (c) 2018 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Nicolas Hafner <shinmera@tymoon.eu>
-|#
-
 (defpackage #:cl-markless-test
   (:nicknames #:org.shirakumo.markless.test)
   (:use #:cl #:parachute)

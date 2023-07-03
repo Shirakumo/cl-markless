@@ -1,9 +1,3 @@
-#|
- This file is a part of cl-markless
- (c) 2018 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Nicolas Hafner <shinmera@tymoon.eu>
-|#
-
 (in-package #:org.shirakumo.markless.epub)
 
 (defvar *here* #.(or *compile-file-pathname* *load-pathname* (error "COMPILE-FILE or LOAD this.")))
