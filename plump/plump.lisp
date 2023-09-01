@@ -169,6 +169,10 @@
 
 (defmethod output-component :around ((component components:embed) (target plump-dom:nesting-node) (format plump))
   (let ((figure (plump-dom:make-element target "figure")))
+    (let ((float (find 'components:float-option (components:options component) :key #'type-of)))
+      (when float
+        (set-plump-embed-options figure (list float) format)
+        (setf (components:options component) (remove float (components:options component)))))
     (call-next-method component figure format)))
 
 (define-plump-output image "a"
