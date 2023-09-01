@@ -165,16 +165,20 @@
               (setf (plump-dom:attribute (plump-dom:parent element) "id")
                     (string-downcase (components:target option))))
              (components:caption-option
-              (let ((caption (plump-dom:make-element (plump-dom:parent element) "figcaption")))
+              (let ((caption (plump-dom:make-element element "figcaption")))
                 (output-component option caption format))))))
 
 (defmethod output-component :around ((component components:embed) (target plump-dom:nesting-node) (format plump))
-  (let ((figure (plump-dom:make-element target "figure")))
-    (let ((float (find 'components:float-option (components:options component) :key #'type-of)))
-      (when float
-        (set-plump-embed-options figure (list float) format)
-        (setf (components:options component) (remove float (components:options component)))))
-    (call-next-method component figure format)))
+  (let ((figure (plump-dom:make-element target "figure"))
+        (float (find 'components:float-option (components:options component) :key #'type-of))
+        (caption (find 'components:caption-option (components:options component) :key #'type-of)))
+    (setf (components:options component) (remove float (components:options component)))
+    (setf (components:options component) (remove caption (components:options component)))
+    (when float
+      (set-plump-embed-options figure (list float) format))
+    (call-next-method component figure format)
+    (when caption
+      (set-plump-embed-options figure (list caption) format))))
 
 (define-plump-output image "a"
   (let ((img (plump-dom:make-element node "img")))
@@ -186,8 +190,7 @@
     (setf (attribute "href") (if link
                                  (components:target link)
                                  (components:target component)))
-    (setf (attribute "target") "_blank"))
-  (set-plump-embed-options node (components:options component) format))
+    (setf (attribute "target") "_blank")))
 
 (define-plump-output video "video"
   (setf (attribute "src") (components:target component))
