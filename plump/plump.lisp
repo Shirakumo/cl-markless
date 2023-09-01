@@ -153,7 +153,8 @@
              (components:width-option
               (append-style element "width:~d~(~a~)"
                             (components:size option)
-                            (components:unit option)))
+                            (components:unit option))
+              (append-style element "object-fit:contain"))
              (components:height-option
               (append-style element "height:~d~(~a~)"
                             (components:size option)
