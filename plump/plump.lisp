@@ -62,7 +62,7 @@
     (when footnotes
       (let ((section (plump-dom:make-element node "footer")))
         (setf (attribute "class" section) "footnotes")
-        (plump-dom:make-element section "hr")
+        (setf (plump-dom:attribute "style" (plump-dom:make-element section "hr")) "clear:both")
         (loop with listing = (plump-dom:make-element section "ol")
               for footnote in footnotes
               for note = (plump-dom:make-element listing "li")
@@ -116,7 +116,8 @@
   (loop for child across (components:children component)
         do (output child)))
 
-(define-plump-output horizontal-rule "hr")
+(define-plump-output horizontal-rule "hr"
+  (setf (attribute "style") "clear:both"))
 
 (defmethod output-component ((component components:code-block) (target plump-dom:nesting-node) (format plump))
   (cond ((and (find (components:language component) '("html" "xhtml")  :test #'string-equal)
