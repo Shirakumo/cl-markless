@@ -170,15 +170,12 @@
 
 (defmethod output-component :around ((component components:embed) (target plump-dom:nesting-node) (format plump))
   (let ((figure (plump-dom:make-element target "figure"))
-        (float (find 'components:float-option (components:options component) :key #'type-of))
-        (caption (find 'components:caption-option (components:options component) :key #'type-of)))
-    (setf (components:options component) (remove float (components:options component)))
-    (setf (components:options component) (remove caption (components:options component)))
-    (when float
-      (set-plump-embed-options figure (list float) format))
+        (options (remove NIL (list (find 'components:float-option (components:options component) :key #'type-of)
+                                   (find 'components:caption-option (components:options component) :key #'type-of))))
+        (width (find 'components:width-option (components:options component) :key #'type-of)))
+    (setf (components:options component) (set-difference (components:options component) options))
     (call-next-method component figure format)
-    (when caption
-      (set-plump-embed-options figure (list caption) format))))
+    (set-plump-embed-options figure (list* width options) format)))
 
 (define-plump-output image "a"
   (let ((img (plump-dom:make-element node "img")))
