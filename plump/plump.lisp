@@ -62,7 +62,7 @@
     (when footnotes
       (let ((section (plump-dom:make-element node "footer")))
         (setf (attribute "class" section) "footnotes")
-        (setf (plump-dom:attribute "style" (plump-dom:make-element section "hr")) "clear:both")
+        (setf (plump-dom:attribute (plump-dom:make-element section "hr") "style") "clear:both")
         (loop with listing = (plump-dom:make-element section "ol")
               for footnote in footnotes
               for note = (plump-dom:make-element listing "li")
