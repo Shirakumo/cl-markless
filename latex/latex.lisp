@@ -11,7 +11,8 @@
 (defclass latex (output-format)
   ((processor :initarg :processor :initform "lualatex" :accessor processor)
    (documentclass :initarg :documentclass :initform "[a4paper,12pt]{article}" :accessor documentclass)
-   (preamble :initarg :preamble :initform NIL :accessor preamble)))
+   (preamble :initarg :preamble :initform NIL :accessor preamble)
+   (verbose :initarg :verbose :initform NIL :accessor verbose)))
 
 (defmacro define-tex-output (class &body body)
   (destructuring-bind (class . args) (if (listp class) class (list class))
@@ -47,7 +48,8 @@
                                           (format NIL "--output-directory=~a" (uiop:native-namestring
                                                                                (make-pathname :name NIL :type NIL :defaults path)))
                                           (uiop:native-namestring tex)))
-                             :output *error-output* :error-output *error-output*)))
+                             :output (when (verbose format) *error-output*)
+                             :error-output (when (verbose format) *error-output*))))
         (T
          (call-next-method))))
 
@@ -229,7 +231,8 @@
                                     (write-char char out))))))
            (ensure-directories-exist temp)
            (unless (probe-file temp)
-             (format *debug-io* "~&; Downloading ~a...~%" target)
+             (when (verbose format)
+               (format *debug-io* "~&; Downloading ~a...~%" target))
              (uiop:run-program (list "curl" "-f" "-o" temp target))
              (unless (find (file-extension target) #(jpg jpeg png eps pdf) :test #'string-equal)
                (let* ((exts (string-right-trim '(#\Linefeed #\Return)
