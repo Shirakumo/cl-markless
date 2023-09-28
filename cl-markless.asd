@@ -1,5 +1,5 @@
 (asdf:defsystem cl-markless
-  :version "1.1.0"
+  :version "1.2.0"
   :license "zlib"
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
