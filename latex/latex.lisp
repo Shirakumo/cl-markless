@@ -248,8 +248,10 @@
             (height (find 'components:height-option (components:options component) :key #'type-of))
             (target (maybe-cache (components:target component) format)))
         (texfun! includegraphics
-                 [ (format NIL "~@[width=~a~]," (when width (translate-unit width)))
-                 (format NIL "~@[height=~a~]" (when height (translate-unit height))) ]
+                 [ (if width
+                       (format NIL "width=~a" (translate-unit width))
+                       (format NIL "width=0.8\textwidth"))
+                 (format NIL "~@[,height=~a~]" (when height (translate-unit height))) ]
                  { (identity target) }))
     (error ()
       (call-next-method))))
