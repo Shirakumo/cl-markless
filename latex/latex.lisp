@@ -5,7 +5,8 @@
    (#:components #:org.shirakumo.markless.components))
   (:shadowing-import-from #:org.shirakumo.markless #:debug)
   (:export
-   #:latex))
+   #:latex
+   #:output))
 (in-package #:org.shirakumo.markless.latex)
 
 (defclass latex (output-format)
@@ -13,6 +14,16 @@
    (documentclass :initarg :documentclass :initform "[a4paper,12pt]{article}" :accessor documentclass)
    (preamble :initarg :preamble :initform NIL :accessor preamble)
    (verbose :initarg :verbose :initform NIL :accessor verbose)))
+
+(defun output (markless target &rest args)
+  (etypecase markless
+    (pathname
+     (let ((*default-pathname-defaults* (make-pathname :name NIL :type NIL :defaults markless)))
+       (apply #'output (cl-markless:parse markless T) target args)))
+    (string
+     (apply #'output (cl-markless:parse markless T) target args))
+    (components:component
+     (output-component markless target (apply #'make-instance 'latex args)))))
 
 (defmacro define-tex-output (class &body body)
   (destructuring-bind (class . args) (if (listp class) class (list class))
