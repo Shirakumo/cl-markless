@@ -88,6 +88,7 @@
   (texfun! usepackage {glossaries})
   (texfun! usepackage {fontspec})
   (texfun! usepackage {graphicx})
+  (texfun! usepackage {xcolor})
   (texfun! usepackage {cancel})
   (texfun! usepackage {csquotes})
   (texfun! usepackage {floatflt})
@@ -234,7 +235,7 @@
       (call-next-method))))
 
 (define-tex-output components:code-block
-  (texfun! begin {minted} { (components:language component) })
+  (texfun! begin {minted} [breaklines] { (components:language component) })
   (write-string (components:text component) stream)
   (texfun! end {minted}))
 
