@@ -7,8 +7,8 @@
 (defparameter *command-line-spec*
   '((("input" #\i) :type string :optional T :documentation "The input file. If left out, the input is taken from standard in.")
     (("output" #\o) :type string :optional T :documentation "The output file. If left out, output is printed to standard out.")
-    (("format" #\f) :type string :optional T :documentation "The format of the output document. Defaults to \"plump\" (HTML).")
-    (("input-format") :type string :optional T :documentation "The format of the input document. Defaults to \"markless\".")
+    (("format" #\f) :type string :optional T :documentation "The format of the output document.")
+    (("input-format") :type string :optional T :documentation "The format of the input document.")
     (("directives" #\d) :type string :optional T :documentation "A comma-separated list of directives to use.")
     (("line-break-mode" #\l) :type string :optional T :documentation "Which line break mode to use, show (default) or hide.")
     (("extension" #\e) :type string :optional T :documentation "Load an extension.")
@@ -63,7 +63,20 @@
     (stream output)
     (null *standard-output*)))
 
-(defun cli (&key input output (format "plump") (input-format "markless") directives (line-break-mode "show") extension help version)
+(defun infer-format (file &optional (default "markless"))
+  (or (when (and file (pathname-type file))
+        (let ((type (pathname-type file)))
+          (cond ((string-equal "mess" type) "markless")
+                ((string-equal "md" type) "markdown")
+                ((string-equal "html" type) "plump")
+                ((string-equal "htm" type) "plump")
+                ((string-equal "epub" type) "epub")
+                ((string-equal "bb" type) "bbcode")
+                ((string-equal "tex" type) "latex")
+                ((string-equal "pdf" type) "latex"))))
+      default))
+
+(defun cli (&key input output (format (infer-format output "plump")) (input-format (infer-format input)) directives (line-break-mode "show") extension help version)
   (unwind-protect
        (handler-case
            (handler-bind ((warning (lambda (w)

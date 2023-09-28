@@ -22,7 +22,7 @@ cl-markless args...
   --version -v                    boolean  Print the version.
 
 Available output formats:
-  debug, epub, markdown, markless, plump
+  debug, epub, markdown, markless, plump, latex
 
 Available input formats:
   markless, markdown
