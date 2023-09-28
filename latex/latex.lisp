@@ -10,7 +10,7 @@
 
 (defclass latex (output-format)
   ((processor :initarg :processor :initform "lualatex" :accessor processor)
-   (documentclass :initarg :documentclass :initform "[a4page,12pt]{article}" :accessor documentclass)
+   (documentclass :initarg :documentclass :initform "[a4paper,12pt]{article}" :accessor documentclass)
    (preamble :initarg :preamble :initform NIL :accessor preamble)))
 
 (defmacro define-tex-output (class &body body)
@@ -105,7 +105,6 @@
 (define-tex-map components:italic textit)
 (define-tex-map components:bold textbf)
 (define-tex-map components:underline underline)
-(define-tex-map components:italic textit)
 (define-tex-map components:strikethrough cancel)
 (define-tex-map components:code texttt)
 (define-tex-map components:subtext textsubscript)
@@ -227,7 +226,7 @@
       (let ((width (find 'components:width-option (components:options component) :key #'type-of))
             (height (find 'components:height-option (components:options component) :key #'type-of))
             (target (maybe-cache (components:target component) format)))
-        (texfun! includegraphics 
+        (texfun! includegraphics
                  [ (format NIL "~@[width=~a~]," (when width (translate-unit width)))
                  (format NIL "~@[height=~a~]" (when height (translate-unit height))) ]
                  { (identity target) }))
@@ -239,4 +238,43 @@
   (write-string (components:text component) stream)
   (texfun! end {minted}))
 
-;; compound
+(define-tex-output components:compound
+  (loop for option in (components:options component)
+        do (output option))
+  (call-next-method)
+  (loop for option in (components:options component)
+        do (format stream "}")))
+
+(define-tex-output components:italic-option
+  (texfun textit {))
+
+(define-tex-output components:bold-option
+  (texfun textbf {))
+
+(define-tex-output components:underline-option
+  (texfun underline {))
+
+(define-tex-output components:strikethrough-option
+  (texfun cancel {))
+
+(define-tex-output components:spoiler-option
+  (texfun textcolor {black} {))
+
+(define-tex-output components:font-option
+  (format stream "{")
+  (texfun fontfamily (components:font-family component))
+  (texfun selectfont {}))
+
+(define-tex-output components:color-option
+  (texfun textcolor [RGB] { (components:red component) "," (components:green component) "," (components:blue component) } {))
+
+(define-tex-output components:size-option
+  (format stream "{")
+  (texfun fontsize { (translate-unit component) } { (translate-unit component) })
+  (texfun selectfont {}))
+
+(define-tex-output components:link-option
+  (texfun href { (components:target component) } {))
+
+(define-tex-output components:internal-link-option
+  (texfun hyperref [ (components:target component) ] {))
