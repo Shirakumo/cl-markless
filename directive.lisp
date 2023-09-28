@@ -310,7 +310,10 @@
                      (char= #\: (aref line end)))
           do (incf end))
     (let ((depth (- end cursor)))
-      (multiple-value-bind (language cursor) (read-delimited line (+ end 1) #\,)
+      (loop while (and (< end (length line))
+                       (char= #\Space (aref line end)))
+            do (incf end))
+      (multiple-value-bind (language cursor) (read-delimited line end #\,)
         (let ((options (split-options line (1+ cursor) #\Nul))
               (language (when (string/= "" language) language)))
           (commit _ (make-instance 'components:code-block :language language
