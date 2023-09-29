@@ -129,6 +129,8 @@
     (texfun! usepackage {csquotes}))
   (when (scan-type component 'components:code-block)
     (texfun! usepackage {minted}))
+  (when (scan-type component 'components:align)
+    (texfun! usepackage {ragged2e}))
   (format stream "~@[~a~]~&~%" (preamble format))
   (when (components:author component)(write-char #\{ stream)
         (texfun author { (components:author component) }))
@@ -274,6 +276,16 @@
   (texfun! begin {minted} [breaklines] { (components:language component) })
   (write-string (components:text component) stream)
   (texfun! end {minted}))
+
+(define-tex-output components:align
+  (let ((env (ecase (components:alignment component)
+               (:left "flushleft")
+               (:right "flushright")
+               (:center "center")
+               (:justify "justify"))))
+    (texfun! begin (identity env))
+    (call-next-method)
+    (texfun! end (identity env))))
 
 (define-tex-output components:compound
   (loop for option in (components:options component)

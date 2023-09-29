@@ -212,6 +212,11 @@
   (components:comment ())
   (components:embed ())
 
+  (components:align ()
+    (format s "[align=~(~a~)]" (components:alignment c))
+    (output (components:children c))
+    (format s "[/align]"))
+
   (components:raw ()
     (when (string-equal "bbcode" (components:target c))
       (write-string (components:text c) s)))
@@ -525,6 +530,16 @@
   (components:footnote ()
     (%op s "[~d] " (components:target c))
     (output (components:children c)))
+
+  (components:align ()
+    (let ((prefix (ecase (components:alignment c)
+                    (:left "|<")
+                    (:right "|>")
+                    (:center "><")
+                    (:justify "||"))))
+      (%op s "~a" prefix)
+      (let ((*prefixes* (list* "| " *prefixes*)))
+        (output (components:children c)))))
 
   (components:bold ()
     (%op s "**")
