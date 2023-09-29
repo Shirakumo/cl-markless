@@ -252,7 +252,7 @@
   (append-style target "font-weight:bold"))
 
 (defmethod output-component ((option components:italic-option) (target plump-dom:nesting-node) (format plump))
-  (append-style target "font-weight:italic"))
+  (append-style target "font-style:italic"))
 
 (defmethod output-component ((option components:underline-option) (target plump-dom:nesting-node) (format plump))
   (append-style target "text-decoration:underline"))
