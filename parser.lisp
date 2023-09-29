@@ -19,6 +19,10 @@
     comment
     embed
     footnote
+    left-align
+    right-align
+    center
+    justify
 
     bold
     italic

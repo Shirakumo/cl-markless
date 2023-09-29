@@ -88,6 +88,8 @@
    #:target
    #:direction
    #:footnote
+   #:align
+   #:alignment
    #:bold
    #:italic
    #:underline
@@ -202,6 +204,10 @@
    #:parse-embed-option-type
    #:embed-option-allowed-p
    #:footnote
+   #:left-align
+   #:right-align
+   #:center
+   #:justify
    #:bold
    #:italic
    #:underline

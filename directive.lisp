@@ -561,6 +561,58 @@
              (commit _ component parser)
              (+ 2 end))))))
 
+(defclass left-align (block-directive)
+  ())
+
+(defmethod prefix ((_ left-align))
+  #("|" "<"))
+
+(defmethod begin ((_ left-align) parser line cursor)
+  (commit _ (make-instance 'components:align :alignment :left) parser)
+  (+ 2 cursor))
+
+(defmethod consume-prefix ((_ left-align) component parser line cursor)
+  (match! "|<" line cursor))
+
+(defclass right-align (block-directive)
+  ())
+
+(defmethod prefix ((_ right-align))
+  #("|" ">"))
+r
+(defmethod begin ((_ right-align) parser line cursor)
+  (commit _ (make-instance 'components:align :alignment :right) parser)
+  (+ 2 cursor))
+
+(defmethod consume-prefix ((_ right-align) component parser line cursor)
+  (match! "|>" line cursor))
+
+(defclass center (block-directive)
+  ())
+
+(defmethod prefix ((_ center))
+  #(">" "<"))
+
+(defmethod begin ((_ center) parser line cursor)
+  (commit _ (make-instance 'components:align :alignment :center) parser)
+  (+ 2 cursor))
+
+(defmethod consume-prefix ((_ center) component parser line cursor)
+  (match! "><" line cursor))
+
+(defclass justify (block-directive)
+  ())
+
+(defmethod prefix ((_ justify))
+  #("|" "|"))
+
+(defmethod begin ((_ justify) parser line cursor)
+  (commit _ (make-instance 'components:align :alignment :justify) parser)
+  (+ 2 cursor))
+
+(defmethod consume-prefix ((_ justify) component parser line cursor)
+  (match! "||" line cursor))
+
 ;;;; Inline Directives
 
 (defclass bold (surrounding-inline-directive)

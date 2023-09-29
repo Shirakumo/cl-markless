@@ -230,6 +230,9 @@
 (define-printer footnote
   "(~d)" (target c))
 
+(defclass align (parent-component block-component)
+  ((alignment :initarg :alginment :initform (cl:error "ALIGNMENT required") :accessor alignment)))
+
 (defclass bold (inline-component parent-component)
   ())
 
