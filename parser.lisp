@@ -278,6 +278,8 @@
   (setf (components:label (components:target instruction) (root parser))
         (stack-entry-component (stack-top (stack parser)))))
 
+(defmethod evaluate-instruction ((instruction components:raw) (parser parser)))
+
 (defun read-full-line (stream)
   (declare (type stream stream))
   (declare (optimize speed))

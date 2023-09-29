@@ -212,6 +212,10 @@
   (components:comment ())
   (components:embed ())
 
+  (components:raw ()
+    (when (string-equal "bbcode" (components:target c))
+      (write-string (components:text c) s)))
+
   (components:image ()
     (cond ((find :img (supported-tags _))
            (format s "[img]~a[/img]" (components:target c)))
@@ -476,6 +480,9 @@
 
   (components:label ()
     (format s "~(~a~) ~a" (type-of c) (components:target c)))
+
+  (components:raw ()
+    (format s "~(~a~) ~a ~a" (type-of c) (components:target c) (components:text c)))
 
   (components:comment ()
     (%op s "; ")

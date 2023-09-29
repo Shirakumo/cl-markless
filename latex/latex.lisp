@@ -315,3 +315,8 @@
 
 (define-tex-output components:internal-link-option
   (texfun hyperref [ (components:target component) ] {))
+
+(defmethod output-component ((raw components:raw) (stream stream) (format latex))
+  (when (or (string-equal "latex" (components:target raw))
+            (string-equal "tex" (components:target raw)))
+    (write-string (components:text raw) stream)))

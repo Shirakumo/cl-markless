@@ -311,3 +311,7 @@
 
 (defmethod output-component ((dash components:em-dash) (target plump-dom:nesting-node) (format plump))
   (plump-dom:make-text-node target #.(string (code-char #x2014))))
+
+(defmethod output-component ((raw components:raw) (target plump-dom:nesting-node) (format plump))
+  (when (string-equal "html" (components:target raw))
+    (plump:parse (components:text raw) :root target)))
