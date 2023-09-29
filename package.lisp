@@ -57,6 +57,7 @@
    #:disable
    #:enable
    #:label
+   #:raw
    #:comment
    #:embed
    #:target

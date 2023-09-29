@@ -157,6 +157,9 @@
 (defclass label (instruction targeted)
   ())
 
+(defclass raw (instruction targeted)
+  ((text :initarg :text :initform (cl:error "TEXT required") :accessor text)))
+
 (defclass comment (text-component block-component)
   ())
 

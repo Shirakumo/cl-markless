@@ -41,7 +41,8 @@
     components:include
     components:disable
     components:enable
-    components:label))
+    components:label
+    components:raw))
 
 (defparameter *default-compound-options*
   '(components:bold-option
