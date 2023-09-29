@@ -8,6 +8,16 @@
 ~~
 (root (code-block ("a") ""))
 
+::a
+::
+~~
+(root (code-block ("a") ""))
+
+::   a
+::
+~~
+(root (code-block ("a") ""))
+
 :: a, b, c
 ::
 ~~
