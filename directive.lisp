@@ -177,7 +177,7 @@
 (defmethod begin ((_ blockquote) parser line cursor)
   (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
          (predecessor (when (< 0 (length children))
-                      (aref children (1- (length children)))))
+                        (aref children (1- (length children)))))
          (component (make-instance 'components:blockquote)))
     (when (typep predecessor 'components:blockquote-header)
       (setf (components:source component) predecessor))
@@ -196,7 +196,7 @@
 (defmethod begin ((_ unordered-list) parser line cursor)
   (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
          (container (when (< 0 (length children))
-                       (aref children (1- (length children)))))
+                      (aref children (1- (length children)))))
          (item (make-instance 'components:unordered-list-item)))
     (unless (typep container 'components:unordered-list)
       (setf container (make-instance 'components:unordered-list))
@@ -579,7 +579,7 @@
 
 (defmethod prefix ((_ right-align))
   #("|" ">"))
-r
+
 (defmethod begin ((_ right-align) parser line cursor)
   (commit _ (make-instance 'components:align :alignment :right) parser)
   (+ 2 cursor))
