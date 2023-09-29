@@ -93,6 +93,15 @@
   (list* 'caption (loop for child across (cl-markless::condense-children (components:children _))
                         collect (to-ast child))))
 
+(defmethod to-ast ((_ components:align))
+  (list* (ecase (components:alignment _)
+           (:left 'left-align)
+           (:right 'right-align)
+           (:center 'center)
+           (:justify 'justify))
+         (loop for child across (cl-markless::condense-children (components:children _))
+               collect (to-ast child))))
+
 (defmethod to-ast ((_ components:footnote))
   (list* (reloc-symbol (type-of _))
          (list (components:target _))
