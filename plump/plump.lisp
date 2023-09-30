@@ -211,7 +211,9 @@
       (plump-dom:make-text-node link (components:target component)))))
 
 (define-plump-output align "span"
-  (append-style node (format NIL "text-align:~(~a~)" (components:alignment component))))
+  (append-style node (format NIL "text-align:~(~a~)" (components:alignment component)))
+  (loop for child across (components:children component)
+        do (output child)))
 
 (define-plump-output bold "strong"
   (loop for child across (components:children component)
