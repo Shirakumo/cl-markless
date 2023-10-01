@@ -48,3 +48,20 @@
 ~ a
 ~~
 (root (blockquote (paragraph "b")) (blockquote-header "a"))
+
+~ a| b
+~~
+(root (blockquote-header "a") (blockquote (paragraph "b")))
+
+~ a|| b
+~~
+(root (blockquote-header "a|") (blockquote (paragraph "b")))
+
+~ a**b**| c
+~~
+(root (blockquote-header "a" (bold "b")) (blockquote (paragraph "c")))
+
+~ a**b**c| d
+~~
+(root (blockquote-header "a" (bold "b") "c") (blockquote (paragraph "d")))
+

@@ -157,6 +157,8 @@
 (defmethod prefix ((_ blockquote-header))
   #("~" " "))
 
+(defmethod consume-end ((_ blockquote-header) component parser line cursor) cursor)
+
 (defmethod begin ((_ blockquote-header) parser line cursor)
   (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
          (predecessor (when (< 0 (length children))
@@ -166,7 +168,22 @@
                (null (components:source predecessor)))
       (setf (components:source predecessor) component))
     (commit _ component parser)
-    (+ 2 cursor)))
+    (incf cursor 2)
+    ;; Special handling for blockquote inline in header
+    (let ((pos (search "| " line :start2 cursor))
+          (top (fill-pointer (stack parser))))
+      (when pos
+        (loop (setf cursor (read-inline parser line cursor #\|))
+              (cond ((<= pos cursor)
+                     (loop until (< (fill-pointer (stack parser)) top)
+                           do (stack-pop (stack parser)))
+                     (setf cursor pos)
+                     (return))
+                    ((char= #\| (char line cursor))
+                     (incf (fill-pointer (stack parser)))
+                     (vector-push-extend "|" (components:children (stack-entry-component (stack-top (stack parser)))))
+                     (incf cursor))))))
+    cursor))
 
 (defclass blockquote (block-directive)
   ())
