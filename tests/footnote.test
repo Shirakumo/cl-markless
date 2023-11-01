@@ -31,3 +31,12 @@
     b
 ~~
 (root (footnote (1) "a") (paragraph "b"))
+
+[1x
+~~
+(root (paragraph "[1x"))
+
+a
+[1x
+~~
+(root (paragraph "a" (newline) "[1x"))

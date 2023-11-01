@@ -158,10 +158,15 @@
   (let* ((component (stack-entry-component (stack-top (stack parser))))
          (children (components:children component))
          (sibling (when (< 0 (length children))
-                      (aref children (1- (length children))))))
-    (unless (or (typep sibling 'components:paragraph)
-                (typep component 'components:paragraph))
-      (commit (directive 'paragraph parser) (make-instance 'components:paragraph) parser))
+                    (aref children (1- (length children))))))
+    (cond ((typep component 'components:paragraph))
+          ((typep sibling 'components:paragraph)
+           ;; Re-push sibling
+           (vector-pop children)
+           (vector-push-extend (make-instance 'components:newline) (components:children sibling))
+           (commit (directive 'paragraph parser) sibling parser))
+          (T
+           (commit (directive 'paragraph parser) (make-instance 'components:paragraph) parser)))
     (read-inline parser line cursor #\Nul)))
 
 (defun class-prototype (class)
