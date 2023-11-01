@@ -765,19 +765,20 @@
   ())
 
 (defmethod prefix ((_ compound))
-  #("\""))
+  #("'" "'"))
 
 (defmethod begin ((_ compound) parser line cursor)
   (commit _ (make-instance 'components:compound) parser)
-  (+ 1 cursor))
+  (+ 2 cursor))
 
 (defmethod invoke ((_ compound) component parser line cursor)
-  (read-inline parser line cursor #\"))
+  (read-inline parser line cursor #\'))
 
 (defmethod consume-end ((_ compound) component parser line cursor)
-  (when (and (< (+ 2 cursor) (length line))
-             (char= #\( (aref line (+ 1 cursor))))
-    (incf cursor 2)
+  (when (and (< (+ 3 cursor) (length line))
+             (char= #\' (aref line (+ 1 cursor)))
+             (char= #\( (aref line (+ 2 cursor))))
+    (incf cursor 3)
     (setf (components:options component)
           (loop for (string next continue) = (next-option line cursor #\))
                 for option = (when string (parse-compound-option parser cursor string))
@@ -787,7 +788,7 @@
     cursor))
 
 (defmethod end :after ((_ compound) component parser)
-  (vector-push-front "\"" (components:children component)))
+  (vector-push-front "''" (components:children component)))
 
 (defun parse-compound-option (parser cursor option)
   (or (gethash option *color-table*)
@@ -838,6 +839,30 @@
     (if (starts-with "#" target)
         (make-instance 'components:internal-link-option :target (subseq target 1))
         (make-instance (class-of proto) :target target))))
+
+(defclass deprecated-compound (compound)
+  ())
+
+(defmethod prefix ((_ deprecated-compound))
+  #("\""))
+
+(defmethod invoke ((_ deprecated-compound) component parser line cursor)
+  (read-inline parser line cursor #\"))
+
+(defmethod end :after ((_ deprecated-compound) component parser)
+  (setf (aref (components:children component) 0) "\""))
+
+(defmethod consume-end ((_ deprecated-compound) component parser line cursor)
+  (when (and (< (+ 2 cursor) (length line))
+             (char= #\( (aref line (+ 1 cursor))))
+    (incf cursor 2)
+    (setf (components:options component)
+          (loop for (string next continue) = (next-option line cursor #\))
+                for option = (when string (parse-compound-option parser cursor string))
+                when option collect option
+                do (setf cursor next)
+                while continue))
+    cursor))
 
 (defclass footnote-reference (inline-directive)
   ())

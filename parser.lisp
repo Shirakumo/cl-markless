@@ -33,6 +33,7 @@
     supertext
     subtext
     compound
+    deprecated-compound
     footnote-reference
     url
     newline))

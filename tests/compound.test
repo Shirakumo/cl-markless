@@ -1,108 +1,116 @@
-""()
+''''()
 ~~
 (root (paragraph (compound ())))
 
-"a"()
+''a''()
 ~~
 (root (paragraph (compound () "a")))
 
-"a"(bold)
+''a''(bold)
 ~~
 (root (paragraph (compound ((bold)) "a")))
 
-"a"(bold, italic, underline, strikethrough, spoiler)
+''a''(bold, italic, underline, strikethrough, spoiler)
 ~~
 (root (paragraph (compound ((bold) (italic) (underline) (strikethrough) (spoiler)) "a")))
 
-"a"(font Comic Sans MS)
+''a''(font Comic Sans MS)
 ~~
 (root (paragraph (compound ((font "Comic Sans MS")) "a")))
 
-"a"(color #FFFFFF)
+''a''(color #FFFFFF)
 ~~
 (root (paragraph (compound ((color 255 255 255)) "a")))
 
-"a"(color 0 0 0)
+''a''(color 0 0 0)
 ~~
 (root (paragraph (compound ((color 0 0 0)) "a")))
 
-"a"(size 0.5em)
+''a''(size 0.5em)
 ~~
 (root (paragraph (compound ((size 0.5 em)) "a")))
 
-"a"(size 10pt)
+''a''(size 10pt)
 ~~
 (root (paragraph (compound ((size 10 pt)) "a")))
 
-"a"(normal)
+''a''(normal)
 ~~
 (root (paragraph (compound ((size 1 em)) "a")))
 
-"a"(#a)
+''a''(#a)
 ~~
 (root (paragraph (compound ((link "a")) "a")))
 
-"a"(http://example.com)
+''a''(http://example.com)
 ~~
 (root (paragraph (compound ((link "http://example.com")) "a")))
 
-"a"(link a)
+''a''(link a)
 ~~
 (root (paragraph (compound ((link "a")) "a")))
 
-a"b"()c
+a''b''()c
 ~~
 (root (paragraph "a" (compound () "b") "c"))
 
-"a
-b"()
+''a
+b''()
 ~~
 (root (paragraph (compound () "a" (newline) "b")))
 
-"a"b"(bold)c"(italic)
+''a''b''(bold)c''(italic)
 ~~
 (root (paragraph (compound ((italic)) "a" (compound ((bold)) "b") "c")))
 
-"a"
+''a''
 ~~
-(root (paragraph "\"a\""))
+(root (paragraph "''a''"))
 
-"a" ()
+'a''()
 ~~
-(root (paragraph "\"a\" ()"))
+(root (paragraph "'a''()"))
 
-\"a"()
+''a'()
 ~~
-(root (paragraph "\"a\"()"))
+(root (paragraph "''a'()"))
 
-"a\"()
+''a'' ()
 ~~
-(root (paragraph "\"a\"()"))
+(root (paragraph "''a'' ()"))
 
-"a"\()
+\''a''()
 ~~
-(root (paragraph "\"a\"()"))
+(root (paragraph "''a\''()"))
 
-"a"(unknown)
+''a\''()
+~~
+(root (paragraph "''a\''()"))
+
+''a''\()
+~~
+(root (paragraph "''a\''()"))
+
+''a''(unknown)
 ~~
 (root (paragraph (compound () "a")))
 
-"a"(bold, unknown, italic)
+''a''(bold, unknown, italic)
 ~~
 (root (paragraph (compound ((bold) (italic)) "a")))
 
-"a"(size 1xx)
+''a''(size 1xx)
 ~~
 (root (paragraph (compound () "a")))
 
-//"a"//
+//''a''//
 ~~
-(root (paragraph (italic "\"a\"")))
+(root (paragraph (italic "''a''")))
 
-//a"b//c//d"()e//
+//a''b//c//d''()e//
 ~~
 (root (paragraph (italic "a" (compound () "b" (italic "c") "d") "e")))
 
-//a"b//c//d"e//
+//a''b//c//d''e//
 ~~
-(root (paragraph (italic "a\"b" (italic "c") "d\"e")))
+(root (paragraph (italic "a''b" (italic "c") "d''e")))

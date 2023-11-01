@@ -578,9 +578,9 @@
     (write-string (components:target c) s))
 
   (components:compound ()
-    (%op s "\"")
+    (%op s "''")
     (output (components:children c))
-    (%op s "\"(")
+    (%op s "''(")
     (when (components:options c)
       (output (first (components:options c)))
       (loop for option in (rest (components:options c))
