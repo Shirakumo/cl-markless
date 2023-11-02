@@ -517,15 +517,33 @@
   (components:label-option ()
     (%op s "label ~a" (components:target c)))
 
+  (components:caption-option ()
+    (%op s "caption ")
+    (output (components:children c)))
+
+  (components:options-option ()
+    (%op s "options~(~{ ~a~}~)" (components:options c)))
+
+  (components:language-option ()
+    (%op s "language ~a" (components:language c)))
+
+  (components:start-option ()
+    (%op s "start ~a" (components:start c)))
+
+  (components:end-option ()
+    (%op s "end ~:[~;+~]~a" (components:offset-p c) (components:end c)))
+
+  (components:encoding-option ()
+    (%op s "encoding ~a" (components:encoding c)))
+
+  (components:embed-link-option ()
+    (%op s "link ~a" (components:target c)))
+
   (components:bold-option () (%op s "bold"))
   (components:italic-option () (%op s "italic"))
   (components:underline-option () (%op s "underline"))
   (components:strikethrough-option () (%op s "strikethrough"))
   (components:spoiler-option () (%op s "spoiler"))
-  
-  (components:caption-option ()
-    (%op s "caption ")
-    (output (components:children c)))
 
   (components:footnote ()
     (%op s "[~d] " (components:target c))
