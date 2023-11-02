@@ -1,6 +1,7 @@
 (defpackage #:cl-markless-latex
   (:nicknames #:org.shirakumo.markless.latex)
   (:use #:cl #:org.shirakumo.markless)
+  (:shadow #:output)
   (:local-nicknames
    (#:components #:org.shirakumo.markless.components))
   (:shadowing-import-from #:org.shirakumo.markless #:debug)
@@ -173,7 +174,7 @@
   (texfun textquote [)
   (when (components:source component)
     (loop for child across (components:children (components:source component))
-          do (output child)))
+          do (cl-markless:output child)))
   (format stream "]{~%")
   (call-next-method)
   (format stream "~&}~%"))
@@ -217,7 +218,7 @@
           do (typecase option
                (components:caption-option
                 (texfun caption {)
-                (output option)
+                (cl-markless:output option)
                 (format stream "}"))
                (components:label-option
                 (texfun! label { (components:target option) }))))
@@ -289,7 +290,7 @@
 
 (define-tex-output components:compound
   (loop for option in (components:options component)
-        do (output option))
+        do (cl-markless:output option))
   (call-next-method)
   (loop for option in (components:options component)
         do (format stream "}")))
