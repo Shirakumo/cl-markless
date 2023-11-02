@@ -101,16 +101,15 @@
                           (directives (parse-directives directives))
                           (input (parse-input input))
                           (output (parse-output output)))
-                      (let ((parser (make-instance 'cl-markless:parser
-                                                   :line-break-mode line-break-mode
-                                                   :directives directives))
-                            (parse-function (parse-input-format input-format)))
+                      (let* ((parser (make-instance 'cl-markless:parser
+                                                    :line-break-mode line-break-mode
+                                                    :directives directives))
+                             (parse-function (parse-input-format input-format))
+                             (input (funcall parse-function input parser)))
                         (when (and (pathnamep output)
                                    (probe-file output))
                           (delete-file output))
-                        (cl-markless:output (funcall parse-function input parser)
-                                            :format format
-                                            :target output))))))
+                        (cl-markless:output input :format format :target output))))))
          (error (e)
            (format *error-output* "~&[ERROR] ~a~%" e)
            (uiop:quit 2)))
