@@ -506,10 +506,10 @@
     (format s "~(~a~)" (type-of c)))
 
   (components:width-option ()
-    (%op s "width ~a~a" (components:size c) (components:unit c)))
+    (%op s "width ~a~(~a~)" (components:size c) (components:unit c)))
 
   (components:height-option ()
-    (%op s "height ~a~a" (components:size c) (components:unit c)))
+    (%op s "height ~a~(~a~)" (components:size c) (components:unit c)))
 
   (components:float-option ()
     (%op s "float ~(~a~)" (components:direction c)))
