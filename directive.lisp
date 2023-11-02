@@ -846,6 +846,10 @@
 (defmethod prefix ((_ deprecated-compound))
   #("\""))
 
+(defmethod begin ((_ compound) parser line cursor)
+  (commit _ (make-instance 'components:compound) parser)
+  (+ 1 cursor))
+
 (defmethod invoke ((_ deprecated-compound) component parser line cursor)
   (read-inline parser line cursor #\"))
 
