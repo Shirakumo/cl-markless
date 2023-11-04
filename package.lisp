@@ -73,6 +73,7 @@
    #:float-option
    #:label-option
    #:caption-option
+   #:description-option
    #:language-option
    #:language
    #:options-option

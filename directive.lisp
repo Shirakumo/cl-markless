@@ -507,6 +507,9 @@
 (defmethod parse-embed-option-type ((type components:caption-option) option)
   (make-instance (class-of type)))
 
+(defmethod parse-embed-option-type ((type components:description-option) option)
+  (make-instance (class-of type) :text (subseq option (length "description "))))
+
 (defmethod parse-embed-option-type ((type components:width-option) option)
   (multiple-value-bind (size unit) (parse-unit option :start (length "width "))
     (when unit
@@ -543,6 +546,7 @@
 (defmethod embed-option-allowed-p ((option components:float-option) (embed components:embed)) T)
 (defmethod embed-option-allowed-p ((option components:label-option) (embed components:embed)) T)
 (defmethod embed-option-allowed-p ((option components:caption-option) (embed components:embed)) T)
+(defmethod embed-option-allowed-p ((option components:description-option) (embed components:embed)) T)
 (defmethod embed-option-allowed-p ((option components:autoplay-option) (embed components:video)) T)
 (defmethod embed-option-allowed-p ((option components:autoplay-option) (embed components:audio)) T)
 (defmethod embed-option-allowed-p ((option components:loop-option) (embed components:video)) T)

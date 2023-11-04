@@ -165,6 +165,8 @@
              (components:label-option
               (setf (plump-dom:attribute (plump-dom:parent element) "id")
                     (string-downcase (components:target option))))
+             (components:description-option
+              (setf (plump-dom:attribute element "alt") (components:text option)))
              (components:caption-option
               (let ((caption (plump-dom:make-element element "figcaption")))
                 (output-component option caption format))))))

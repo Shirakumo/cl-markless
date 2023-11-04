@@ -205,6 +205,9 @@
 (defclass caption-option (embed-option parent-component)
   ())
 
+(defclass description-option (embed-option text-component)
+  ())
+
 (defclass options-option (embed-option)
   ((options :initarg :options :initform () :accessor options)))
 
