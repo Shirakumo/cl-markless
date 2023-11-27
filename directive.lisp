@@ -850,7 +850,7 @@
 (defmethod prefix ((_ deprecated-compound))
   #("\""))
 
-(defmethod begin ((_ compound) parser line cursor)
+(defmethod begin ((_ deprecated-compound) parser line cursor)
   (commit _ (make-instance 'components:compound) parser)
   (+ 1 cursor))
 
