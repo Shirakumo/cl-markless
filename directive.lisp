@@ -195,6 +195,9 @@
              do (incf cursor))
        (match! "| " line cursor)))
 
+(defmethod consume-end ((_ blockquote-header) component parser line cursor)
+  cursor)
+
 (defclass blockquote (block-directive)
   ())
 
