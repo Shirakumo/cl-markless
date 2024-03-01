@@ -88,6 +88,8 @@
 (define-plump-output blockquote "blockquote"
   (loop for child across (components:children component)
         do (output child))
+  (when (< 0 (components:indentation component))
+    (setf (attribute "class") "inline"))
   (when (components:source component)
     (let ((source (plump-dom:make-element node "cite")))
       (loop for child across (components:children (components:source component))

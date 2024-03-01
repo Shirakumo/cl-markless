@@ -151,16 +151,15 @@
             (read-inline parser line cursor #\Nul)
             (begin inner parser line cursor)))))
 
-(defclass blockquote-header (singular-line-directive)
+(defclass blockquote-header (block-directive)
   ())
 
 (defmethod prefix ((_ blockquote-header))
   #("~" " "))
 
-(defmethod consume-end ((_ blockquote-header) component parser line cursor) cursor)
-
 (defmethod begin ((_ blockquote-header) parser line cursor)
-  (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
+  (let* ((start cursor)
+         (children (components:children (stack-entry-component (stack-top (stack parser)))))
          (predecessor (when (< 0 (length children))
                         (aref children (1- (length children)))))
          (component (make-instance 'components:blockquote-header)))
@@ -173,17 +172,28 @@
     (let ((pos (search "| " line :start2 cursor))
           (top (fill-pointer (stack parser))))
       (when pos
-        (loop (setf cursor (read-inline parser line cursor #\|))
-              (cond ((<= pos cursor)
-                     (loop until (< (fill-pointer (stack parser)) top)
-                           do (stack-pop (stack parser)))
-                     (setf cursor pos)
-                     (return))
-                    ((char= #\| (char line cursor))
-                     (incf (fill-pointer (stack parser)))
-                     (vector-push-extend "|" (components:children (stack-entry-component (stack-top (stack parser)))))
-                     (incf cursor))))))
+        (let ((component (make-instance 'components:blockquote :source component :indentation (- pos start))))
+          (loop (setf cursor (read-inline parser line cursor #\|))
+                (cond ((<= pos cursor)
+                       (loop until (< (fill-pointer (stack parser)) top)
+                             do (stack-pop (stack parser)))
+                       (setf cursor pos)
+                       (return))
+                      ((char= #\| (char line cursor))
+                       (incf (fill-pointer (stack parser)))
+                       (vector-push-extend "|" (components:children (stack-entry-component (stack-top (stack parser)))))
+                       (incf cursor))))
+          ;; Eagerly create our blockquote to set the indentation
+          (commit _ component parser)
+          (incf cursor 2))))
     cursor))
+
+(defmethod consume-prefix ((_ blockquote-header) component parser line cursor)
+  (and (loop repeat (components:indentation component)
+             always (and (< cursor (length line))
+                         (char= #\  (aref line cursor)))
+             do (incf cursor))
+       (match! "| " line cursor)))
 
 (defclass blockquote (block-directive)
   ())
@@ -210,7 +220,7 @@
 (defmethod prefix ((_ unordered-list))
   #("-" " "))
 
-(defmethod begin ((_ unordered-list) parser line cursor)
+(defmethod begin ((_ unordered-list) parser line cursor)9
   (let* ((children (components:children (stack-entry-component (stack-top (stack parser)))))
          (container (when (< 0 (length children))
                       (aref children (1- (length children)))))

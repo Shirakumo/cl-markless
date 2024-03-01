@@ -70,7 +70,8 @@
   ())
 
 (defclass blockquote (parent-component block-component)
-  ((source :initarg :source :initform NIL :accessor source)))
+  ((source :initarg :source :initform NIL :accessor source)
+   (indentation :initarg :indentation :initform 0 :accessor indentation)))
 
 (defclass list (parent-component)
   ())
