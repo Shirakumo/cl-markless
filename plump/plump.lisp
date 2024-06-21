@@ -157,7 +157,7 @@
               (append-style element "width:~d~(~a~)"
                             (components:size option)
                             (components:unit option))
-              (append-style element "object-fit:contain"))
+              (append-style element "object-fit:contain;object-position:center center;margin:auto"))
              (components:height-option
               (append-style element "height:~d~(~a~)"
                             (components:size option)
@@ -176,18 +176,18 @@
 (defmethod output-component :around ((component components:embed) (target plump-dom:nesting-node) (format plump))
   (let ((figure (plump-dom:make-element target "figure"))
         (options (remove NIL (list (find 'components:float-option (components:options component) :key #'type-of)
-                                   (find 'components:caption-option (components:options component) :key #'type-of))))
-        (width (find 'components:width-option (components:options component) :key #'type-of)))
+                                   (find 'components:caption-option (components:options component) :key #'type-of)
+                                   (find 'components:width-option (components:options component) :key #'type-of)))))
     (setf (components:options component) (set-difference (components:options component) options))
     (call-next-method component figure format)
-    (set-plump-embed-options figure (list* width options) format)))
+    (set-plump-embed-options figure options format)))
 
 (define-plump-output image "a"
   (let ((img (plump-dom:make-element node "img")))
     (set-plump-embed-options img (components:options component) format)
     (setf (plump-dom:attribute img "alt") (components:target component))
     (setf (plump-dom:attribute img "src") (components:target component))
-    (append-style img "display:block"))
+    (append-style img "display:block;"))
   (let ((link (find 'components:embed-link-option (components:options component) :key #'type-of)))
     (setf (attribute "href") (if link
                                  (components:target link)
