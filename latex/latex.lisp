@@ -13,7 +13,7 @@
 (defclass latex (output-format)
   ((processor :initarg :processor :initform "lualatex" :accessor processor)
    (documentclass :initarg :documentclass :initform "[a4paper,12pt]{article}" :accessor documentclass)
-   (preamble :initarg :preamble :initform NIL :accessor preamble)
+   (preamble :initarg :preamble :initarg :styling :initform NIL :accessor preamble)
    (verbose :initarg :verbose :initform NIL :accessor verbose)))
 
 (defun output (markless target &rest args)
@@ -134,7 +134,13 @@
     (texfun! usepackage {minted}))
   (when (scan-type component 'components:align)
     (texfun! usepackage {ragged2e}))
-  (format stream "~@[~a~]~&~%" (preamble format))
+  (etypecase (preamble format)
+    (pathname
+     (with-open-file (preamble (preamble format))
+       (uiop:copy-stream-to-stream preamble stream)))
+    (string
+     (write-string (preamble format) stream)))
+  (format stream "~&~%")
   (when (components:author component)(write-char #\{ stream)
         (texfun author { (components:author component) }))
   (texfun! begin {document})

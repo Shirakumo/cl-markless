@@ -12,6 +12,7 @@
     (("directives" #\d) :type string :optional T :documentation "A comma-separated list of directives to use.")
     (("line-break-mode" #\l) :type string :optional T :documentation "Which line break mode to use, show (default) or hide.")
     (("extension" #\e) :type string :optional T :documentation "Load an extension.")
+    (("styling" #\s) :type string :optional T :documentation "Path to a file with extra styling information. Depends on the output format.")
     (("help" #\h #\?) :type boolean :optional T :documentation "Show a brief help about the tool.")
     (("version" #\v) :type boolean :optional T :documentation "Print the version.")))
 
@@ -76,7 +77,7 @@
                 ((string-equal "pdf" type) "latex"))))
       default))
 
-(defun cli (&key input output (format (infer-format output "plump")) (input-format (infer-format input)) directives (line-break-mode "show") extension help version)
+(defun cli (&key input output styling (format (infer-format output "plump")) (input-format (infer-format input)) directives (line-break-mode "show") extension help version)
   (unwind-protect
        (handler-case
            (handler-bind ((warning (lambda (w)
@@ -97,7 +98,9 @@
                             (*package* #.(find-package "CL-USER")))
                         (load extension)))
                     (let ((line-break-mode (parse-line-break-mode line-break-mode))
-                          (format (parse-format format))
+                          (format (make-instance (parse-format format)
+                                                 :styling (when styling (uiop:parse-native-namestring styling))
+                                                 :allow-other-keys T))
                           (directives (parse-directives directives))
                           (input (parse-input input))
                           (output (parse-output output)))

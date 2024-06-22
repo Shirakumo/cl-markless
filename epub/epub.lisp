@@ -7,7 +7,7 @@
    (date :initarg :date :initform NIL :accessor date)
    (title :initarg :title :initform NIL :accessor title)
    (cover :initarg :cover :initform NIL :accessor cover)
-   (stylesheet :initarg :stylesheet :initform NIL :accessor stylesheet)
+   (stylesheet :initarg :stylesheet :initarg :styling :initform NIL :accessor stylesheet)
    (embeds :initarg :embeds :initform NIL :accessor embeds)
    (if-exists :initarg :if-exists :initform :error :accessor if-exists)))
 

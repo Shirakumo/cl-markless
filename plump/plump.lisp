@@ -17,7 +17,7 @@
                 format args)))
 
 (defclass plump (output-format)
-  ((css :initform NIL :initarg :css :accessor css)))
+  ((css :initform NIL :initarg :css :initarg :styling :accessor css)))
 
 (defmethod output-component (component (target stream) (format plump))
   (let ((dom (output-component component (make-instance 'plump-dom:root) format)))
@@ -52,7 +52,11 @@
   (when (components:language component)
     (setf (attribute "lang") (components:language component)))
   (when (css format)
-    (plump-dom:make-fulltext-element node "style" :text (css format)))
+    (let ((css (etypecase (css format)
+                 (pathname (with-open-file (stream (css format))
+                             (read-sequence (make-string (file-length stream)) stream)))
+                 (string (css format)))))
+      (plump-dom:make-fulltext-element node "style" :text css)))
   (loop for child across (components:children component)
         do (output child))
   (let ((footnotes (sort (loop for child across (components:children component)
