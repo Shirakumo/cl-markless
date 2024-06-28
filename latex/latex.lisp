@@ -135,6 +135,7 @@
   (when (scan-type component 'components:align)
     (texfun! usepackage {ragged2e}))
   (etypecase (preamble format)
+    (null)
     (pathname
      (with-open-file (preamble (preamble format))
        (uiop:copy-stream-to-stream preamble stream)))
