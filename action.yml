@@ -12,12 +12,12 @@ inputs:
     required: true
   format:
     description: 'The format of the output file'
-    defalut: 'plump'
+    default: 'plump'
   input-format:
     description: 'The format of the input file'
     default: 'markless'
   directives:
-    description: 'A comma-separated list of directives to use.'
+    description: 'A comma-separated list of directives to use'
     default: 'paragraph, blockquote-header, blockquote, unordered-list, ordered-list, header, horizontal-rule, code-block, instruction, comment, embed, footnote, left-align, right-align, center, justify, bold, italic, underline, strikethrough, code, dash, supertext, subtext, compound, deprecated-compound, footnote-reference, url, newline'
   line-break-mode:
     description: 'Which line break mode to use'

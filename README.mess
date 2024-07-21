@@ -124,3 +124,26 @@ Additional output formats are provided by external systems.
 
 ## Standalone Executable
 You can create a standalone executable of cl-markless with a command line interface. See "cl-markless-standalone"(link cl-markless-standalone/index.html).
+
+## Using it with Github Actions
+You can compile Markless files easily in your Github Actions workflows. Simply use this repository as a step:
+
+::yaml
+- name: Compile Markless
+  uses: Shirakumo/cl-markless@latest
+  with:
+    input: my-file.mess
+    output: my-file.html
+::
+
+The available options to the action are the same as for the standalone executable:
+
+- ``input`` The source file to compile
+- ``output`` The target file to output to
+- ``format`` The format of the output file
+- ``input-format`` The format of the input file
+- ``directives`` A comma-separated list of directives to use
+- ``line-break-mod`` Which line break mode to use
+- ``extension`` Path to an extension to load
+- ``styling`` Path to a styling file to use
+  
