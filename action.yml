@@ -1,5 +1,8 @@
 name: 'Compile Markless'
 description: 'Compile a Markless file'
+branding:
+  color: blue
+  icon: file-text
 inputs:
   input:
     description: 'The source file to compile'
