@@ -42,7 +42,9 @@
   (if (and directives (string/= "" directives))
       (let ((parts (cl-markless:split-string directives #\,)))
         (loop for name in parts
-              for symb = (find-symbol (cl-markless:to-readtable-case name #.(readtable-case *readtable*))
+              for symb = (find-symbol (cl-markless:to-readtable-case
+                                       (string-trim " " name)
+                                       #.(readtable-case *readtable*))
                                       '#:org.shirakumo.markless)
               if (and symb (subtypep symb 'cl-markless:directive))
               collect symb
@@ -88,18 +90,21 @@
                     (format *error-output* "~&~%Available output formats:~%  ~{~a~^, ~}~%"
                             (mapcar #'string-downcase (cl-markless:list-output-formats)))
                     (format *error-output* "~&~%Available input formats:~%  ~{~a~^, ~}~%"
-                            (mapcar #'string-downcase '(:markless :markdown))))
+                            (mapcar #'string-downcase '(:markless :markdown)))
+                    (format *error-output* "~&~%Available directives:~%  ~{~a~^, ~}~%"
+                            (mapcar #'string-downcase cl-markless:*default-directives*)))
                    (version
                     (format *error-output* "cl-markless v~a~%" (asdf:component-version (asdf:find-system :cl-markless))))
                    (T
-                    (when extension
+                    (when (and extension (string/= "" extension))
                       (let ((*standard-output* *error-output*)
                             (*terminal-io* *error-output*)
                             (*package* #.(find-package "CL-USER")))
                         (load extension)))
                     (let ((line-break-mode (parse-line-break-mode line-break-mode))
                           (format (make-instance (parse-format format)
-                                                 :styling (when styling (uiop:parse-native-namestring styling))
+                                                 :styling (when (and styling (string/= "" styling))
+                                                            (uiop:parse-native-namestring styling))
                                                  :allow-other-keys T))
                           (directives (parse-directives directives))
                           (input (parse-input input))
