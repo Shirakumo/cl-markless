@@ -14,5 +14,7 @@
                :cl-markless-latex
                :command-line-arguments)
   :build-operation "program-op"
-  :build-pathname "cl-markless"
+  :build-pathname #+win32 "cl-markless.exe"
+                  #+linux "cl-markless.run"
+                  #-(or win32 linux) "cl-markless.o"
   :entry-point "cl-markless-standalone:start")
