@@ -128,7 +128,7 @@ You can create a standalone executable of cl-markless with a command line interf
 ## Using it with Github Actions
 You can compile Markless files easily in your Github Actions workflows. Simply use this repository as a step:
 
-::yaml
+:: yaml
 - name: Compile Markless
   uses: Shirakumo/cl-markless@v1.2.2
   with:
@@ -149,7 +149,7 @@ The available options to the action are the same as for the standalone executabl
   
 For example, to compile ``README.mess`` and publish the result as ``index.html`` to gh-pages:
 
-::yaml
+:: yaml
 name: publish README
 on: push
 jobs:
