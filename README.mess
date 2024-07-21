@@ -158,7 +158,7 @@ jobs:
     steps:
       - run: mkdir -p /tmp/gh-pages
       - uses: actions/checkout@v1
-      - uses: Shirakumo/cl-markless@v1.2.2
+      - uses: Shirakumo/cl-markless@v1.2.1
         with:
           input: README.mess
           output: /tmp/gh-pages/index.html
@@ -179,3 +179,5 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 ::
+
+Make sure that you have Github Pages configured to deploy via Actions in the settings of your repository, or the deploy step will fail.
