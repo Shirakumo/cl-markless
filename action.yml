@@ -1,0 +1,61 @@
+name: 'Compile Markless'
+description: 'Compile a Markless file'
+inputs:
+  input:
+    description: 'The source file to compile'
+    required: true
+  output:
+    description: 'The target file to output to'
+    required: true
+  format:
+    description: 'The format of the output file'
+    defalut: 'plump'
+  input-format:
+    description: 'The format of the input file'
+    default: 'markless'
+  directives:
+    description: 'A comma-separated list of directives to use.'
+    default: 'paragraph, blockquote-header, blockquote, unordered-list, ordered-list, header, horizontal-rule, code-block, instruction, comment, embed, footnote, left-align, right-align, center, justify, bold, italic, underline, strikethrough, code, dash, supertext, subtext, compound, deprecated-compound, footnote-reference, url, newline'
+  line-break-mode:
+    description: 'Which line break mode to use'
+    default: 'show'
+  extension:
+    description: 'Path to an extension to load'
+  styling:
+    description: 'Path to a styling file to use'
+  
+outputs:
+  output:
+    description: 'The output file that was compiled'
+    value: ${{ inputs.output }}
+runs:
+  using: "composite"
+  steps:
+    - name: Install the corresponding cl-markless release
+      shell: bash
+      run: |
+        curl -L -o ~/cl-markless https://github.com/Shirakumo/cl-markless/releases/download/$REF/cl-markless.$EXT
+      env:
+        REF: ${{ github.ref_name }}
+        EXT: ${{ runner.os == 'Windows' && 'exe' || (runner.os == 'Linux' && 'run' || 'o') }}
+    - name: Run cl-markless
+      shell: bash
+      run: |
+        ~/cl-markless \
+          --input "$INPUT" \
+          --output "$OUTPUT" \
+          --format "$FORMAT" \
+          --input-format "$INPUT_FORMAT" \
+          --directives "$DIRECTIVES" \
+          --line-break-mode "$LINE_BREAK_MODE" \
+          --extension "$EXTENSION" \
+          --styling "$STYLING"
+      env:
+        INPUT: ${{ inputs.input }}
+        OUTPUT: ${{ inputs.output }}
+        FORMAT: ${{ inputs.fromat }}
+        INPUT_FORMAT: ${{ inputs.input-format }}
+        DIRECTIVES: ${{ inputs.directives }}
+        LINE_BREAK_MODE: ${{ inputs.line-break-mode }}
+        EXTENSION: ${{ inputs.extension }}
+        STYLING: ${{ inputs.styling }}
