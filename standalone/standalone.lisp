@@ -79,7 +79,7 @@
                 ((string-equal "pdf" type) "latex"))))
       default))
 
-(defun cli (&key input output styling (format (infer-format output "plump")) (input-format (infer-format input)) directives (line-break-mode "show") extension help version)
+(defun cli (&key input output styling format input-format directives (line-break-mode "show") extension help version)
   (unwind-protect
        (handler-case
            (handler-bind ((warning (lambda (w)
@@ -102,7 +102,9 @@
                             (*package* #.(find-package "CL-USER")))
                         (load extension)))
                     (let ((line-break-mode (parse-line-break-mode line-break-mode))
-                          (format (make-instance (parse-format format)
+                          (format (make-instance (if (and format (string/= "" format))
+                                                     (parse-format format)
+                                                     (parse-format (infer-format output "plump")))
                                                  :styling (when (and styling (string/= "" styling))
                                                             (uiop:parse-native-namestring styling))
                                                  :allow-other-keys T))
@@ -112,7 +114,9 @@
                       (let* ((parser (make-instance 'cl-markless:parser
                                                     :line-break-mode line-break-mode
                                                     :directives directives))
-                             (parse-function (parse-input-format input-format))
+                             (parse-function (if (and input-format (string/= "" input-format))
+                                                 (parse-input-format input-format)
+                                                 (parse-input-format (infer-format input))))
                              (input (funcall parse-function input parser)))
                         (when (and (pathnamep output)
                                    (probe-file output))

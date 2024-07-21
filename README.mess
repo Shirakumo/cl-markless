@@ -130,7 +130,7 @@ You can compile Markless files easily in your Github Actions workflows. Simply u
 
 ::yaml
 - name: Compile Markless
-  uses: Shirakumo/cl-markless@latest
+  uses: Shirakumo/cl-markless@v1.2.2
   with:
     input: my-file.mess
     output: my-file.html
@@ -147,3 +147,35 @@ The available options to the action are the same as for the standalone executabl
 - ``extension`` Path to an extension to load
 - ``styling`` Path to a styling file to use
   
+For example, to compile ``README.mess`` and publish the result as ``index.html`` to gh-pages:
+
+::yaml
+name: publish README
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: mkdir -p /tmp/gh-pages
+      - uses: actions/checkout@v1
+      - uses: Shirakumo/cl-markless@v1.2.2
+        with:
+          input: README.mess
+          output: /tmp/gh-pages/index.html
+      - uses: actions/upload-pages-artifact@v3.0.1
+        with:
+          path: /tmp/gh-pages/
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+::
