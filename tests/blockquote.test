@@ -1,0 +1,67 @@
+| 
+~~
+(root (blockquote))
+
+| a
+~~
+(root (blockquote (paragraph "a")))
+
+| a
+| b
+~~
+(root (blockquote (paragraph "a" (newline) "b")))
+
+| | 
+~~
+(root (blockquote (blockquote)))
+
+| | a
+| | b
+~~
+(root (blockquote (blockquote (paragraph "a" (newline) "b"))))
+
+| a
+| | b
+| c
+~~
+(root (blockquote (paragraph "a") (blockquote (paragraph "b")) (paragraph "c")))
+
+|
+~~
+(root (paragraph "|"))
+
+|a
+~~
+(root (paragraph "|a"))
+
+| a
+|  b
+~~
+(root (blockquote (paragraph "a") (paragraph "b")))
+
+~ a
+| b
+~~
+(root (blockquote-header (paragraph "a")) (blockquote (paragraph "b")))
+
+| b
+~ a
+~~
+(root (blockquote (paragraph "b")) (blockquote-header (paragraph "a")))
+
+~ a| b
+~~
+(root (blockquote-header "a") (blockquote (paragraph "b")))
+
+~ a|| b
+~~
+(root (blockquote-header "a|") (blockquote (paragraph "b")))
+
+~ a**b**| c
+~~
+(root (blockquote-header "a" (bold "b")) (blockquote (paragraph "c")))
+
+~ a**b**c| d
+~~
+(root (blockquote-header "a" (bold "b") "c") (blockquote (paragraph "d")))
+

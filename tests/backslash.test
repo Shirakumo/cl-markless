@@ -1,0 +1,21 @@
+\a
+~~
+(root (paragraph "a"))
+
+\\
+~~
+(root (paragraph "\\"))
+
+a\
+b
+~~
+(root (paragraph "ab"))
+
+\\\
+a
+~~
+(root (paragraph "\\a"))
+
+\\\\
+~~
+(root (paragraph "\\\\"))

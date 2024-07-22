@@ -1,0 +1,35 @@
+! set author a
+~~
+(root)
+
+! set line-break-mode hide
+a
+b
+~~
+(root (paragraph "ab"))
+
+! set line-break-mode hide
+# a
+b
+~~
+(root (header (1) "a") (paragraph "b"))
+
+! info a
+~~
+(root)
+
+! disable header
+~~
+(root)
+
+! disable header
+# a
+~~
+(root (paragraph "# a"))
+
+! disable header
+# a
+! enable header
+# a
+~~
+(root (paragraph "# a") (header (1) "a"))

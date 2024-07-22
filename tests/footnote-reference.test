@@ -1,0 +1,35 @@
+[1]
+~~
+(root (paragraph (footnote-reference 1)))
+
+[10]
+~~
+(root (paragraph (footnote-reference 10)))
+
+a[1]
+~~
+(root (paragraph "a" (footnote-reference 1)))
+
+a[]
+~~
+(root (paragraph "a[]"))
+
+a[1a]
+~~
+(root (paragraph "a[1a]"))
+
+a[1
+~~
+(root (paragraph "a[1"))
+
+a[1\]
+~~
+(root (paragraph "a[1]"))
+
+a[\1]
+~~
+(root (paragraph "a[1]"))
+
+a\[1]
+~~
+(root (paragraph "a[1]"))

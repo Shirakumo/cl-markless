@@ -1,0 +1,15 @@
+; a
+~~
+(root)
+
+;; a
+~~
+(root)
+
+;a
+~~
+(root (paragraph ";a"))
+
+| ; a
+~~
+(root (blockquote))

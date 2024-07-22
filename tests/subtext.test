@@ -1,0 +1,36 @@
+v(a)
+~~
+(root (paragraph (subtext "a")))
+
+v(av(b)c)
+~~
+(root (paragraph (subtext "a" (subtext "b") "c")))
+
+v(\-)
+~~
+(root (paragraph (subtext "-")))
+
+v(a
+b)
+~~
+(root (paragraph (subtext "a" (newline) "b")))
+
+v(a
+~~
+(root (paragraph "v(a"))
+
+v(a)b)
+~~
+(root (paragraph (subtext "a") "b)"))
+
+a)
+~~
+(root (paragraph "a)"))
+
+v\(a)
+~~
+(root (paragraph "v(a)"))
+
+\v(a)
+~~
+(root (paragraph "v(a)"))
