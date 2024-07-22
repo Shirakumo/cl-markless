@@ -17,7 +17,8 @@
                                                     (error "COMPILE-FILE or LOAD this."))))
 (defparameter *test-case-directory* (merge-pathnames "tests/" *here*))
 
-(define-test cl-markless)
+(define-test cl-markless
+  :defun T)
 
 (defun reloc-symbol (symbol)
   (intern (string symbol) #.*package*))
@@ -200,7 +201,7 @@ which is not ast= ~20t~s"
 
 (defmethod eval-in-context (context (result ast-result))
   (call-next-method)
-  (when (eql :unknown (status result))
+  (when (eql :tentative (status result))
     (if (ast= (value result) (expected result))
         (setf (status result) :passed)
         (setf (status result) :failed))))
