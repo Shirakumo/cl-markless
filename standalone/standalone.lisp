@@ -54,19 +54,39 @@
 
 (defun parse-input (input)
   (etypecase input
-    (string (uiop:parse-native-namestring input))
+    (string (pathname-utils:parse-native-namestring input))
     (pathname input)
     (stream input)
     (null *standard-input*)))
 
-(defun parse-output (output)
+(defun parse-output (output input format)
   (etypecase output
-    (string (uiop:parse-native-namestring output))
-    (pathname output)
+    (string
+     (if (string= "" output)
+         (etypecase input
+           (stream
+            *standard-output*)
+           ((or string pathname)
+            (make-pathname :type (infer-file-type format) :defaults input)))
+         (pathname-utils:parse-native-namestring output)))
+    (pathname
+     (if (pathname-utils:directory-p output)
+         (make-pathname :type (infer-file-type format) :name (pathname-name input) :defaults output)
+         output))
     (stream output)
     (null *standard-output*)))
 
-(defun infer-format (file &optional (default "markless"))
+(defun infer-file-type (format)
+  (etypecase format
+    (cl-markless:markless "mess")
+    (cl-markless:bbcode "bb")
+    (cl-markless:debug "txt")
+    (cl-markless:highlighted "html")
+    (cl-markless-plump:plump "html")
+    (cl-markless-latex:latex "pdf")
+    (cl-markless-epub:epub "epub")))
+
+(defun infer-format (file &optional (default "plump"))
   (or (when (and file (pathname-type file))
         (let ((type (pathname-type file)))
           (cond ((string-equal "mess" type) "markless")
@@ -101,16 +121,16 @@
                             (*terminal-io* *error-output*)
                             (*package* #.(find-package "CL-USER")))
                         (load extension)))
-                    (let ((line-break-mode (parse-line-break-mode line-break-mode))
-                          (format (make-instance (if (and format (string/= "" format))
-                                                     (parse-format format)
-                                                     (parse-format (infer-format output "plump")))
-                                                 :styling (when (and styling (string/= "" styling))
-                                                            (uiop:parse-native-namestring styling))
-                                                 :allow-other-keys T))
-                          (directives (parse-directives directives))
-                          (input (parse-input input))
-                          (output (parse-output output)))
+                    (let* ((line-break-mode (parse-line-break-mode line-break-mode))
+                           (format (make-instance (if (and format (string/= "" format))
+                                                      (parse-format format)
+                                                      (parse-format (infer-format output "plump")))
+                                                  :styling (when (and styling (string/= "" styling))
+                                                             (pathname-utils:parse-native-namestring styling))
+                                                  :allow-other-keys T))
+                           (directives (parse-directives directives))
+                           (input (parse-input input))
+                           (output (parse-output output input format)))
                       (let* ((parser (make-instance 'cl-markless:parser
                                                     :line-break-mode line-break-mode
                                                     :directives directives))
@@ -122,6 +142,9 @@
                                    (probe-file output))
                           (delete-file output))
                         (cl-markless:output input :format format :target output))))))
+         #+sbcl
+         (sb-sys:interactive-interrupt ()
+           (uiop:quit 1))
          (error (e)
            (format *error-output* "~&[ERROR] ~a~%" e)
            (uiop:quit 2)))

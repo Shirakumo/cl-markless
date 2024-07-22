@@ -12,6 +12,7 @@
                :cl-markless-epub
                :cl-markless-markdown
                :cl-markless-latex
+               :pathname-utils
                :command-line-arguments)
   :build-operation "program-op"
   :build-pathname #+win32 "cl-markless"
