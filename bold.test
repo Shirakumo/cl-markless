@@ -1,0 +1,40 @@
+**a**
+~~
+(root (paragraph (bold "a")))
+
+**a**b**c**
+~~
+(root (paragraph (bold "a") "b" (bold "c")))
+
+**\***
+~~
+(root (paragraph (bold "*")))
+
+**a
+b**
+~~
+(root (paragraph (bold "a" (newline) "b")))
+
+a**b**c
+~~
+(root (paragraph "a" (bold "b") "c"))
+
+**a
+~~
+(root (paragraph "**a"))
+
+**a**b**
+~~
+(root (paragraph (bold "a") "b**"))
+
+*a*
+~~
+(root (paragraph "*a*"))
+
+*\*a**
+~~
+(root (paragraph "**a**"))
+
+\**a**
+~~
+(root (paragraph "**a**"))

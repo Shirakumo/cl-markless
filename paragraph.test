@@ -1,0 +1,29 @@
+a
+~~
+(root (paragraph "a"))
+
+a
+b
+~~
+(root (paragraph "a" (newline) "b"))
+
+ a
+ b
+~~
+(root (paragraph "a" (newline) "b"))
+
+a
+
+b
+~~
+(root (paragraph "a") (paragraph "b"))
+
+a
+ b
+~~
+(root (paragraph "a") (paragraph "b"))
+
+ a
+b
+~~
+(root (paragraph "a") (paragraph "b"))

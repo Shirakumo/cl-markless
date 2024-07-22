@@ -1,0 +1,70 @@
+- 
+~~
+(root (unordered-list (unordered-list-item)))
+
+- a
+~~
+(root (unordered-list (unordered-list-item (paragraph "a"))))
+
+- 
+- 
+~~
+(root (unordered-list (unordered-list-item) (unordered-list-item)))
+
+-
+~~
+(root (paragraph "-"))
+
+-a
+~~
+(root (paragraph "-a"))
+
+ - a
+~~
+(root (paragraph (unordered-list (unordered-list-item (paragraph "a")))))
+
+- a
+  b
+~~
+(root (unordered-list (unordered-list-item (paragraph "a" (newline) "b"))))
+
+- a
+  b
+- c
+~~
+(root (unordered-list (unordered-list-item (paragraph "a" (newline) "b")) (unordered-list-item (paragraph "c"))))
+
+- - 
+~~
+(root (unordered-list (unordered-list-item (unordered-list (unordered-list-item)))))
+
+- - a
+    b
+~~
+(root (unordered-list (unordered-list-item (unordered-list (unordered-list-item (paragraph "a" (newline) "b"))))))
+
+-  a
+   b
+~~
+(root (unordered-list (unordered-list-item (paragraph "a" (newline) "b"))))
+
+- a
+   b
+~~
+(root (unordered-list (unordered-list-item (paragraph "a") (paragraph "b"))))
+
+- a
+
+- b
+~~
+(root (unordered-list (unordered-list-item (paragraph "a"))) (unordered-list (unordered-list-item (paragraph "b"))))
+
+- - a
+  - b
+~~
+(root (unordered-list (unordered-list-item (unordered-list (unordered-list-item (paragraph "a")) (unordered-list-item (paragraph "b"))))))
+
+-  - a
+   - b
+~~
+(root (unordered-list (unordered-list-item (paragraph (unordered-list (unordered-list-item (paragraph "a")) (unordered-list-item (paragraph "b")))))))
