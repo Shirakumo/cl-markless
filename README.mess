@@ -139,13 +139,14 @@ You can compile Markless files easily in your Github Actions workflows. Simply u
 The available options to the action are the same as for the standalone executable:
 
 - ``input`` The source file to compile
-- ``output`` The target file to output to
+- ``output`` The target file to output to. If not given, outputs to ``${{runner.temp}}/markless/index.html``
 - ``format`` The format of the output file
 - ``input-format`` The format of the input file
 - ``directives`` A comma-separated list of directives to use
 - ``line-break-mod`` Which line break mode to use
 - ``extension`` Path to an extension to load
 - ``styling`` Path to a styling file to use
+- ``gh-pages`` Whether to push the resulting file to Github Pages
   
 For example, to compile ``README.mess`` and publish the result as ``index.html`` to gh-pages:
 
@@ -155,29 +156,15 @@ on: push
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - run: mkdir -p /tmp/gh-pages
-      - uses: actions/checkout@v1
-      - uses: Shirakumo/cl-markless@v1.2.1
-        with:
-          input: README.mess
-          output: /tmp/gh-pages/index.html
-      - uses: actions/upload-pages-artifact@v3.0.1
-        with:
-          path: /tmp/gh-pages/
-  deploy:
-    needs: build
     permissions:
       pages: write
       id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v1
+      - uses: Shirakumo/cl-markless@v1.2.2
+        with:
+          input: README.mess
+          gh-pages: true
 ::
 
 Make sure that you have Github Pages configured to deploy via Actions in the settings of your repository, or the deploy step will fail.

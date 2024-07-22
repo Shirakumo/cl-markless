@@ -9,7 +9,6 @@ inputs:
     required: true
   output:
     description: 'The target file to output to'
-    required: true
   format:
     description: 'The format of the output file'
   input-format:
@@ -24,15 +23,19 @@ inputs:
     description: 'Path to an extension to load'
   styling:
     description: 'Path to a styling file to use'
+  gh-pages:
+    description: 'Whether to push to Github pages'
   
 outputs:
   output:
     description: 'The output file that was compiled'
-    value: ${{ inputs.output }}
+    value: ${{ inputs.output || format('{0}/markless/index.html', runner.temp) }}
 runs:
   using: "composite"
   steps:
-    - uses: dsaltares/fetch-gh-release-asset@master
+    - name: Install cl-markless
+      if: ${{ hashFiles(format('{0}/cl-markless', runner.temp)) != '' }}
+      uses: dsaltares/fetch-gh-release-asset@master
       with:
         repo: 'Shirakumo/cl-markless'
         file: ${{ runner.os == 'Windows' && 'cl-markless.exe' || (runner.os == 'Linux' && 'cl-markless.run' || 'cl-markless.o') }}
@@ -40,6 +43,7 @@ runs:
     - name: Run cl-markless
       shell: bash
       run: |
+        mkdir -p "$(dirname "$OUTPUT")"
         chmod +x ${{ runner.temp }}/cl-markless
         ${{ runner.temp }}/cl-markless \
           --input "$INPUT" \
@@ -52,10 +56,19 @@ runs:
           --styling "$STYLING"
       env:
         INPUT: ${{ inputs.input }}
-        OUTPUT: ${{ inputs.output }}
+        OUTPUT: ${{ inputs.output || format('{0}/markless/index.html', runner.temp) }}
         FORMAT: ${{ inputs.format }}
         INPUT_FORMAT: ${{ inputs.input-format }}
         DIRECTIVES: ${{ inputs.directives }}
         LINE_BREAK_MODE: ${{ inputs.line-break-mode }}
         EXTENSION: ${{ inputs.extension }}
         STYLING: ${{ inputs.styling }}
+    - name: Upload Github Pages Artefact
+      if: ${{ inputs.gh-pages }}
+      uses: actions/upload-pages-artifact@v3.0.1
+      with:
+        path: ${{ inputs.output || format('{0}/markless/index.html', runner.temp) }}
+    - name: Write to Github Pages
+      if: ${{ inputs.gh-pages }}
+      id: deployment
+      uses: actions/deploy-pages@v4
