@@ -130,7 +130,7 @@ You can compile Markless files easily in your Github Actions workflows. Simply u
 
 :: yaml
 - name: Compile Markless
-  uses: Shirakumo/cl-markless@v1.2.3
+  uses: Shirakumo/cl-markless@v1.2.4
   with:
     input: my-file.mess
     output: my-file.html
@@ -170,7 +170,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v1
-      - uses: Shirakumo/cl-markless@v1.2.3
+      - uses: Shirakumo/cl-markless@v1.2.4
         with:
           input: README.mess
           gh-pages: true
