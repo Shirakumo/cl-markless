@@ -20,11 +20,11 @@ b//c**
 ~~
 (root (paragraph (bold "a" (italic "b" (bold "c") "d") "e")))
 
-"**a**"(italic)
+''**a**''(italic)
 ~~
 (root (paragraph (compound ((italic)) (bold "a"))))
 
-//"a"(bold)//
+//'a''(bold)//
 ~~
 (root (paragraph (italic (compound ((bold)) "a"))))
 
