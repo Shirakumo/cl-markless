@@ -24,7 +24,7 @@ b//c**
 ~~
 (root (paragraph (compound ((italic)) (bold "a"))))
 
-//'a''(bold)//
+//''a''(bold)//
 ~~
 (root (paragraph (italic (compound ((bold)) "a"))))
 

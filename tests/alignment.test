@@ -17,8 +17,7 @@
 |< a
 |< b
 ~~
-(root (left-align (paragraph "a
-b")))
+(root (left-align (paragraph "a" (newline) "b")))
 
 |< a
 |> b
