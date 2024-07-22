@@ -130,7 +130,7 @@ You can compile Markless files easily in your Github Actions workflows. Simply u
 
 :: yaml
 - name: Compile Markless
-  uses: Shirakumo/cl-markless@v1.2.2
+  uses: Shirakumo/cl-markless@v1.2.3
   with:
     input: my-file.mess
     output: my-file.html
@@ -138,15 +138,24 @@ You can compile Markless files easily in your Github Actions workflows. Simply u
 
 The available options to the action are the same as for the standalone executable:
 
-- ``input`` The source file to compile
-- ``output`` The target file to output to. If not given, outputs to ``${{runner.temp}}/markless/index.html``
-- ``format`` The format of the output file
-- ``input-format`` The format of the input file
-- ``directives`` A comma-separated list of directives to use
-- ``line-break-mod`` Which line break mode to use
-- ``extension`` Path to an extension to load
-- ``styling`` Path to a styling file to use
-- ``gh-pages`` Whether to push the resulting file to Github Pages
+- ``input``
+  The source file to compile. This can be a glob pattern or a list of files, too. If you pass multiple input files, make sure the ``output`` is a directory. The output file name will be the same as the input file name, with the extension chosen appropriately to the ``format``.
+- ``output``
+  The target file to output to. If not given, outputs to ``${{runner.temp}}/markless/index.html``
+- ``format``
+  The format of the output file. If not passed is inferred from the ``output`` file name, and if that does not provide it either, defaults to ``plump`` (html).
+- ``input-format``
+  The format of the input file. If not passed is inferred from the ``input`` file.
+- ``directives``
+  A comma-separated list of directives to use. If not passed, all directives are enabled.
+- ``line-break-mod``
+  Which line break mode to use. If not passed, defaults to ``show``.
+- ``extension``
+  Path to an extension to load.
+- ``styling``
+  Path to a styling file to use. The file type is specific to the output ``format``.
+- ``gh-pages``
+  Whether to push the ``output`` to Github Pages.
   
 For example, to compile ``README.mess`` and publish the result as ``index.html`` to gh-pages:
 
@@ -161,7 +170,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v1
-      - uses: Shirakumo/cl-markless@v1.2.2
+      - uses: Shirakumo/cl-markless@v1.2.3
         with:
           input: README.mess
           gh-pages: true

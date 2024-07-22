@@ -39,7 +39,7 @@ runs:
       run: |
         sudo apt-get install -y texlive
     - name: Install cl-markless
-      if: ${{ hashFiles(format('{0}/cl-markless', runner.temp)) != '' }}
+      if: ${{ hashFiles(format('{0}/cl-markless', runner.temp)) == '' }}
       uses: dsaltares/fetch-gh-release-asset@master
       with:
         repo: 'Shirakumo/cl-markless'
@@ -50,15 +50,17 @@ runs:
       run: |
         mkdir -p "$(dirname "$OUTPUT")"
         chmod +x ${{ runner.temp }}/cl-markless
-        ${{ runner.temp }}/cl-markless \
-          --input "$INPUT" \
-          --output "$OUTPUT" \
-          --format "$FORMAT" \
-          --input-format "$INPUT_FORMAT" \
-          --directives "$DIRECTIVES" \
-          --line-break-mode "$LINE_BREAK_MODE" \
-          --extension "$EXTENSION" \
-          --styling "$STYLING"
+        for file in $INPUT; do
+          ${{ runner.temp }}/cl-markless \
+            --input "$file" \
+            --output "$OUTPUT" \
+            --format "$FORMAT" \
+            --input-format "$INPUT_FORMAT" \
+            --directives "$DIRECTIVES" \
+            --line-break-mode "$LINE_BREAK_MODE" \
+            --extension "$EXTENSION" \
+            --styling "$STYLING"
+        done
       env:
         INPUT: ${{ inputs.input }}
         OUTPUT: ${{ inputs.output || format('{0}/markless/index.html', runner.temp) }}
@@ -72,7 +74,7 @@ runs:
       if: ${{ inputs.gh-pages }}
       uses: actions/upload-pages-artifact@v3.0.1
       with:
-        path: ${{ inputs.output || format('{0}/markless/index.html', runner.temp) }}
+        path: ${{ inputs.output || format('{0}/markless/', runner.temp) }}
     - name: Write to Github Pages
       if: ${{ inputs.gh-pages }}
       id: deployment
