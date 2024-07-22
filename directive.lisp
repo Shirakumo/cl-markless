@@ -188,12 +188,15 @@
           (incf cursor 2))))
     cursor))
 
-(defmethod consume-prefix ((_ blockquote-header) component parser line cursor)
+(defmethod consume-prefix ((_ blockquote-header) (component components:blockquote) parser line cursor)
   (and (loop repeat (components:indentation component)
              always (and (< cursor (length line))
                          (char= #\  (aref line cursor)))
              do (incf cursor))
        (match! "| " line cursor)))
+
+(defmethod consume-prefix ((_ blockquote-header) component parser line cursor)
+  NIL)
 
 (defmethod consume-end ((_ blockquote-header) component parser line cursor)
   cursor)
