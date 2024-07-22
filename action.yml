@@ -48,7 +48,7 @@ runs:
     - name: Run cl-markless
       shell: bash
       run: |
-        mkdir -p "$(dirname "$OUTPUT")"
+        mkdir -p "$(echo "$OUTPUT" | sed 's|\(.*\)/.*|\1|')"
         chmod +x ${{ runner.temp }}/cl-markless
         for file in $INPUT; do
           ${{ runner.temp }}/cl-markless \
