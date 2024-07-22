@@ -68,7 +68,7 @@
             *standard-output*)
            ((or string pathname)
             (make-pathname :type (infer-file-type format) :defaults input)))
-         (pathname-utils:parse-native-namestring output)))
+         (parse-output (pathname-utils:parse-native-namestring output) input format)))
     (pathname
      (if (pathname-utils:directory-p output)
          (make-pathname :type (infer-file-type format) :name (pathname-name input) :defaults output)
@@ -101,53 +101,58 @@
 
 (defun cli (&key input output styling format input-format directives (line-break-mode "show") extension help version)
   (unwind-protect
-       (handler-case
-           (handler-bind ((warning (lambda (w)
-                                     (format *error-output* "~&[WARN] ~a~%" w))))
-             (cond (help
-                    (format *error-output* "cl-markless args...~%")
-                    (command-line-arguments:show-option-help *command-line-spec* :stream *error-output*)
-                    (format *error-output* "~&~%Available output formats:~%  ~{~a~^, ~}~%"
-                            (mapcar #'string-downcase (cl-markless:list-output-formats)))
-                    (format *error-output* "~&~%Available input formats:~%  ~{~a~^, ~}~%"
-                            (mapcar #'string-downcase '(:markless :markdown)))
-                    (format *error-output* "~&~%Available directives:~%  ~{~a~^, ~}~%"
-                            (mapcar #'string-downcase cl-markless:*default-directives*)))
-                   (version
-                    (format *error-output* "cl-markless v~a~%" (asdf:component-version (asdf:find-system :cl-markless))))
-                   (T
-                    (when (and extension (string/= "" extension))
-                      (let ((*standard-output* *error-output*)
-                            (*terminal-io* *error-output*)
-                            (*package* #.(find-package "CL-USER")))
-                        (load extension)))
-                    (let* ((line-break-mode (parse-line-break-mode line-break-mode))
-                           (format (make-instance (if (and format (string/= "" format))
-                                                      (parse-format format)
-                                                      (parse-format (infer-format output "plump")))
-                                                  :styling (when (and styling (string/= "" styling))
-                                                             (pathname-utils:parse-native-namestring styling))
-                                                  :allow-other-keys T))
-                           (directives (parse-directives directives))
-                           (input (parse-input input))
-                           (output (parse-output output input format)))
-                      (let* ((parser (make-instance 'cl-markless:parser
-                                                    :line-break-mode line-break-mode
-                                                    :directives directives))
-                             (parse-function (if (and input-format (string/= "" input-format))
-                                                 (parse-input-format input-format)
-                                                 (parse-input-format (infer-format input))))
-                             (input (funcall parse-function input parser)))
-                        (when (and (pathnamep output)
-                                   (probe-file output))
-                          (delete-file output))
-                        (cl-markless:output input :format format :target output))))))
-         #+sbcl
-         (sb-sys:interactive-interrupt ()
-           (uiop:quit 1))
-         (error (e)
-           (format *error-output* "~&[ERROR] ~a~%" e)
-           (uiop:quit 2)))
+       (handler-bind ((warning 
+                        (lambda (w)
+                          (format *error-output* "~&[WARN] ~a~%" w)
+                          (muffle-warning w)))
+                      (error 
+                        (lambda (e)
+                          (format *error-output* "~&[ERROR] ~a~%" e)
+                          (uiop:print-condition-backtrace e)
+                          (uiop:quit 2)))
+                      #+sbcl
+                      (sb-sys:interactive-interrupt 
+                        (lambda (e)
+                          (declare (ignore e))
+                          (uiop:quit 1))))
+         (cond (help
+                (format *error-output* "cl-markless args...~%")
+                (command-line-arguments:show-option-help *command-line-spec* :stream *error-output*)
+                (format *error-output* "~&~%Available output formats:~%  ~{~a~^, ~}~%"
+                        (mapcar #'string-downcase (cl-markless:list-output-formats)))
+                (format *error-output* "~&~%Available input formats:~%  ~{~a~^, ~}~%"
+                        (mapcar #'string-downcase '(:markless :markdown)))
+                (format *error-output* "~&~%Available directives:~%  ~{~a~^, ~}~%"
+                        (mapcar #'string-downcase cl-markless:*default-directives*)))
+               (version
+                (format *error-output* "cl-markless v~a~%" (asdf:component-version (asdf:find-system :cl-markless))))
+               (T
+                (when (and extension (string/= "" extension))
+                  (let ((*standard-output* *error-output*)
+                        (*terminal-io* *error-output*)
+                        (*package* #.(find-package "CL-USER")))
+                    (load extension)))
+                (let* ((line-break-mode (parse-line-break-mode line-break-mode))
+                       (format (make-instance (if (and format (string/= "" format))
+                                                  (parse-format format)
+                                                  (parse-format (infer-format output "plump")))
+                                              :styling (when (and styling (string/= "" styling))
+                                                         (pathname-utils:parse-native-namestring styling))
+                                              :allow-other-keys T))
+                       (directives (parse-directives directives))
+                       (input (parse-input input))
+                       (output (parse-output output input format)))
+                  (let* ((parser (make-instance 'cl-markless:parser
+                                                :line-break-mode line-break-mode
+                                                :directives directives))
+                         (parse-function (if (and input-format (string/= "" input-format))
+                                             (parse-input-format input-format)
+                                             (parse-input-format (infer-format input))))
+                         (input (funcall parse-function input parser)))
+                    (when (and (pathnamep output) (probe-file output))
+                      (delete-file output))
+                    (cl-markless:output input :format format :target output))))))
+    
     (uiop:finish-outputs)))
 
 (defmethod asdf:perform ((o asdf:program-op) (c asdf:system))
