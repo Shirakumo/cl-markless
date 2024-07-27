@@ -14,7 +14,7 @@ b//c**
 |   # **a**
 |   b
 ~~
-(root (blockquote (paragraph (header (1) (bold "a")) "b")))
+(root (blockquote (paragraph "# " (bold "a") (newline) "b")))
 
 **a//b**c**d//e**
 ~~
