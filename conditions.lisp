@@ -22,6 +22,14 @@
   (:report (lambda (c s) (format s "Deactivating the ~s directive is not allowed."
                                  (type-of (directive-instance c))))))
 
+(define-condition no-such-file (markless-condition error)
+  ((file :initarg :file :reader file))
+  (:report (lambda (c s) (format s "The file ~s does not exist." (file c)))))
+
+(define-condition no-prior-component (markless-condition error)
+  ()
+  (:report (lambda (c s) (format s "There's no prior component for the label to target!"))))
+
 (define-condition parser-condition (markless-condition)
   ((line :initarg :line :reader line)
    (cursor :initarg :cursor :reader cursor))
@@ -43,10 +51,6 @@
   ((embed-type :initarg :embed-type :reader embed-type))
   (:report (lambda (c s) (format s "The embed type ~s is not known."
                                  (embed-type c)))))
-
-(define-condition no-such-file (parser-error)
-  ((file :initarg :file :reader file))
-  (:report (lambda (c s) (format s "The file ~s does not exist." (file c)))))
 
 (define-condition bad-option (parser-warning)
   ((option :initarg :option :reader option))

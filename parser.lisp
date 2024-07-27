@@ -282,6 +282,8 @@
         (setf (enabled-p directive) T)))))
 
 (defmethod evaluate-instruction ((instruction components:label) (parser parser))
+  (when (eq instruction (stack-entry-component (stack-top (stack parser))))
+    (error 'no-prior-component))
   (setf (components:label (components:target instruction) (root parser))
         (stack-entry-component (stack-top (stack parser)))))
 
