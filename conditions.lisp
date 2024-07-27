@@ -44,6 +44,10 @@
   (:report (lambda (c s) (format s "The embed type ~s is not known."
                                  (embed-type c)))))
 
+(define-condition no-such-file (parser-error)
+  ((file :initarg :file :reader file))
+  (:report (lambda (c s) (format s "The file ~s does not exist." (file c)))))
+
 (define-condition bad-option (parser-warning)
   ((option :initarg :option :reader option))
   (:report (lambda (c s) (format s "The option ~s is malformed or unrecognised."

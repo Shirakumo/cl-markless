@@ -263,6 +263,8 @@
   (error 'user-error :message (components:message instruction)))
 
 (defmethod evaluate-instruction ((instruction components:include) (parser parser))
+  (unless (probe-file (components:file instruction))
+    (error 'no-such-file :file (components:file instruction)))
   (setf (input parser) (make-concatenated-stream
                         (open (components:file instruction) :element-type 'character)
                         (input parser))))
