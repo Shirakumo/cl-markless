@@ -3,9 +3,10 @@ This repository contains test files for a compliant Markless parser implementati
     TEST-FILE ::= TEST-CASE ("\n" TEST-CASE)*
     TEST-CASE ::= INPUT "~~\n" AST "\n"
     INPUT     ::= line*
-    AST       ::= "(" name OPTIONS? (" " CHILD)* ")"
+    AST       ::= "(" name OPTIONS? (" " CHILD)* ")" | error
     OPTIONS   ::= " (" (option (" " option)*)? ")"
     CHILD     ::= AST | string
+    error     --- The string "error", signifying a nerror being signalled during parsing
     name      --- The name of a component or option
     string    --- A double-quote enclosed string with backslash escapes
     option    --- An option specific to a component
