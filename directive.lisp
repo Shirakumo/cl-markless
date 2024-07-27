@@ -551,7 +551,9 @@
       (make-instance (class-of type) :end (parse-integer option :start (length "end ")))))
 
 (defmethod parse-embed-option-type ((type components:encoding-option) option)
-  (make-instance (class-of type) :encoding (subseq option (length "encoding "))))
+  (let ((encoding (subseq option (length "encoding "))))
+    (assert (member encoding '("utf-8" "ascii") :test #'string-equal))
+    (make-instance (class-of type) :encoding encoding)))
 
 (defmethod parse-embed-option-type ((type components:embed-link-option) option)
   (make-instance (class-of type) :target (subseq option (length "link "))))
