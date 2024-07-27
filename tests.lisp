@@ -222,12 +222,22 @@ which is not ast= ~20t~s"
 
 (defun compile-test-case (test-case)
   (destructuring-bind (input expected-structure) test-case
-    (lambda ()
-      (eval-in-context *context*
-                       (make-instance 'ast-result
-                                      :expression input
-                                      :body (lambda () (cl-markless:parse input T))
-                                      :expected expected-structure)))))
+    (if (eql expected-structure 'error)
+        (lambda ()
+          (eval-in-context *context*
+                           (make-instance 'comparison-result
+                                          :expression input
+                                          :value-form input
+                                          :body (lambda () (parachute::capture-error (cl-markless:parse input T)
+                                                               cl-markless:parser-error))
+                                          :expected 'cl-markless:parser-error
+                                          :comparison 'typep)))
+        (lambda ()
+          (eval-in-context *context*
+                           (make-instance 'ast-result
+                                          :expression input
+                                          :body (lambda () (cl-markless:parse input T))
+                                          :expected expected-structure))))))
 
 (defun create-test-from-file (file)
   (let* ((name (pathname-name file))
