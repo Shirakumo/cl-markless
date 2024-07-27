@@ -54,7 +54,12 @@
 
 (define-condition bad-option (parser-warning)
   ((option :initarg :option :reader option))
-  (:report (lambda (c s) (format s "The option ~s is malformed or unrecognised."
+  (:report (lambda (c s) (format s "The option ~s is not unrecognised."
+                                 (option c)))))
+
+(define-condition invalid-option (parser-error)
+  ((option :initarg :option :reader option))
+  (:report (lambda (c s) (format s "The option ~s is malformed."
                                  (option c)))))
 
 (define-condition bad-unit (bad-option)

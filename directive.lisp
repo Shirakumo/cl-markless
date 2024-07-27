@@ -494,6 +494,8 @@
                         :cursor (+ 2 cursor)
                         :option option
                         :embed-type (class-name class))))
+          (invalid-option ()
+            (error 'invalid-option :cursor (+ 2 cursor) :option option))
           (error (_)
             (declare (ignore _))
             (warn 'bad-option :cursor (+ 2 cursor) :option option)))
@@ -552,7 +554,7 @@
 
 (defmethod parse-embed-option-type ((type components:encoding-option) option)
   (let ((encoding (subseq option (length "encoding "))))
-    (assert (member encoding '("utf-8" "ascii") :test #'string-equal))
+    (unless (member encoding '("utf-8" "ascii") :test #'string-equal) (error 'invalid-option))
     (make-instance (class-of type) :encoding encoding)))
 
 (defmethod parse-embed-option-type ((type components:embed-link-option) option)
@@ -823,6 +825,8 @@
              (let ((class (find-compound-option-type parser option)))
                (if class
                    (handler-case (parse-compound-option-type (class-prototype class) option)
+                     (invalid-option ()
+                       (error 'invalid-option :cursor (+ 2 cursor) :option option))
                      (error (e)
                        (declare (ignore e))
                        (warn 'bad-option :cursor (+ 2 cursor) :option option)))
@@ -845,12 +849,15 @@
 (defmethod parse-compound-option-type ((proto components:color-option) option)
   (if (starts-with "color #" option)
       (multiple-value-bind (hex end) (parse-integer option :start (length "color #") :radix 16)
-        (assert (= end (+ 7 6)))
+        (unless (= end (+ 7 6)) (error 'invalid-option))
         (destructuring-bind (r g b) (decompose-rgb hex)
           (make-instance (class-of proto) :red r :green g :blue b)))
       (let ((parts (split-string option #\  (length "color "))))
-        (destructuring-bind (r g b) (mapcar #'parse-integer parts)
-          (make-instance (class-of proto) :red r :green g :blue b)))))
+        (if (= 1 (length parts))
+            ;; FIXME: implement color table
+            (error 'invalid-option)
+            (destructuring-bind (r g b) (mapcar #'parse-integer parts)
+              (make-instance (class-of proto) :red r :green g :blue b))))))
 
 (defmethod parse-compound-option-type ((proto components:size-option) option)
   (multiple-value-bind (size unit) (parse-unit option :start (length "size "))
