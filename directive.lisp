@@ -201,6 +201,12 @@
 (defmethod consume-end ((_ blockquote-header) component parser line cursor)
   cursor)
 
+(defmethod invoke ((_ blockquote-header) component parser line cursor)
+  (read-inline parser line cursor #\nul))
+
+(defmethod invoke ((_ blockquote-header) (component components:blockquote) parser line cursor)
+  (read-block parser line cursor))
+
 (defclass blockquote (block-directive)
   ())
 
