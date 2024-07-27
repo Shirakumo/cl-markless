@@ -49,3 +49,7 @@
 [ image a, width 1xx ]
 ~~
 (root (embed image "a"))
+
+[ source a, encoding deadbeef ]
+~~
+error

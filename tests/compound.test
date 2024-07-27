@@ -114,3 +114,15 @@ b''()
 //a''b//c//d''e//
 ~~
 (root (paragraph (italic "a''b" (italic "c") "d''e")))
+
+''a''(color #A)
+~~
+error
+
+''a''(color #AAAAAAA)
+~~
+error
+
+''a''(color deadbeef)
+~~
+error

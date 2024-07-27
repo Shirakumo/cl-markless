@@ -42,12 +42,12 @@
 ~ a
 | b
 ~~
-(root (blockquote-header (paragraph "a")) (blockquote (paragraph "b")))
+(root (blockquote-header "a") (blockquote (paragraph "b")))
 
 | b
 ~ a
 ~~
-(root (blockquote (paragraph "b")) (blockquote-header (paragraph "a")))
+(root (blockquote (paragraph "b")) (blockquote-header "a"))
 
 ~ a| b
 ~~

@@ -33,3 +33,31 @@ b
 # a
 ~~
 (root (paragraph "# a") (header (1) "a"))
+
+! label foo
+~~
+error
+
+- ! label foo
+~~
+error
+
+! disable paragraph
+~~
+error
+
+! deadbeef
+~~
+error
+
+! error Hello
+~~
+error
+
+! include deadbeef
+~~
+error
+
+! set deadbeef deadbeef
+~~
+error
