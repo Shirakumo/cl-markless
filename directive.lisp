@@ -842,7 +842,8 @@
 
 (defmethod parse-compound-option-type ((proto components:color-option) option)
   (if (starts-with "color #" option)
-      (let ((hex (parse-integer option :start (length "color #") :radix 16)))
+      (multiple-value-bind (hex end) (parse-integer option :start (length "color #") :radix 16)
+        (assert (= end (+ 7 6)))
         (destructuring-bind (r g b) (decompose-rgb hex)
           (make-instance (class-of proto) :red r :green g :blue b)))
       (let ((parts (split-string option #\  (length "color "))))
