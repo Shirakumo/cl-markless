@@ -229,8 +229,8 @@ which is not ast= ~20t~s"
                                           :expression input
                                           :value-form input
                                           :body (lambda () (parachute::capture-error (cl-markless:parse input T)
-                                                               cl-markless:parser-error))
-                                          :expected 'cl-markless:parser-error
+                                                               error))
+                                          :expected 'cl-markless:markless-condition
                                           :comparison 'typep)))
         (lambda ()
           (eval-in-context *context*
