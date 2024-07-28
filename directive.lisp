@@ -855,8 +855,8 @@
           (make-instance (class-of proto) :red r :green g :blue b)))
       (let ((parts (split-string option #\  (length "color "))))
         (if (= 1 (length parts))
-            ;; FIXME: implement color table
-            (error 'invalid-option)
+            (or (gethash option *color-table*)
+                (error 'invalid-option))
             (destructuring-bind (r g b) (mapcar #'parse-integer parts)
               (make-instance (class-of proto) :red r :green g :blue b))))))
 
