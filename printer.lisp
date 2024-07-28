@@ -106,7 +106,10 @@
     (format s " ~a ~a" (type-of c) (components:directives c)))
 
   (components:embed ()
-    (format s " ~a ~s" (type-of c) (components:target c)))
+    (format s " ~a ~s" (type-of c) (components:target c))
+    (let ((*level* (1+ *level*)))
+      (dolist (option (components:options c))
+        (output option))))
 
   (components:footnote ()
     (format s "/~a (~d)" (type-of c) (components:target c)))
@@ -115,7 +118,10 @@
     (format s " ~a (~d)" (type-of c) (components:target c)))
 
   (components:compound ()
-    (format s "/~a ~{~a~}" (type-of c) (components:options c)))
+    (format s "/~a ~{~a~}" (type-of c) (components:options c))
+    (let ((*level* (1+ *level*)))
+      (dolist (option (components:options c))
+        (output option))))
 
   (components:unit-component ()
     (format s " ~a" (type-of c))))
