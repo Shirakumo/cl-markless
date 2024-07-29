@@ -31,6 +31,22 @@
 
 (defgeneric generate-component (type &key children recurse))
 (defgeneric viable-children (parent))
+(defgeneric probability (component))
+
+(defmethod probability (component) 1.0)
+(defmethod probability ((component string)) 5.0)
+(defmethod probability ((component components:instruction)) 0.1)
+(defmethod probability ((component components:paragraph)) 3.0)
+(defmethod probability ((thing symbol)) (probability (allocate-instance (find-class thing))))
+(defmethod probability ((thing (eql 'string))) (probability ""))
+
+(defun choose-weighted (choices)
+  (let ((index (random (float (loop for choice in choices sum (probability choice)) 0.0))))
+    (loop for choice in choices
+          for left = 0.0 then right
+          for right = (+ left (probability choice))
+          do (when (and (<= left index) (< index right))
+               (return choice)))))
 
 (defun class-direct-subclasses (class)
   #+abcl      (mop:class-direct-subclasses class)
@@ -72,6 +88,9 @@
               'components:unordered-list-item
               'components:ordered-list-item))
 
+(defmethod viable-children ((component components:code))
+  '(string))
+
 (defmethod viable-children ((component components:unordered-list))
   '(components:unordered-list-item))
 
@@ -106,8 +125,8 @@
 (defmethod generate-component ((component symbol) &rest args &key &allow-other-keys)
   (apply #'generate-component (allocate-instance (find-class component)) args))
 
-(defmethod generate-component ((component (eql 'string)) &key (count '(2 9)) &allow-other-keys)
-  (format NIL "~{~a~^ ~}." (loop repeat (range count) collect (random-elt *ipsum*))))
+(defmethod generate-component ((component (eql 'string)) &key (children '(2 9)) &allow-other-keys)
+  (format NIL "~{~a~^ ~}." (loop repeat (max 1 (range children)) collect (random-elt *ipsum*))))
 
 (defmethod generate-component ((component (eql 'link)) &key &allow-other-keys)
   (format NIL "http://~a.com/~a" (generate-words) (generate-words)))
@@ -122,8 +141,16 @@
 (defmethod generate-component :before ((component components:paragraph) &key &allow-other-keys)
   (setf (components:indentation component) (max 0 (- (random 10) 5))))
 
-(defmethod generate-component :before ((component components:blockquote) &key &allow-other-keys)
-  (setf (components:indentation component) (max 0 (- (random 10) 5))))
+(defmethod generate-component :before ((component components:blockquote) &key children recurse)
+  (cond ((< (random 10) 8)
+         (setf (components:source component) NIL)
+         (setf (components:indentation component) 0))
+        ((< (random 10) 8)
+         (setf (components:source component) (generate-component 'components:blockquote-header :children children :recurse recurse))
+         (setf (components:indentation component) 0))
+        (T
+         (setf (components:source component) (generate-component 'components:blockquote-header :children 1 :recurse 0))
+         (setf (components:indentation component) (+ 2 (length (aref (components:children (components:source component)) 0)))))))
 
 (defmethod generate-component :before ((component components:ordered-list-item) &key &allow-other-keys)
   (setf (components:number component) (range 1 100)))
@@ -157,7 +184,7 @@
 
 (defmethod generate-component ((component components:raw) &key &allow-other-keys)
   (setf (components:target component) (generate-words))
-  (setf (components:text component) (generate-component 'string :count (range 1 5))))
+  (setf (components:text component) (generate-component 'string :children (range 1 5))))
 
 (defmethod generate-component ((component components:embed) &key &allow-other-keys)
   (let ((viable (viable-options component)))
@@ -235,8 +262,8 @@
 
 (defmethod generate-component ((component components:parent-component) &key (children '(0 5)) (recurse 10))
   (let ((viable (if (< 0 recurse) (viable-children component) '(string))))
-    (dotimes (i (range children) component)
-      (let ((child (generate-component (random-elt viable) :children children :recurse (1- recurse))))
+    (dotimes (i (if (equal viable '(string)) (max 1 (range children)) (range children)) component)
+      (let ((child (generate-component (choose-weighted viable) :children children :recurse (1- recurse))))
         (vector-push-extend child (components:children component))))))
 
 (defmethod generate-component ((component components:unit-component) &key &allow-other-keys))
