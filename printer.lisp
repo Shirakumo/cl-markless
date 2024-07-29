@@ -438,13 +438,17 @@
       (%op s "~a" prefix)
       (output (components:children c))))
 
-  (components:blockquote-header ()
-    (%op s "~~ ")
-    (output-children))
-  
+  (components:blockquote-header ())
+
   (components:blockquote ()
-    (%op s "| ")
-    (let ((*prefixes* (list* "| " *prefixes*)))
+    (cond ((and (components:source c) (< 0 (components:indentation c)))
+           (%op s "~~ ")
+           (loop for child across (components:children (components:source c))
+                 do (output child))
+           (%op s "| "))
+          (T
+           (%op s "~v@{ ~}| " (components:indentation c) NIL)))
+    (let ((*prefixes* (list* (format NIL "~v@{ ~}| " (components:indentation c) NIL) *prefixes*)))
       (output (components:children c))))
 
   (components:ordered-list-item ()
@@ -468,10 +472,9 @@
   (components:code-block ()
     (%op s "~v@{:~}" (+ 2 (components:depth c)) NIL)
     (format s "~@[ ~a~{, ~a~}~]"  (components:language c) (components:options c))
-    (with-input-from-string (input (components:text c))
-      (loop for line = (read-line input NIL NIL)
-            while line
-            do (format s "~&~v@{ ~}~a" (components:inset c) line)))
+    (format s "~&~v@{ ~}" (components:inset c) NIL)
+    (let ((*prefixes* (list* (format NIL "~v@{ ~}" (components:inset c) NIL) *prefixes*)))
+      (output (components:text c)))
     (%op s "~%~v@{ ~}~v@{:~}" (components:inset c) (+ 2 (components:depth c)) NIL))
 
   (components:instruction (:before)
@@ -679,7 +682,9 @@
     (format s "---"))
 
   (components:newline ()
-    (format s "-/-")))
+    (fresh-line s)
+    (loop for prefix in (reverse *prefixes*)
+          do (%op s "~a" prefix))))
 
 (defmethod output-operator (string target (markless markless))
   (write-string string target))
