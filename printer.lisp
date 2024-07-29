@@ -466,6 +466,7 @@
     (%op s "=="))
 
   (components:code-block ()
+    ;; TODO: indentation
     (%op s "~v@{:~}" (+ 2 (components:depth c)) NIL)
     (format s "~@[ ~a~{, ~a~}~]"  (components:language c) (components:options c))
     (format s "~&~a" (components:text c))
@@ -511,6 +512,12 @@
   (components:embed-option ()
     (format s "~(~a~)" (type-of c)))
 
+  (components:loop-option ()
+    (%op s "loop"))
+
+  (components:autoplay-option ()
+    (%op s "autoplay"))
+
   (components:width-option ()
     (%op s "width ~a~(~a~)" (components:size c) (components:unit c)))
 
@@ -526,6 +533,9 @@
   (components:caption-option ()
     (%op s "caption ")
     (output (components:children c)))
+
+  (components:description-option ()
+    (%op s "description ~a" (components:text c)))
 
   (components:options-option ()
     (%op s "options~(~{ ~a~}~)" (components:options c)))
@@ -544,12 +554,6 @@
 
   (components:embed-link-option ()
     (%op s "link ~a" (components:target c)))
-
-  (components:bold-option () (%op s "bold"))
-  (components:italic-option () (%op s "italic"))
-  (components:underline-option () (%op s "underline"))
-  (components:strikethrough-option () (%op s "strikethrough"))
-  (components:spoiler-option () (%op s "spoiler"))
 
   (components:footnote ()
     (%op s "[~d] " (components:target c))
@@ -614,6 +618,21 @@
 
   (components:compound-option ()
     (%op s "~(~a~)" (type-of c)))
+
+  (components:bold-option ()
+    (%op s "bold"))
+
+  (components:italic-option ()
+    (%op s "italic"))
+
+  (components:underline-option ()
+    (%op s "underline"))
+
+  (components:strikethrough-option ()
+    (%op s "strikethrough"))
+  
+  (components:spoiler-option ()
+    (%op s "spoiler"))
 
   (components:font-option ()
     (%op s "font ~a" (components:font-family c)))

@@ -45,6 +45,9 @@
 (defmethod viable-children ((component components:caption-option))
   (list* 'string (leaf-classes 'components:inline-component)))
 
+(defmethod viable-children ((component components:blockquote-header))
+  (list* 'string (leaf-classes 'components:inline-component)))
+
 (defmethod viable-options ((component components:embed))
   (leaf-classes 'components:embed-option))
 
@@ -121,7 +124,8 @@
                                                for type = (alexandria:random-elt viable)
                                                collect (generate-component type)))))
 
-(defmethod generate-component ((component components:embed-option) &key &allow-other-keys))
+(defmethod generate-component ((component components:embed-option) &key &allow-other-keys)
+  (when (next-method-p) (call-next-method)))
 
 (defmethod generate-component ((component components:embed-link-option) &key &allow-other-keys)
   (setf (components:target component) (generate-component 'link)))
@@ -164,7 +168,8 @@
                                                for type = (alexandria:random-elt viable)
                                                collect (generate-component type)))))
 
-(defmethod generate-component ((component components:compound-option) &key &allow-other-keys))
+(defmethod generate-component ((component components:compound-option) &key &allow-other-keys)
+  (when (next-method-p) (call-next-method)))
 
 (defmethod generate-component ((component components:font-option) &key &allow-other-keys)
   (setf (components:font-family component) (lorem-ipsum:word)))
@@ -187,10 +192,9 @@
   (setf (components:children component) (make-array 0 :adjustable T :fill-pointer T)))
 
 (defmethod generate-component ((component components:parent-component) &key (children '(0 5)) (recurse 10))
-  (when (< 0 recurse)
-    (let ((viable (viable-children component)))
-      (dotimes (i (range children) component)
-        (let ((child (generate-component (alexandria:random-elt viable) :children children :recurse (1- recurse))))
-          (vector-push-extend child (components:children component)))))))
+  (let ((viable (if (< 0 recurse) (viable-children component) '(string))))
+    (dotimes (i (range children) component)
+      (let ((child (generate-component (alexandria:random-elt viable) :children children :recurse (1- recurse))))
+        (vector-push-extend child (components:children component))))))
 
 (defmethod generate-component ((component components:unit-component) &key &allow-other-keys))
