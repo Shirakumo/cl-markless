@@ -466,11 +466,13 @@
     (%op s "=="))
 
   (components:code-block ()
-    ;; TODO: indentation
     (%op s "~v@{:~}" (+ 2 (components:depth c)) NIL)
     (format s "~@[ ~a~{, ~a~}~]"  (components:language c) (components:options c))
-    (format s "~&~a" (components:text c))
-    (%op s "~&~v@{:~}" (+ 2 (components:depth c)) NIL))
+    (with-input-from-string (input (components:text c))
+      (loop for line = (read-line input NIL NIL)
+            while line
+            do (format s "~&~v@{ ~}~a" (components:inset c) line)))
+    (%op s "~%~v@{ ~}~v@{:~}" (components:inset c) (+ 2 (components:depth c)) NIL))
 
   (components:instruction (:before)
     (%op s "! "))
