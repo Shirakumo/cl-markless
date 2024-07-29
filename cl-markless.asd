@@ -20,6 +20,7 @@
                (:file "misc")
                (:file "documentation"))
   :depends-on (:documentation-utils
-               :trivial-indent)
+               :trivial-indent
+               :lorem-ipsum)
   :in-order-to ((asdf:test-op (asdf:test-op :cl-markless-test))
                 (asdf:build-op (asdf:build-op :cl-markless-standalone))))
