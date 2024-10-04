@@ -42,6 +42,16 @@ error
 ~~
 error
 
+a
+! label foo
+~~
+(root (paragraph "a") (label "foo"))
+
+| a
+! label foo
+~~
+(root (blockquote (paragraph "a")) (label "foo"))
+
 ! disable paragraph
 ~~
 error
