@@ -34,6 +34,11 @@
 ~~
 (root (paragraph (em-dash) (newline) (em-dash)))
 
+-/-
+-/-
+~~
+(root (paragraph (newline) (newline) (newline)))
+
 ! set line-break-mode hide
 -/-
 -/-

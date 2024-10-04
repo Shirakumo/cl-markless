@@ -26,6 +26,14 @@
 ~~
 (root (embed video "a" (caption "a" (bold "b"))))
 
+[ video a, caption a\,b ]
+~~
+(root (embed video "a" (caption "a,b")))
+
+[ video a, caption \]
+~~
+(root (embed video "a" (caption "]")))
+
 [ video a, loop, autoplay, float left, width 10px, height 10%, label foo ]
 ~~
 (root (embed video "a" (loop) (autoplay) (float left) (width 10 px) (height 10 %) (label "foo")))

@@ -10,6 +10,10 @@
 ~~
 (root (paragraph (compound ((bold)) "a")))
 
+''a''(red)
+~~
+(root (paragraph (compound ((color 255 0 0)) "a")))
+
 ''a''(bold, italic, underline, strikethrough, spoiler)
 ~~
 (root (paragraph (compound ((bold) (italic) (underline) (strikethrough) (spoiler)) "a")))
@@ -17,6 +21,10 @@
 ''a''(font Comic Sans MS)
 ~~
 (root (paragraph (compound ((font "Comic Sans MS")) "a")))
+
+''a''(color red)
+~~
+(root (paragraph (compound ((color 255 0 0)) "a")))
 
 ''a''(color #FFFFFF)
 ~~
