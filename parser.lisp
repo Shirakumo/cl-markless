@@ -184,10 +184,17 @@
   (decf (fill-pointer stack))
   (aref stack (fill-pointer stack)))
 
+(declaim (inline stack-peek))
+(defun stack-peek (stack)
+  (declare (type (vector stack-entry) stack))
+  (when (< (fill-pointer stack) 2)
+    (error 'stack-exhausted))
+  (aref stack (- (fill-pointer stack) 2)))
+
 (declaim (inline stack-top))
 (defun stack-top (stack)
   (declare (type (vector stack-entry) stack))
-  (aref stack (1- (length stack))))
+  (aref stack (1- (fill-pointer stack))))
 
 (declaim (inline stack-bottom))
 (defun stack-bottom (stack)
@@ -282,10 +289,11 @@
         (setf (enabled-p directive) T)))))
 
 (defmethod evaluate-instruction ((instruction components:label) (parser parser))
-  (when (eq instruction (stack-entry-component (stack-top (stack parser))))
-    (error 'no-prior-component))
-  (setf (components:label (components:target instruction) (root parser))
-        (stack-entry-component (stack-top (stack parser)))))
+  (let ((siblings (components:children (stack-entry-component (stack-peek (stack parser))))))
+    (when (= 1 (length siblings))
+      (error 'no-prior-component))
+    (setf (components:label (components:target instruction) (root parser))
+          (aref siblings (1- (length siblings))))))
 
 (defmethod evaluate-instruction ((instruction components:raw) (parser parser)))
 
