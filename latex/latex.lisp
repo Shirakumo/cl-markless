@@ -53,15 +53,16 @@
          (uiop:with-temporary-file (:pathname tex :stream stream :type "tex")
            (output-component component stream format)
            (close stream)
-           (uiop:run-program (list (processor format)
-                                   "--shell-escape" "--file-line-error"
-                                   "--halt-on-error" "--interaction=nonstopmode"
-                                   (format NIL "--jobname=~a" (pathname-name path))
-                                   (format NIL "--output-directory=~a" (uiop:native-namestring
-                                                                        (truename (make-pathname :name NIL :type NIL :defaults path))))
-                                   (uiop:native-namestring tex))
-                             :output (when (verbose format) *error-output*)
-                             :error-output (when (verbose format) *error-output*))))
+           (dotimes (i 2)
+             (uiop:run-program (list (processor format)
+                                     "--shell-escape" "--file-line-error"
+                                     "--halt-on-error" "--interaction=nonstopmode"
+                                     (format NIL "--jobname=~a" (pathname-name path))
+                                     (format NIL "--output-directory=~a" (uiop:native-namestring
+                                                                          (truename (make-pathname :name NIL :type NIL :defaults path))))
+                                     (uiop:native-namestring tex))
+                               :output (when (verbose format) *error-output*)
+                               :error-output (when (verbose format) *error-output*)))))
         (T
          (call-next-method))))
 
