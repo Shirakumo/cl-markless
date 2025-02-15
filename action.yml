@@ -48,7 +48,7 @@ runs:
     - name: Run cl-markless
       shell: bash
       run: |
-        mkdir -p "$(echo "$OUTPUT" | sed 's|\(.*\)/.*|\1|')"
+        mkdir -p "$(echo "$OUTPUT" | sed -nE 's/(.*)\/.*/\1/p')" || echo ""
         chmod +x ${{ runner.temp }}/cl-markless
         for file in $INPUT; do
           ${{ runner.temp }}/cl-markless \
@@ -59,7 +59,8 @@ runs:
             --directives "$DIRECTIVES" \
             --line-break-mode "$LINE_BREAK_MODE" \
             --extension "$EXTENSION" \
-            --styling "$STYLING"
+            --styling "$STYLING" \
+            --verbose
         done
       env:
         INPUT: ${{ inputs.input }}

@@ -14,7 +14,8 @@
     (("extension" #\e) :type string :optional T :documentation "Load an extension.")
     (("styling" #\s) :type string :optional T :documentation "Path to a file with extra styling information. Depends on the output format.")
     (("help" #\h #\?) :type boolean :optional T :documentation "Show a brief help about the tool.")
-    (("version" #\v) :type boolean :optional T :documentation "Print the version.")))
+    (("verbose" #\v) :type boolean :optional T :documentation "Print verbose output if available.")
+    (("version") :type boolean :optional T :documentation "Print the version.")))
 
 (defun start ()
   (command-line-arguments:handle-command-line
@@ -99,7 +100,7 @@
                 ((string-equal "pdf" type) "latex"))))
       default))
 
-(defun cli (&key input output styling format input-format directives (line-break-mode "show") extension help version)
+(defun cli (&key input output styling format input-format directives (line-break-mode "show") extension help verbose version)
   (unwind-protect
        (handler-bind ((warning 
                         (lambda (w)
@@ -136,6 +137,7 @@
                        (format (make-instance (if (and format (string/= "" format))
                                                   (parse-format format)
                                                   (parse-format (infer-format output "plump")))
+                                              :verbose verbose
                                               :styling (when (and styling (string/= "" styling))
                                                          (pathname-utils:parse-native-namestring styling))
                                               :allow-other-keys T))
