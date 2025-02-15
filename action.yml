@@ -37,7 +37,7 @@ runs:
       if: ${{ inputs.format == 'latex' }}
       shell: bash
       run: |
-        sudo apt-get install -y texlive
+        sudo apt-get install -y texlive texlive-latex-extra python3-pygments
     - name: Install cl-markless
       if: ${{ hashFiles(format('{0}/cl-markless', runner.temp)) == '' }}
       uses: dsaltares/fetch-gh-release-asset@master
