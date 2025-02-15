@@ -58,7 +58,7 @@
                                    "--halt-on-error" "--interaction=nonstopmode"
                                    (format NIL "--jobname=~a" (pathname-name path))
                                    (format NIL "--output-directory=~a" (uiop:native-namestring
-                                                                        (make-pathname :name NIL :type NIL :defaults path)))
+                                                                        (truename (make-pathname :name NIL :type NIL :defaults path))))
                                    (uiop:native-namestring tex))
                              :output (when (verbose format) *error-output*)
                              :error-output (when (verbose format) *error-output*))))
