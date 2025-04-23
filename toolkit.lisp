@@ -173,6 +173,13 @@
   (let ((class (etypecase class
                  (class class)
                  (symbol (find-class class)))))
+    #+clozure (progn (unless (ccl:class-finalized-p class)
+                       (ccl:finalize-inheritance class))
+                     (ccl:class-prototype class))
+    #+sbcl (progn (unless (sb-mop:class-finalized-p class)
+                    (sb-mop:finalize-inheritance class))
+                  (sb-mop:class-prototype class))
+    #-(or sbcl clozure)
     (allocate-instance class)))
 
 (defun subclasses (class)
