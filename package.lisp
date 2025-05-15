@@ -60,6 +60,7 @@
    #:raw
    #:comment
    #:embed
+   #:find-option
    #:target
    #:image
    #:video

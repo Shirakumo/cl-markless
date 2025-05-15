@@ -167,6 +167,11 @@
 (defclass embed (unit-component block-component targeted)
   ((options :initarg :options :initform () :accessor options)))
 
+(defun find-option (type container)
+  (loop for option in (options container)
+        do (when (typep option type)
+             (return option))))
+
 (define-printer embed
   "~s" (target c))
 
