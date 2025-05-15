@@ -720,3 +720,126 @@
 
 (defmethod output-operator (string target (thing highlighted))
   (format target "<span class=\"operator\">~a</span>" string))
+
+(define-output (gemtext () ((pending-links :initform NIL :accessor pending-links))) (c s)
+  (vector ()
+    (loop for child across c 
+          do (if (typep child '(and components:block-component
+                                   components:parent-component))
+                 (output (components:children child))
+                 (output child))))
+
+  (string ()
+    (loop for char across c
+          do (case char
+               (#\Linefeed (output char))
+               (T (write-char char s)))))
+
+  ((eql #\Linefeed) ()
+    (format s "~c~c" #\Return #\Linefeed))
+
+  (components:root-component ()
+    (loop for child across (components:children c)
+          do (if (typep child 'components:list)
+                 (loop for c across (components:children child)
+                       do (output c))
+                 (output child))))
+
+  (components:parent-component ()
+    (output (components:children c)))
+
+  (components:paragraph (:after)
+    (output #\Linefeed))
+
+  (components:block-component (:after)
+    (dolist (link (reverse (shiftf (pending-links _) ())))
+      (format s "=> ~a" link)
+      (output #\Linefeed)))
+
+  (components:header ()
+    (format s "~v@{#~} " (min (components:depth c) 3) NIL)
+    (output (components:children c))
+    (output #\Linefeed))
+
+  (components:embed ()
+    (format s "=> ~a~@[ ~a~]"
+            (components:target c)
+            (or (components:find-option 'components:description-option c)
+                (components:find-option 'components:label-option c)))
+    (output #\Linefeed))
+
+  (components:blockquote-header ())
+
+  (components:blockquote ()
+    (format s "> ")
+    (output (components:children c))
+    (output #\Linefeed))
+
+  (components:list-item ()
+    (format s "* ")
+    (output (components:children c))
+    (output #\Linefeed))
+
+  (components:code-block ()
+    (format s "```")(output #\Linefeed)
+    (output (components:text c))
+    (format s "```")(output #\Linefeed))
+
+  (components:embed-option ())
+  (components:compound-option ())
+
+  (components:compound (:after)
+    (mapc #'output (components:options c)))
+
+  (components:link-option ()
+    (push (components:target c) (pending-links _)))
+
+  (components:raw ()
+    (when (string-equal "gemtext" (components:target c))
+      (write-string (components:text c) s)))
+  
+  (components:comment ())
+  (components:instruction ())
+
+  (components:bold ()
+    (format s "**")
+    (output (components:children c))
+    (format s "**"))
+
+  (components:italic ()
+    (format s "//")
+    (output (components:children c))
+    (format s "//"))
+
+  (components:underline ()
+    (format s "__")
+    (output (components:children c))
+    (format s "__"))
+
+  (components:strikethrough ()
+    (format s "<-")
+    (output (components:children c))
+    (format s "->"))
+
+  (components:code ()
+    (format s "``~a``" (components:text c)))
+
+  (components:footnote-reference ()
+    (format s "[~d]" (components:target c)))
+
+  (components:footnote ()
+    (format s "[~d] " (components:target c))
+    (output (components:children c))
+    (output #\Linefeed))
+
+  (components:url ()
+    (push (components:target c) (pending-links _)))
+  
+  (components:en-dash ()
+    (format s "–"))
+
+  (components:em-dash ()
+    (format s "—"))
+
+  (components:newline ()
+    (output #\Linefeed)))

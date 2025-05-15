@@ -278,6 +278,7 @@
    #:highlighted
    #:debug
    #:bbcode
+   #:gemtext
    #:define-output
    #:output-component
    #:output
