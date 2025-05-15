@@ -80,6 +80,7 @@
 (defun infer-file-type (format)
   (etypecase format
     (cl-markless:markless "mess")
+    (cl-markless:gemtext "gmi")
     (cl-markless:bbcode "bb")
     (cl-markless:debug "txt")
     (cl-markless:highlighted "html")
@@ -91,6 +92,8 @@
   (or (when (and file (pathname-type file))
         (let ((type (pathname-type file)))
           (cond ((string-equal "mess" type) "markless")
+                ((string-equal "gmi" type) "gemtext")
+                ((string-equal "gemini" type) "gemtext")
                 ((string-equal "md" type) "markdown")
                 ((string-equal "html" type) "plump")
                 ((string-equal "htm" type) "plump")
