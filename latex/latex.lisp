@@ -310,7 +310,7 @@
 
 (define-tex-output components:compound
   (loop for option in (components:options component)
-        do (cl-markless:output option))
+        do (output option))
   (call-next-method)
   (loop for option in (components:options component)
         do (format stream "}")))
