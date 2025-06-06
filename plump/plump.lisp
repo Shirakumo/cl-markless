@@ -73,7 +73,7 @@
               for footnote in footnotes
               for note = (plump-dom:make-element listing "li")
               do (setf (attribute "value" note) (princ-to-string (components:target footnote)))
-                 (setf (attribute "id" note) (format NIL "footnote-~d" (components:target footnote)))
+                 (setf (attribute "id" note) (label footnote))
                  (loop for child across (components:children footnote)
                        do (output-component child note format)))))))
 
@@ -261,7 +261,7 @@
   (components:text component))
 
 (defmethod label ((component components:footnote))
-  (format NIL "footnote-~d" (components:target component)))
+  (format NIL "~d" (components:target component)))
 
 (defmethod output-component ((option components:bold-option) (target plump-dom:nesting-node) (format plump))
   (append-style target "font-weight:bold"))
