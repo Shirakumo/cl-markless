@@ -213,3 +213,11 @@
   (if (< 0 (length array))
       (values (aref array (1- (length array))) T)
       (values NIL NIL)))
+
+(defun integer-digits (int)
+  (cond ((< 0 int)
+         (ceiling (log (1+ (abs int)) 10)))
+        ((< int 0)
+         (+ 1 (ceiling (log (1+ (abs int)) 10))))
+        (T
+         1)))

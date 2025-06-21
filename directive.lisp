@@ -273,11 +273,7 @@
              (+ end 1))))))
 
 (defmethod consume-prefix ((_ ordered-list) component parser line cursor)
-  (let ((numcnt (cond ((< 0 (components:number component))
-                       (1+ (ceiling (log (components:number component) 10))))
-                      ((= 0 (components:number component)) 1)
-                      (T
-                       (+ 2 (ceiling (log (abs (components:number component)) 10)))))))
+  (let ((numcnt (integer-digits (components:number component))))
     (when (loop for i from cursor
                 repeat numcnt
                 always (and (< i (length line))
