@@ -65,3 +65,30 @@
 ~~
 (root (blockquote-header "a" (bold "b") "c") (blockquote (paragraph "d")))
 
+~ a | b
+~~
+(root (blockquote-header "a ") (blockquote (paragraph "b")))
+
+- ~ a| b
+~~
+(root (unordered-list (unordered-list-item (blockquote-header "a") (blockquote (paragraph "b")))))
+
+- ~ a| b
+  ~ c| d
+~~
+(root (unordered-list (unordered-list-item (blockquote-header "a") (blockquote (paragraph "b")) (blockquote-header "c") (blockquote (paragraph "d")))))
+
+- x
+  ~ a| b
+~~
+(root (unordered-list (unordered-list-item (paragraph "x") (blockquote-header "a") (blockquote (paragraph "b")))))
+
+1.x
+  ~ a| b
+~~
+(root (ordered-list (ordered-list-item (1) (paragraph "x") (blockquote-header "a") (blockquote (paragraph "b")))))
+
+1. x
+   ~ a| b
+~~
+(root (ordered-list (ordered-list-item (1) (paragraph "x") (blockquote-header "a") (blockquote (paragraph "b")))))
