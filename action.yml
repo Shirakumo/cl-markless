@@ -48,12 +48,23 @@ runs:
     - name: Run cl-markless
       shell: bash
       run: |
+        shopt -s globstar
         mkdir -p "$(echo "$OUTPUT" | sed -nE 's/(.*)\/.*/\1/p')" || echo ""
         chmod +x ${{ runner.temp }}/cl-markless
         for file in $INPUT; do
+          outpath="$OUTPUT"
+          if [[ "$outpath" =~ /$ ]]; then
+             relpath="$file"
+             if [[ "$relpath" =~ ^/ ]]; then
+                relpath="$(basename "$relpath")"
+             fi
+             outpath="$(dirname "$outpath$relpath")/"
+             mkdir -p "$outpath"
+          fi
+          echo "; Compiling $file to $outpath"
           ${{ runner.temp }}/cl-markless \
             --input "$file" \
-            --output "$OUTPUT" \
+            --output "$outpath" \
             --format "$FORMAT" \
             --input-format "$INPUT_FORMAT" \
             --directives "$DIRECTIVES" \
