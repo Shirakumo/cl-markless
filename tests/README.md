@@ -17,8 +17,8 @@ Note that Markless allows some ambiguity in the parse results, notably inserting
 
 You may include these tests as part of your implementation for automated testing. To do so, we recommend using a git subtree:
 
-    git subtree add --prefix tests https://github.com/shirakumo/markless-tests main --squash
+    git subtree add --prefix tests https://shirakumo.org/project/markless-tests main --squash
 
 You can similarly update the tests should there be upstream changes like this:
 
-    git subtree pull --prefix tests https://github.com/shirakumo/markless-tests main --squash
+    git subtree pull --prefix tests https://shirakumo.org/project/markless-tests main --squash

@@ -4,7 +4,7 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "A compiler for Markless to LaTeX source files."
-  :homepage "https://github.com/Shinmera/cl-markless"
+  :homepage "https://shinmera.com/project/cl-markless"
   :serial T
   :components ((:file "latex"))
   :depends-on (:cl-markless))

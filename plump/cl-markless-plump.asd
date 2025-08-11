@@ -4,7 +4,7 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "A compiler for Markless to Plump DOM/HTML."
-  :homepage "https://github.com/Shinmera/cl-markless"
+  :homepage "https://shinmera.com/project/cl-markless"
   :serial T
   :components ((:file "plump"))
   :depends-on (:cl-markless

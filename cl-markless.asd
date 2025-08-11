@@ -4,9 +4,9 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "A parser implementation for Markless"
-  :homepage "https://github.com/Shirakumo/cl-markless"
-  :bug-tracker "https://github.com/Shirakumo/cl-markless/issues"
-  :source-control (:git "https://github.com/Shirakumo/cl-markless.git")
+  :homepage "https://shirakumo.org/project/cl-markless"
+  :bug-tracker "https://shirakumo.org/project/cl-markless/issues"
+  :source-control (:git "https://shirakumo.org/project/cl-markless.git")
   :serial T
   :components ((:file "package")
                (:file "toolkit")

@@ -1,5 +1,5 @@
 ## About cl-markless
-This is an implementation of the "Markless standard"(link https://github.com/shirakumo/markless) at version 1.0. It handles the parsing of plaintext from a stream into an abstract syntax tree composed out of strings and component objects. From there the AST can be easily compiled into a target markup language like HTML.
+This is an implementation of the "Markless standard"(link https://shirakumo.org/project/markless) at version 1.0. It handles the parsing of plaintext from a stream into an abstract syntax tree composed out of strings and component objects. From there the AST can be easily compiled into a target markup language like HTML.
 
 ## How To
 To parse a Markless document, simply call the function ``parse``:
@@ -17,7 +17,7 @@ This will return the generated AST. From there on you can manipulate, inspect, o
 One thing in particular to note is that cl-markless requires LF (unix-style) line endings. CR (mac) or CRLF (windows) //have// to be converted ahead of time, or parse results will not be as expected.
 
 ### Writing Markless
-You can find a lengthy tutorial on the "Markless website"(https://shirakumo.github.io/markless).
+You can find a lengthy tutorial on the "Markless website"(https://shirakumo.org/docs/markless).
 
 ### Extending cl-markless
 The Markless standard permits extension in a few ways, all of which cl-markless supports. Furthermore, cl-markless allows the seamless addition of output compilers to allow integrating more target languages.

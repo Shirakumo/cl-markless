@@ -4,7 +4,7 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "Standalone executable of cl-markless"
-  :homepage "https://github.com/Shinmera/cl-markless"
+  :homepage "https://shinmera.com/project/cl-markless"
   :serial T
   :components ((:file "standalone"))
   :depends-on (:cl-markless
